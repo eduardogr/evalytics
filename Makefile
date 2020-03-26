@@ -14,10 +14,13 @@ build:
 
 run-server:
 	docker run -d \
-		--volume $(CURRENT_PATH)/server:/usr/evalytics \
+		--volume $(CURRENT_PATH)/evalytics:/usr/evalytics \
 		--publish $(PORT):$(PORT) \
 		--name $(CONTAINER_NAME) \
 		-ti $(CONTAINER_NAME):$(IMAGE_VERSION)
+
+test:
+	docker exec $(CONTAINER_NAME) pytest
 
 start-server:
 	docker start $(CONTAINER_NAME)

@@ -5,8 +5,9 @@ EXPOSE 8080
 RUN mkdir -p /usr/evalytics
 WORKDIR /usr/evalytics
 
-COPY server .
+COPY evalytics .
 
-RUN pip install --no-cache-dir -r requirements/prod.txt
+RUN pip install --no-cache-dir -r requirements/test.txt
 
+ENV PYTHONPATH /usr/evalytics
 ENTRYPOINT ["python3", "main.py"]
