@@ -5,7 +5,8 @@ import tornado.web
 
 from tornado.options import define, options
 
-from _server.handlers import WelcomeHandler
+from _server.handlers import WelcomeHandler, StartPhaseHandler, StatusHandler, FinishHandler
+from _server.di import Module
 
 define("port", default=8080, help="Run tornado server on the given port", type=int)
 
@@ -13,9 +14,15 @@ class EvalyticsServer(tornado.web.Application):
     def __init__(self):
         handlers = [
             WelcomeHandler,
+            StartPhaseHandler,
+            StatusHandler,
+            FinishHandler,
         ]
 
-        paths_by_handler = [(h.path, h) for h in handlers]
+        # Swtich between 'dev' and 'production' containers to inject dev or production instances 
+        instances = Module.containers['dev']
+
+        paths_by_handler = [(h.path, h, instances) for h in handlers]
         tornado.web.Application.__init__(self, paths_by_handler)
 
 
