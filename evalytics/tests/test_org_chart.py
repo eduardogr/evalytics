@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from server.models import Employee, OrgChart
+from ..server.models import Employee, OrgChart
 
 
 class TestOrgChart(TestCase):
