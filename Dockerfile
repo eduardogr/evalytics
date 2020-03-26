@@ -7,6 +7,6 @@ WORKDIR /usr/evalytics
 
 COPY server .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements/prod.txt
 
 ENTRYPOINT ["python3", "main.py"]
