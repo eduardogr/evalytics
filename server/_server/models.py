@@ -1,4 +1,6 @@
-from anytree import NodeMixin, RenderTree, PreOrderIter
+from typing import Iterable
+
+from anytree import NodeMixin, PreOrderIter, RenderTree
 
 
 class Employee(NodeMixin):
@@ -6,8 +8,8 @@ class Employee(NodeMixin):
     Base model for building the OrgChart
 
     examples;
-        <jhon@tuenti.com: 1>
-        <jane@tuenti.com (business development): 3>
+        <jhon: 1 minion>
+        <jane (business development): 3 minions>
     """
 
     def __init__(self, mail: str, area: str = None, supervisor=None, minions=None):
@@ -24,24 +26,25 @@ class Employee(NodeMixin):
         return self.mail.split('@')[0]
 
     @property
-    def minions(self) -> int:
-        return len(self.children)
+    def minions(self) -> Iterable['Employee']:
+        return self.children
 
     def __str__(self):
+        minions_count = len(self.children)
         if self.area:
-            return '<{0.mail} ({0.area}): {0.minions}>'.format(self)
-        return '<{0.mail}: {0.minions}>'.format(self)
+            return '<{0.name} ({0.area}): {1} minions>'.format(self, minions_count)
+        return '<{0.name}: {1} minions>'.format(self, minions_count)
 
 
 class OrgChart:
     """
     example;
 
-    <jane@tuenti.com: 1>
-     └── <jhon@tuenti.com: 3>
-         ├── <minion1@tuenti.com: 0>
-         ├── <minion2@tuenti.com: 0>
-         └── <minion3@tuenti.com: 0>
+    <jane: 1 minions>
+     └── <jhon: 3 minions>
+         ├── <minion: 0 minions>
+         ├── <minion: 0 minions>
+         └── <minion: 0 minions>
     """
 
     def __init__(self, root: Employee):

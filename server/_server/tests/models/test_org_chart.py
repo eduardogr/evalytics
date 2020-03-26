@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from server.models import Employee, OrgChart
+from _server.models import Employee, OrgChart
 
 
 class TestOrgChart(TestCase):
@@ -12,6 +12,12 @@ class TestOrgChart(TestCase):
         minion_2 = Employee('minion2@tuenti.com', supervisor=jhon)
         minion_3 = Employee('minion3@tuenti.com', supervisor=jhon)
         self.org_chart = OrgChart(jane)
+
+    def test_org_chart_keeps_the_expected_structure(self):
+        minions_names = [
+            minion.name for minion in self.org_chart.root.minions[0].minions
+        ]
+        self.assertListEqual(minions_names, ['minion1', 'minion2', 'minion3'])
 
     def test_org_chart_may_be_iterated(self):
         for employee in self.org_chart:
