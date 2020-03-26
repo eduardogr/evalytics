@@ -1,4 +1,3 @@
-
 CURRENT_PATH=$(shell pwd)
 PROJECT_FOLDER="."
 DOCKERFILE_PATH="Dockerfile"
@@ -7,8 +6,14 @@ CONTAINER_NAME=evalytics
 IMAGE_VERSION=0.1
 PORT=8080
 
+env ?= dev # get from cl or 'dev' by default
+
+# make
+# make build
+# make build env=prod
 build:
 	docker build . \
+		--build-arg BUILD_ENV=$(env) \
 		--file $(DOCKERFILE_PATH) \
 		--tag $(CONTAINER_NAME):$(IMAGE_VERSION)
 

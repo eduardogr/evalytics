@@ -1,4 +1,0 @@
--r prod.txt
-
-# test runner
-pytest==5.4.1
