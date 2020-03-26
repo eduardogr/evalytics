@@ -1,4 +1,4 @@
-# evalytics
+# evalytics [![Build Status](https://travis-ci.org/eduardogr/evalytics.svg?branch=master)](https://travis-ci.org/eduardogr/evalytics)
 
 This project proposal is to manage the evaluation cycle for a company
 
