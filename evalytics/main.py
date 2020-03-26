@@ -5,8 +5,8 @@ import tornado.web
 
 from tornado.options import define, options
 
-from server.handlers import WelcomeHandler, StartPhaseHandler, StatusHandler, FinishHandler
-from server.di import Module
+from .server.handlers import WelcomeHandler, StartPhaseHandler, StatusHandler, FinishHandler
+from .server.di import Module
 
 define("port", default=8080, help="Run tornado server on the given port", type=int)
 
