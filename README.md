@@ -2,6 +2,16 @@
 
 This project proposal is to manage the evaluation cycle for a company
 
+## Usage
+
+```
+# Could de dev for development
+make build env=prod 
+make google-auth
+make run-server
+# If you are developing, for reload code within docker container
+make run  stop-server && make start-server 
+```
 
 ## Examples
 
@@ -22,11 +32,7 @@ your token.pickle using credentials.json.
 See [GOOGLE_API_USAGE](doc/GOOGLE_API_USAGE.md) for more information.
 
 
-## eval diagram
-
-You can see [here](doc) a flow diagram
-
-### Flowchart of evaluations
+## Eval process
 
 <img src="./doc/diagrams/flowchart.svg" width="400" height="800" >
 
