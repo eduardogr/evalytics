@@ -19,7 +19,7 @@ examples/
 Note that, if you are going to use google apis you have to run `make google-auth` to obtain
 your token.pickle using credentials.json.
 
-See [GOOGLE_API_USAGE](https://github.com/eduardogr/evalytics/blob/master/GOOGLE_API_USAGE.md) for more information.
+See [GOOGLE_API_USAGE](doc/GOOGLE_API_USAGE.md) for more information.
 
 
 ## eval diagram
@@ -28,7 +28,7 @@ You can see [here](doc) a flow diagram
 
 ### Flowchart of evaluations
 
-<img src="./flowchart.svg" width="400" height="800" >
+<img src="./doc/diagrams/flowchart.svg" width="400" height="800" >
 
 ### Phases
 
