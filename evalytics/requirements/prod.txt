@@ -8,3 +8,4 @@ google-auth-oauthlib==0.4.1
 
 # data structure: tree
 anytree==2.8.0
+dataclasses==0.7
