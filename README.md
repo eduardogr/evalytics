@@ -2,6 +2,14 @@
 
 This project proposal is to manage the evaluation cycle for a company
 
+# Examples
+
+```
+examples/
+        eval-process/: Example documents for each eval subprocess
+        google-api-client/: Example clients for each google api that we use
+```
+
 # Authentication
 
 ## Google authentication
