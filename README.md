@@ -23,7 +23,7 @@ curl -s localhost:8080/start -d 'id=201' | json_pp
    "message" : "You have started an evaluation process",
    "id" : "201",
    "success" : true
-
+}
 ```
 
 ## Examples
