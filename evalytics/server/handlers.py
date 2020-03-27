@@ -40,8 +40,6 @@ class StartHandler(tornado.web.RequestHandler):
         try:
             id = str(self.get_argument('id', -1, True))
 
-            StartEvaluationProcess(reader).start(id=id)
-
             self.finish({
                 'success': True,
                 'message': 'You have started an evaluation process',
@@ -65,7 +63,6 @@ class StatusHandler(tornado.web.RequestHandler):
     async def get(self):
         id = str(self.get_argument('id', -1, True))
 
-        GetEvaluationProcessStatus(self.__reader).get(id=id)
         self.finish({
             'id': id,
             'message': 'With this entrypoint you querying the process of the evaluation process!',

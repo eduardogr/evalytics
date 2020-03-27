@@ -7,7 +7,6 @@ class StartEvaluationProcess:
 
     def start(self, id):
         self.__reader.get_org_chart()
-        pass
 
 
 class GetEvaluationProcessStatus:
