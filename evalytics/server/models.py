@@ -15,7 +15,8 @@ class Employee(NodeMixin):
         <jane (business development): 3 minions>
     """
 
-    def __init__(self, mail: str, area: str = None, supervisor=None, minions=None):
+    def __init__(self, mail: str, area: str = None,
+                 supervisor=None, minions=None):
         assert '@' in mail
         super().__init__()
         self.mail = mail
@@ -35,7 +36,8 @@ class Employee(NodeMixin):
     def __str__(self):
         minions_count = len(self.children)
         if self.area:
-            return '<{0.name} ({0.area}): {1} minions>'.format(self, minions_count)
+            return '<{0.name} ({0.area}): {1} minions>'.format(
+                self, minions_count)
         return '<{0.name}: {1} minions>'.format(self, minions_count)
 
 
@@ -58,7 +60,8 @@ class OrgChart:
         return iter(PreOrderIter(self.root))
 
     def __str__(self):
-        return '\n'.join(["{0}{1}".format(pre, node) for pre, _, node in RenderTree(self.root)])
+        return '\n'.join(["{0}{1}".format(pre, node)
+                          for pre, _, node in RenderTree(self.root)])
 
 
 class EvalType(Enum):
@@ -95,12 +98,14 @@ class Eval:
         return cls(who, peer, EvalType.PEER)
 
     @classmethod
-    def new_supervisor_eval(cls, who: Employee, supervisor: Employee) -> 'Eval':
+    def new_supervisor_eval(
+            cls, who: Employee, supervisor: Employee) -> 'Eval':
         return cls(who, supervisor, EvalType.MY_SUPERVISOR)
 
     @classmethod
     def new_minion_eval(cls, who: Employee, minion: Employee) -> 'Eval':
         return cls(who, minion, EvalType.MY_MINION)
+
 
 @dataclass
 class EvalSuite:
@@ -108,5 +113,5 @@ class EvalSuite:
     def __init__(self):
         self.evals = []
 
-    def add_eval(self, eval: Eval):
-        self.evals.append(eval)
+    def add_eval(self, eval_: Eval):
+        self.evals.append(eval_)

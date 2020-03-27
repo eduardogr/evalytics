@@ -1,5 +1,3 @@
-
-
 class StartEvaluationProcess:
 
     __reader = None
@@ -15,7 +13,7 @@ class StartEvaluationProcess:
 class GetEvaluationProcessStatus:
 
     __reader = None
-    
+
     def __init__(self, reader):
         self.__reader = reader
 

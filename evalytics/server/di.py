@@ -2,6 +2,7 @@
 from dependency_injector import providers, containers
 from .adapters import FakeAdapter, GoogleSheetsAdapter
 
+
 class Reader(containers.DeclarativeContainer):
     fake_reader = providers.Singleton(FakeAdapter)
     google_sheets_reader = providers.Singleton(GoogleSheetsAdapter)

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from ..server.adapters import OrgChartAdapter
-from ..server.models import Employee, Eval, EvalSuite, EvalType, OrgChart
+from ..server.models import Employee, Eval, EvalType, OrgChart
 
 # fixtures
 jane = Employee('jane@tuenti.com')
