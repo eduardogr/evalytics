@@ -1,17 +1,19 @@
 from unittest import TestCase
 
-from ..server.models import Employee, OrgChart
+from ..server.models import Employee, Eval, EvalType, OrgChart
+
+# fixtures
+jane = Employee('jane@tuenti.com')
+jhon = Employee('jhon@tuenti.com', supervisor=jane)
+minion_1 = Employee('minion1@tuenti.com', supervisor=jhon)
+minion_2 = Employee('minion2@tuenti.com', supervisor=jhon)
+minion_3 = Employee('minion3@tuenti.com', supervisor=jhon)
 
 
 class TestOrgChart(TestCase):
 
     def setUp(self):
-        jane = Employee('jane@tuenti.com')
-        jhon = Employee('jhon@tuenti.com', supervisor=jane)
-        minion_1 = Employee('minion1@tuenti.com', supervisor=jhon)
-        minion_2 = Employee('minion2@tuenti.com', supervisor=jhon)
-        minion_3 = Employee('minion3@tuenti.com', supervisor=jhon)
-        self.org_chart = OrgChart(jane)
+        self.org_chart = OrgChart(jane)  # subject
 
     def test_org_chart_keeps_the_expected_structure(self):
         minions_names = [
