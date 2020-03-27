@@ -410,8 +410,7 @@ const-naming-style=UPPER_CASE
 
 # Regular expression matching correct constant names. Overrides const-naming-
 # style.
-# CUSTOMIZATION: added logger
-const-rgx=logger
+# const-rgx=
 
 # Minimum line length for functions/classes that require docstrings, shorter
 # ones are exempt.

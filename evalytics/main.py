@@ -5,8 +5,8 @@ import tornado.web
 
 from tornado.options import define, options
 
-from server.handlers import WelcomeHandler, StartHandler, StatusHandler, FinishHandler
-from server.di import Module
+from evalytics.server.handlers import WelcomeHandler, StartHandler, StatusHandler, FinishHandler
+from evalytics.server.di import Module
 
 define("port", default=8080, help="Run tornado server on the given port", type=int)
 

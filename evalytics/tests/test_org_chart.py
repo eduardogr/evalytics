@@ -1,19 +1,13 @@
 from unittest import TestCase
 
-from ..server.models import Employee, OrgChart
-
-# fixtures
-jane = Employee('jane@tuenti.com')
-jhon = Employee('jhon@tuenti.com', supervisor=jane)
-minion_1 = Employee('minion1@tuenti.com', supervisor=jhon)
-minion_2 = Employee('minion2@tuenti.com', supervisor=jhon)
-minion_3 = Employee('minion3@tuenti.com', supervisor=jhon)
+from evalytics.server.models import OrgChart, Employee
+from evalytics.tests.fixtures import employees
 
 
 class TestOrgChart(TestCase):
 
     def setUp(self):
-        self.org_chart = OrgChart(jane)  # subject
+        self.org_chart = OrgChart(employees.jane)  # subject
 
     def test_org_chart_keeps_the_expected_structure(self):
         minions_names = [
