@@ -16,7 +16,7 @@ With same credentials we could specify all scopes we need, e.g:
 As we did it in this `examples/google-api-client/auth.py`.
 Note that we are using python for this but you could try other programming languages
 
-## google drive API
+## google drive
 
 - [quickstart](https://developers.google.com/sheets/api/quickstart/python)
 - [enabling api](https://console.developers.google.com/apis/api/drive.googleapis.com/overview)
@@ -24,7 +24,7 @@ Note that we are using python for this but you could try other programming langu
 - [permissions used]("https://www.googleapis.com/auth/drive")
     - [permissions level doc](https://developers.google.com/drive/api/v2/about-auth)
 
-## google sheets API
+## google sheets
 
 - [quickstar])https://developers.google.com/sheets/api/quickstart/python)
 - [enabling api](https://console.developers.google.com/apis/api/sheets.googleapis.com/overview)
@@ -32,7 +32,7 @@ Note that we are using python for this but you could try other programming langu
 - permissions used:
     - permissions level doc
 
-## gmail API
+## gmail
 
 - [quickstart](https://developers.google.com/gmail/api/quickstart/python
 - [enabling api](https://console.developers.google.com/apis/api/gmail.googleapis.com/overview)
