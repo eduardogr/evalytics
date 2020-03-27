@@ -60,25 +60,6 @@ class OrgChart:
     def __str__(self):
         return '\n'.join(["{0}{1}".format(pre, node) for pre, _, node in RenderTree(self.root)])
 
-    def create_eval_suite(self) -> 'EvalSuite':
-        evals = []
-        for employee in self:
-            evals.append(Eval.new_self_eval(employee))
-
-            supervisor = employee.parent
-            if supervisor:
-                evals.append(
-                    Eval.new_supervisor_eval(employee, supervisor)
-                )
-                for peer in supervisor.minions:
-                    if peer is not employee:
-                        evals.append(Eval.new_peer_eval(employee, peer))
-
-            for minion in employee.minions:
-                evals.append(Eval.new_minion_eval(employee, minion))
-
-        return EvalSuite(evals)
-
 
 class EvalType(Enum):
     SELF = 1
@@ -101,7 +82,7 @@ class Eval:
         self.to_ = to_
         self.type_ = type_
 
-    def __repr__(self):
+    def __str__(self):
         return '<Eval: {0.from_.name} --> {0.to_.name} ({0.type_.name})>'\
             .format(self)
 
@@ -121,8 +102,11 @@ class Eval:
     def new_minion_eval(cls, who: Employee, minion: Employee) -> 'Eval':
         return cls(who, minion, EvalType.MY_MINION)
 
-
+@dataclass
 class EvalSuite:
 
-    def __init__(self, initial_evals: Iterable[Eval]):
-        self.initial_evals = initial_evals
+    def __init__(self):
+        self.evals = []
+
+    def add_eval(self, eval: Eval):
+        self.evals.append(eval)
