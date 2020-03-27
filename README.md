@@ -19,7 +19,7 @@ examples/
 Note that, if you are going to use google apis you have to run `make google-auth` to obtain
 your token.pickle using credentials.json.
 
-See GOOGLE_API_USAGE for more information.
+See [GOOGLE_API_USAGE](https://github.com/eduardogr/evalytics/blob/master/GOOGLE_API_USAGE.md) for more information.
 
 
 ## eval diagram
