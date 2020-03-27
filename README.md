@@ -2,6 +2,17 @@
 
 This project proposal is to manage the evaluation cycle for a company
 
+# Authentication
+
+## Google authentication
+
+Note that, if you are going to use google apis you have to run `make google-auth` to obtain
+your token.pickle using credentials.json.
+
+See GOOGLE_API_USAGE for more information.
+
+# Eval process
+
 You can see [here](doc) a flow diagram
 
 ## Flowchart of evaluations

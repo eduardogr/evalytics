@@ -17,6 +17,9 @@ build:
 		--file $(DOCKERFILE_PATH) \
 		--tag $(CONTAINER_NAME):$(IMAGE_VERSION)
 
+google-auth:
+	python3 auth.py
+
 run-server:
 	docker run -d \
 		--volume $(CURRENT_PATH)/evalytics:/usr/evalytics \
