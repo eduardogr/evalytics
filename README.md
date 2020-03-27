@@ -5,7 +5,7 @@ This project proposal is to manage the evaluation cycle for a company
 ## Usage
 
 ```
-# Could de dev for development
+# Could be env=dev for development
 make build env=prod 
 make google-auth
 make run-server
