@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ..server.models import Employee, Eval, EvalType, OrgChart
+from ..server.models import Employee, OrgChart
 
 # fixtures
 jane = Employee('jane@tuenti.com')
