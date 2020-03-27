@@ -4,6 +4,8 @@ This project proposal is to manage the evaluation cycle for a company
 
 ## Usage
 
+Preparing local environment to run evalytics:
+
 ```
 # Could be env=dev for development
 make build env=prod 
@@ -11,6 +13,17 @@ make google-auth
 make run-server
 # If you are developing, for reload code within docker container
 make run  stop-server && make start-server 
+```
+
+Requesting evalytics:
+
+```
+curl -s localhost:8080/start -d 'id=201' | json_pp
+{
+   "message" : "You have started an evaluation process",
+   "id" : "201",
+   "success" : true
+
 ```
 
 ## Examples
