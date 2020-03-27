@@ -13,7 +13,7 @@ With the same credentials we could specify all scopes we need, e.g:
     - 'https://www.googleapis.com/auth/documents.readonly'
     - 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
-As we did it in this examples-google-api-client/auth.py.
+As we did it in this `examples/google-api-client/auth.py`.
 Note that we are using python for this but you could try other programming languages
 
 ## google drive
