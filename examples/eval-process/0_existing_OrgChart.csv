@@ -1,0 +1,6 @@
+Name,email,Team,Position,Manager,One level up
+"SURNAME, FULANITE",fulanite@company.com,EngineeringTeam,Engineer,"SURNAME, TECH LEAD","SURNAME, ANA CEO"
+"SURNAME, C-TANGANITE",ctanganite@company.com,EngineeringTeam,Engineer,"SURNAME, TECH LEAD","SURNAME, ANA CEO"
+"SURNAME, MENGANITA",menganita@company.com,EngineeringTeam,Engineer,"SURNAME, TECH LEAD","SURNAME, ANA CEO"
+"SURNAME, TECH LEAD",techlead@company.com,EngineeringTeam,EngineerTechLead,"SURNAME, ANA CEO",
+"SURNAME, ANA CEO",ceo@company.com,Office,CEO,"SURNAME, CEO MANAGER",
