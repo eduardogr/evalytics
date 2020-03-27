@@ -6,7 +6,32 @@ from anytree import NodeMixin, PreOrderIter, RenderTree
 
 
 @dataclass
-class Employee(NodeMixin):
+class Team:
+
+    def __init__(self, name: str,
+                 manager: str = None,
+                 manager_one_level_up: str = None):
+        self.__name = name
+        self.__manager = manager
+        self.__manager_one_level_up = manager_one_level_up
+
+@dataclass
+class Employee:
+
+    def __init__(self, name: str, mail: str, position: str = None,
+                 team: Team = None):
+        assert '@' in mail
+        self.__name = name
+        self.__mail = mail
+        self.__team = team
+        self.__position = position
+
+    @property
+    def uid(self) -> str:
+        return self.__mail.split('@')[0]
+
+@dataclass
+class EmployeeNode(NodeMixin):
     """Tree-Node functionallity
     Base model for building the OrgChart
 
@@ -15,30 +40,24 @@ class Employee(NodeMixin):
         <jane (business development): 3 minions>
     """
 
-    def __init__(self, mail: str, area: str = None,
-                 supervisor=None, minions=None):
-        assert '@' in mail
+    def __init__(self, employee: Employee,
+                 supervisor: Employee = None, minions=None):
         super().__init__()
-        self.mail = mail
-        self.area = area
+        self.employee = employee
         self.parent = supervisor
         if minions:
             self.children = minions
 
     @property
-    def name(self) -> str:
-        return self.mail.split('@')[0]
-
-    @property
-    def minions(self) -> Iterable['Employee']:
+    def minions(self) -> Iterable['EmployeeNode']:
         return self.children
 
     def __str__(self):
         minions_count = len(self.children)
-        if self.area:
-            return '<{0.name} ({0.area}): {1} minions>'.format(
+        if self.employee.get_team():
+            return '<{0.employee.get_uid()} ({0.employee.get_team()}): {1} minions>'.format(
                 self, minions_count)
-        return '<{0.name}: {1} minions>'.format(self, minions_count)
+        return '<{0.employee.get_uid()}: {1} minions>'.format(self, minions_count)
 
 
 class OrgChart:
@@ -52,7 +71,7 @@ class OrgChart:
          └── <minion: 0 minions>
     """
 
-    def __init__(self, root: Employee):
+    def __init__(self, root: EmployeeNode):
         assert root is not None
         self.root = root
 
@@ -80,7 +99,7 @@ class Eval:
         <Eval: minion3 --> minion3 (SELF)>
     """
 
-    def __init__(self, from_: Employee, to_: Employee, type_: EvalType):
+    def __init__(self, from_: EmployeeNode, to_: EmployeeNode, type_: EvalType):
         self.from_ = from_
         self.to_ = to_
         self.type_ = type_
@@ -90,20 +109,20 @@ class Eval:
             .format(self)
 
     @classmethod
-    def new_self_eval(cls, who: Employee) -> 'Eval':
+    def new_self_eval(cls, who: EmployeeNode) -> 'Eval':
         return cls(who, who, EvalType.SELF)
 
     @classmethod
-    def new_peer_eval(cls, who: Employee, peer: Employee) -> 'Eval':
+    def new_peer_eval(cls, who: EmployeeNode, peer: EmployeeNode) -> 'Eval':
         return cls(who, peer, EvalType.PEER)
 
     @classmethod
     def new_supervisor_eval(
-            cls, who: Employee, supervisor: Employee) -> 'Eval':
+            cls, who: EmployeeNode, supervisor: EmployeeNode) -> 'Eval':
         return cls(who, supervisor, EvalType.MY_SUPERVISOR)
 
     @classmethod
-    def new_minion_eval(cls, who: Employee, minion: Employee) -> 'Eval':
+    def new_minion_eval(cls, who: EmployeeNode, minion: EmployeeNode) -> 'Eval':
         return cls(who, minion, EvalType.MY_MINION)
 
 

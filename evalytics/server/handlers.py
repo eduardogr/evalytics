@@ -1,13 +1,14 @@
 
 import tornado.web
 
-from .usecases import StartEvaluationProcess, GetEvaluationProcessStatus
 
 class WelcomeHandler(tornado.web.RequestHandler):
     path = r"/"
 
-    def initialize(self, reader):
-        self.__reader = reader
+    __repository = None
+
+    def initialize(self, repository):
+        self.__repository = repository
 
     async def get(self):
         self.finish({
@@ -23,10 +24,10 @@ class WelcomeHandler(tornado.web.RequestHandler):
 class StartHandler(tornado.web.RequestHandler):
     path = r"/start"
 
-    __reader = None
+    __repository = None
 
-    def initialize(self, reader):
-        self.__reader = reader
+    def initialize(self, repository):
+        self.__repository = repository
 
     async def get(self):
         id = str(self.get_argument('id', -1, True))
@@ -55,10 +56,10 @@ class StartHandler(tornado.web.RequestHandler):
 class StatusHandler(tornado.web.RequestHandler):
     path = r"/status"
 
-    __reader = None
+    __repository = None
 
-    def initialize(self, reader):
-        self.__reader = reader
+    def initialize(self, repository):
+        self.__repository = repository
 
     async def get(self):
         id = str(self.get_argument('id', -1, True))
@@ -71,12 +72,12 @@ class StatusHandler(tornado.web.RequestHandler):
 class FinishHandler(tornado.web.RequestHandler):
     path = r"/finish"
 
-    __reader = None
+    __repository = None
 
-    def initialize(self, reader):
-        self.__reader = reader
+    def initialize(self, repository):
+        self.__repository = repository
 
-    async def get(self):
+    async def post(self):
         id = str(self.get_argument('id', -1, True))
 
         self.finish({

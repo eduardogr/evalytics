@@ -1,19 +1,19 @@
-
 from dependency_injector import providers, containers
-from .repositories import FakeRepository, GoogleSheetsRepository
+from .repositories import DataRepository
+from .storages import GoogleStorage, InMemoryStorage
 
 
-class Reader(containers.DeclarativeContainer):
-    fake_reader = providers.Singleton(FakeRepository)
-    google_sheets_reader = providers.Singleton(GoogleSheetsRepository)
+class DataStorage(containers.DeclarativeContainer):
+    inmemory_persistence = providers.Singleton(DataRepository, InMemoryStorage)
+    google_persistence = providers.Singleton(DataRepository, GoogleStorage)
 
 
 class Module:
     containers = {
         'dev': {
-            'reader': Reader.fake_reader(),
+            'repository': DataStorage.inmemory_persistence(),
         },
         'production': {
-            'reader': Reader.google_sheets_reader(),
+            'repository': DataStorage.google_persistence(),
         }
     }
