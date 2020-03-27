@@ -1,7 +1,7 @@
 
 # Evaluation for menganita
 
-## id: 2020Q1
+## 2020Q1
 
 * kind: self-evaluation
 * Reviewer: menganita
