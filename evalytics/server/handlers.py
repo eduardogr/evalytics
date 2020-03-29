@@ -6,9 +6,11 @@ class WelcomeHandler(tornado.web.RequestHandler):
     path = r"/"
 
     __repository = None
+    __comms_provider = None
 
-    def initialize(self, repository):
+    def initialize(self, repository, comms_provider):
         self.__repository = repository
+        self.__comms_provider = comms_provider
 
     async def get(self):
         self.finish({
@@ -25,9 +27,11 @@ class StartHandler(tornado.web.RequestHandler):
     path = r"/start"
 
     __repository = None
+    __comms_provider = None
 
-    def initialize(self, repository):
+    def initialize(self, repository, comms_provider):
         self.__repository = repository
+        self.__comms_provider = comms_provider
 
     async def get(self):
         id = str(self.get_argument('id', -1, True))
@@ -57,9 +61,11 @@ class StatusHandler(tornado.web.RequestHandler):
     path = r"/status"
 
     __repository = None
+    __comms_provider = None
 
-    def initialize(self, repository):
+    def initialize(self, repository, comms_provider):
         self.__repository = repository
+        self.__comms_provider = comms_provider
 
     async def get(self):
         id = str(self.get_argument('id', -1, True))
@@ -73,9 +79,11 @@ class FinishHandler(tornado.web.RequestHandler):
     path = r"/finish"
 
     __repository = None
+    __comms_provider = None
 
-    def initialize(self, repository):
+    def initialize(self, repository, comms_provider):
         self.__repository = repository
+        self.__comms_provider = comms_provider
 
     async def post(self):
         id = str(self.get_argument('id', -1, True))

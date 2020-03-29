@@ -1,7 +1,7 @@
 from __future__ import print_function
 from googleapiclient.discovery import build
 from evalytics.server.auth import GoogleAuth
-from evalytics.server.repositories import GoogleRepository
+from evalytics.server.storages import GoogleStorage
 
 def main():
     folder_name = 'evalytics'
@@ -12,7 +12,7 @@ def main():
     sheet_service = build('sheets', 'v4', credentials=creds)
 
     # Folder setup
-    folder = GoogleRepository.get_folder(name=folder_name)
+    folder = GoogleStorage.__get_folder(name=folder_name)
     if folder is None:
         file_metadata = {
             'name': folder_name,
@@ -26,7 +26,7 @@ def main():
     folder_parent = folder.get('parents')[0]
 
     # Sheet setup
-    spreadheet_id = GoogleRepository.get_file_id_from_folder(
+    spreadheet_id = GoogleStorage__.get_file_id_from_folder(
         folder_id=folder.get('id'),
         filename=orgchart_filename)
 
