@@ -5,15 +5,15 @@ import tornado.web
 
 from tornado.options import define, options
 
-from server.di import Module
-from server.handlers import \
+from evalytics.server.di import Module
+from evalytics.server.handlers import \
     WelcomeHandler, StartHandler, StatusHandler, FinishHandler
 
 define(
     "port", default=8080,
     help="Run tornado server on the given port", type=int)
 define(
-    "environment", default='dev',
+    "environment", default=Module.PRODUCTION,
     help="Environment to switch between di.Module instances", type=str)
 
 class EvalyticsServer(tornado.web.Application):
