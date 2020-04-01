@@ -11,20 +11,29 @@ class OrgChartAdapter:
         """
         eval_suite = EvalSuite()
 
-        for employee in org_chart:
-            eval_suite.add_eval(Eval.new_self_eval(employee))
+        for employee_node in org_chart:
+            eval_suite.add_eval(Eval.new_self_eval(employee_node))
 
-            supervisor = employee.parent
+            supervisor = employee_node.parent
             if supervisor:
                 eval_suite.add_eval(
-                    Eval.new_supervisor_eval(employee, supervisor))
+                    Eval.new_supervisor_eval(employee_node, supervisor))
                 if consider_peers:
                     for peer in supervisor.minions:
-                        if peer is not employee:
+                        if peer is not employee_node:
                             eval_suite.add_eval(
-                                Eval.new_peer_eval(employee, peer))
+                                Eval.new_peer_eval(employee_node, peer))
 
-            for minion in employee.minions:
-                eval_suite.add_eval(Eval.new_minion_eval(employee, minion))
+            for minion in employee_node.minions:
+                eval_suite.add_eval(
+                    Eval.new_minion_eval(employee_node, minion))
 
         return eval_suite
+
+
+class EmployeeAdapter:
+
+    @classmethod
+    def build_org_chart(cls, employees):
+        # TODO: build OrgChart from list of employees
+        pass

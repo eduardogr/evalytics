@@ -21,40 +21,41 @@ Note that we are using python for this but you could try other programming langu
 - [quickstart](https://developers.google.com/sheets/api/quickstart/python)
 - [enabling api](https://console.developers.google.com/apis/api/drive.googleapis.com/overview)
 - [api reference](https://developers.google.com/drive/api/v3/reference/)
-- [permissions used]("https://www.googleapis.com/auth/drive")
-    - [permissions level doc](https://developers.google.com/drive/api/v2/about-auth)
+- [permissions level doc](https://developers.google.com/drive/api/v3/about-auth)
+    - permissions used: "https://www.googleapis.com/auth/drive.file"
+
 
 ## google sheets
 
 - [quickstar])https://developers.google.com/sheets/api/quickstart/python)
 - [enabling api](https://console.developers.google.com/apis/api/sheets.googleapis.com/overview)
 - [api reference](https://developers.google.com/sheets/api/reference/rest)
-- permissions used:
-    - permissions level doc
+- [permissions level doc](https://developers.google.com/sheets/api/guides/authorizing)
+    - permissions used: "https://www.googleapis.com/auth/spreadsheets.readonly"
 
 ## gmail
 
 - [quickstart](https://developers.google.com/gmail/api/quickstart/python
 - [enabling api](https://console.developers.google.com/apis/api/gmail.googleapis.com/overview)
 - [api reference](https://developers.google.com/gmail/api/v1/reference/)
-- permissions used
-    - permissions level doc
+- [permissions level doc](https://developers.google.com/gmail/api/auth/scopes)
+    - permissions used: "https://www.googleapis.com/auth/gmail.send"
 
 ## google docs
 
 - [quickstart](https://developers.google.com/docs/api/quickstart/python)
 - [enabling api](https://console.developers.google.com/apis/api/docs.googleapis.com/overview)
 - [api reference](https://developers.google.com/docs/api/reference/rest)
-- permissions used
-    - permissions level doc
+- [permissions level doc](https://developers.google.com/docs/api/how-tos/authorizing)
+    - permissions used: "https://www.googleapis.com/auth/drive.file"
 
 ## app scrips
 
-- [quickstart](https://developers.google.com/apps-script/api/quickstart/python
-- [enabling api](https://console.developers.google.com/apis/api/script.googleapis.com/overview
-- [api reference](https://developers.google.com/apps-script/api/reference/rest
-- permissions used
-    - permissions level doc
+- [quickstart](https://developers.google.com/apps-script/api/quickstart/python)
+- [enabling api](https://console.developers.google.com/apis/api/script.googleapis.com/overview)
+- [api reference](https://developers.google.com/apps-script/api/reference/rest)
+- [permissions level doc](https://developers.google.com/apps-script/api/how-tos/enable)
+    - permissions used: No permission right now
 
 # General things
 
