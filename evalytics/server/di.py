@@ -18,11 +18,16 @@ class CommunicationsChannel(containers.DeclarativeContainer):
 
 class Module:
     PRODUCTION = 'prod'
+    TESTS = 'tests'
     '''
     Here we specify concrete implementations
     for our core classes defined in core.py
     '''
     containers = {
+        'tests': {
+            'repository': DataStorage.inmemory_storage(),
+            'comms_provider': CommunicationsChannel.std_output_channel(),
+        },
         'prod': {
             'repository': DataStorage.google_storage(),
             'comms_provider': CommunicationsChannel.gmail_channel(),
