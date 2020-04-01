@@ -5,6 +5,11 @@ python:
 # command to install dependencies
 install:
   - pip install -r evalytics/requirements/dev.txt
+  - pip install --user codecov
 # command to run tests
 script:
   - pytest
+
+after_success:
+  - codecov
+  - bash <(curl -s https://codecov.io/bash)
