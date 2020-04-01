@@ -185,7 +185,8 @@ class GoogleStorage(Storage):
             cls.__sheets_service = build(
                 cls.SHEETS_SERVICE_ID, 
                 cls.SHEETS_SERVICE_VERISON, 
-                credentials=cls.__get_credentials())
+                credentials=cls.__get_credentials(),
+                cache_discovery=False)
         return cls.__sheets_service
 
     @classmethod
@@ -194,7 +195,8 @@ class GoogleStorage(Storage):
             cls.__drive_service = build(
                 cls.DRIVE_SERVICE_ID,
                 cls.DRIVE_SERVICE_VERSION,
-                credentials=cls.__get_credentials())
+                credentials=cls.__get_credentials(),
+                cache_discovery=False)
         return cls.__drive_service
 
     @classmethod
