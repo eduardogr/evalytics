@@ -46,30 +46,39 @@ class GoogleSetup(Setup):
 
 
 @dataclass
-class Team:
+class Eval180:
 
-    def __init__(self, name: str,
-                 manager: str = None,
-                 manager_one_level_up: str = None):
-        self.__name = name
-        self.__manager = manager
-        self.__manager_one_level_up = manager_one_level_up
+    def __init__(self, self_eval: str, manager_eval: str):
+        self.self_eval = self_eval
+        self.manager_eval = manager_eval
+    
+    def to_json(self):
+        return {
+            'self_eval': self.self_eval,
+            'manager_eval': self.manager_eval
+        }
 
 
 @dataclass
 class Employee:
 
-    def __init__(self, name: str, mail: str, position: str = None,
-                 team: Team = None):
+    def __init__(self, mail: str, manager: str, eval_180: Eval180):
         assert '@' in mail
-        self.__name = name
-        self.__mail = mail
-        self.__team = team
-        self.__position = position
+        self.mail = mail
+        self.manager = manager
+        self.eval_180 = eval_180
 
     @property
     def uid(self) -> str:
-        return self.__mail.split('@')[0]
+        return self.mail.split('@')[0]
+
+    def to_json(self):
+        return {
+            'mail': self.mail,
+            'uid': self.uid,
+            'manager': self.manager,
+            'eval': self.eval_180.to_json()
+        }
 
 
 @dataclass

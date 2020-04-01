@@ -23,15 +23,14 @@ class StartUseCase:
         self.__repository = repository
         self.__comms_provider = comms_provider
 
-    def start(self):
+    def execute(self):
         employees = self.__repository.get_employee_list()
-        EmployeeAdapter.build_org_chart(employees)
 
-        # TODO: get reviewer -> reviewees list.
-        # Called InitialEvals
-        reviews = employees
-        for employee in reviews:
-            self.__comms_provider.send(employee.mail, {})
+        reviews = []
+        for employee in employees:
+            reviews.append(employee)
+
+        return reviews
 
 
 class GetEvaluationStatusUseCase:

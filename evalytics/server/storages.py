@@ -2,7 +2,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from .auth import GoogleAuth
-from .models import Employee, Team, GoogleSetup, GoogleFile
+from .models import GoogleSetup, GoogleFile
+from .models import Employee, Eval180
 
 
 class Storage:
@@ -32,7 +33,7 @@ class GoogleStorage(Storage):
     STORAGE_FOLDER_NAME = 'evalytics'
 
     ORG_CHART_NAME = 'orgchart'
-    ORG_CHART_RANGE = 'A1:F10'
+    ORG_CHART_RANGE = 'A2:F10'
 
     DRIVE_SERVICE_ID = 'drive'
     DRIVE_SERVICE_VERSION = 'v3'
@@ -106,18 +107,20 @@ class GoogleStorage(Storage):
         ).execute()
         values = result.get('values', [])
 
+        # Creating models
         employees = []
         if values:
             for row in values:
-                team = Team(
-                    name=row[3],
-                    manager=row[5],
-                    manager_one_level_up=row[6])
+                employee_mail = row[0]
+                manager = row[1]
+                self_eval = row[3]
+                manager_eval = row[4]
+
+                eval_180 = Eval180(self_eval=self_eval, manager_eval=manager_eval)
                 employee = Employee(
-                    name=row[0],
-                    mail=row[1],
-                    position=row[4],
-                    team=team)
+                    mail=employee_mail,
+                    manager=manager,
+                    eval_180=eval_180)
                 employees.append(employee)
 
         return employees
