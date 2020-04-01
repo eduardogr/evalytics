@@ -5,7 +5,6 @@ python:
 # command to install dependencies
 install:
   - pip install -r evalytics/requirements/dev.txt
-  - pip install codecov
 # command to run tests
 script:
   - pytest
