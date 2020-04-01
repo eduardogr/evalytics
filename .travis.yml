@@ -7,8 +7,7 @@ install:
   - pip install -r evalytics/requirements/dev.txt
 # command to run tests
 script:
-  - pytest --cov=./
+  - pytest --cov=./ --cov-report=html
 
 after_success:
   - codecov
-  - bash <(curl -s https://codecov.io/bash)
