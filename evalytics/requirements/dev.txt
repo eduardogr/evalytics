@@ -8,6 +8,7 @@ autopep8==1.5
 
 # test runner
 pytest==5.4.1
+pytest-cov==2.8.1
 
 # upgraded Python shell for dev env
 ipython==7.13.0
