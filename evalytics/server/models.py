@@ -1,8 +1,48 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable
+from json import JSONEncoder
 
 from anytree import NodeMixin, PreOrderIter, RenderTree
+
+
+@dataclass
+class Setup:
+    pass
+
+
+@dataclass
+class GoogleFile:
+
+    def __init__(self, name, id):
+        self.name = name
+        self.id = id
+
+    def to_json(self):
+        return {
+            'name': self.name,
+            'id': self.id
+        }
+
+
+@dataclass
+class GoogleSetup(Setup):
+
+    def __init__(self, folder: GoogleFile, orgchart_file: GoogleFile):
+        self.folder = folder
+        self.orgchart_file = orgchart_file
+
+    def to_json(self):
+        return {
+            'folder': {
+                'name': self.folder.name,
+                'id': self.folder.id,
+            },
+            'orgchart_file': {
+                'name': self.orgchart_file.name,
+                'id': self.orgchart_file.id,
+            }
+        }
 
 
 @dataclass
@@ -14,6 +54,7 @@ class Team:
         self.__name = name
         self.__manager = manager
         self.__manager_one_level_up = manager_one_level_up
+
 
 @dataclass
 class Employee:
@@ -29,6 +70,7 @@ class Employee:
     @property
     def uid(self) -> str:
         return self.__mail.split('@')[0]
+
 
 @dataclass
 class EmployeeNode(NodeMixin):

@@ -1,6 +1,20 @@
 from .adapters import EmployeeAdapter
 
-class StartEvaluationProcess:
+
+class SetupUseCase:
+
+    __repository = None
+    __comms_provider = None
+
+    def __init__(self, repository, comms_provider):
+        self.__repository = repository
+        self.__comms_provider = comms_provider
+
+    def execute(self):
+        setup = self.__repository.setup()
+        return setup
+
+class StartUseCase:
 
     __repository = None
     __comms_provider = None
@@ -20,7 +34,7 @@ class StartEvaluationProcess:
             self.__comms_provider.send(employee.mail, {})
 
 
-class GetEvaluationProcessStatus:
+class GetEvaluationStatusUseCase:
 
     __repository = None
 

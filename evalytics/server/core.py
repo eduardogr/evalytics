@@ -1,9 +1,12 @@
-
+from .models import Setup
 
 class DataRepository:
 
     def __init__(self, storage):
         self.__storage = storage
+
+    def setup(self) -> Setup:
+        return self.__storage.setup()
 
     def get_employee_list(self):
         return self.__storage.get_employee_list()

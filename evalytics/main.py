@@ -7,7 +7,8 @@ from tornado.options import define, options
 
 from evalytics.server.di import Module
 from evalytics.server.handlers import \
-    WelcomeHandler, StartHandler, StatusHandler, FinishHandler
+    WelcomeHandler, SetupHandler, \
+    StartHandler, StatusHandler, FinishHandler
 
 define(
     "port", default=8080,
@@ -20,6 +21,7 @@ class EvalyticsServer(tornado.web.Application):
     def __init__(self, environment):
         handlers = [
             WelcomeHandler,
+            SetupHandler,
             StartHandler,
             StatusHandler,
             FinishHandler,

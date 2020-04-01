@@ -1,6 +1,6 @@
-
 import tornado.web
 
+from .usecases import SetupUseCase
 
 class WelcomeHandler(tornado.web.RequestHandler):
     path = r"/"
@@ -22,6 +22,29 @@ class WelcomeHandler(tornado.web.RequestHandler):
                 '/finish',
             ]
         })
+
+class SetupHandler(tornado.web.RequestHandler):
+    path = r"/setup"
+
+    __repository = None
+    __comms_provider = None
+
+    def initialize(self, repository, comms_provider):
+        self.__repository = repository
+        self.__comms_provider = comms_provider
+
+    async def post(self):
+        try:
+            setup_usecase = SetupUseCase(self.__repository, self.__comms_provider)
+            setup = setup_usecase.execute()
+            self.finish({
+                'setup': setup.to_json()
+            })
+        except:
+            self.finish({
+                'success': False,
+                'message': 'Something went wrong setting up evalytics',
+            })
 
 class StartHandler(tornado.web.RequestHandler):
     path = r"/start"
