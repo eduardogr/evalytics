@@ -46,4 +46,4 @@ You have new assignments:
     - eval self: %s
     - eval_manager: %s""" % (
         employee.eval_180.self_eval, 
-        employee.eval_180.self_eval)
+        employee.eval_180.eval_manager)

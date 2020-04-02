@@ -6,9 +6,9 @@ EXPOSE 8080
 RUN mkdir -p /usr/evalytics
 WORKDIR /usr/evalytics
 
-COPY evalytics .
+COPY . .
 
-RUN pip install --no-cache-dir -r requirements/${BUILD_ENV}.txt
+RUN pip install --no-cache-dir -r evalytics/requirements/${BUILD_ENV}.txt
 
 ENV PYTHONPATH /usr
 ENTRYPOINT ["python3", "main.py"]
