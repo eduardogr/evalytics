@@ -39,5 +39,8 @@ To generate this we have the make target google-auth, so, you just have to tun
   - `make google-auth`
 
 
-:warning: Credentials files files to authenticate yourself are included in our (.gitignore)[.gitignore] :angel:
+
+:warning: Credentials files files to authenticate yourself are included in our (.gitignore)[.gitignore] 
+
+:angel: You don't have to worry about that :smiley:
 
