@@ -29,7 +29,7 @@ class StartUseCase:
         reviews = []
         for employee in employees:
             self.__comms_provider.send(
-                destiny=employee,
+                employee=employee,
                 data=EmployeeAdapter.build_eval_message(employee))
             reviews.append(employee)
 

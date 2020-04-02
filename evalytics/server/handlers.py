@@ -65,8 +65,9 @@ class StartHandler(tornado.web.RequestHandler):
         self.finish({
             'success': True,
             'eval': {
-                'reviewers': [e.to_json() for e in reviewers]
-            }
+                'id': id
+            },
+            'reviewers': [e.to_json() for e in reviewers]
         })
   
 class StatusHandler(tornado.web.RequestHandler):
