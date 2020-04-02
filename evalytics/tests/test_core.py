@@ -1,12 +1,12 @@
 from unittest import TestCase
 
-from evalytics.server.storages import Storage
-from evalytics.server.communications_channels import CommunicationChannel
+from evalytics.server.storages import GoogleStorage
+from evalytics.server.communications_channels import GmailChannel
 from evalytics.server.core import DataRepository, CommunicationsProvider
 from evalytics.server.models import Employee
 
 
-class MockStorage(Storage):
+class MockGoogleStorage(GoogleStorage):
 
     def setup(self):
         return
@@ -14,17 +14,17 @@ class MockStorage(Storage):
     def get_employee_list(self):
         return
 
-class MockedDataRepository(DataRepository, MockStorage):
+class MockedDataRepository(DataRepository, MockGoogleStorage):
     'Inject a mock into the DataRepository dependency'
 
-class MockCommunicationChannel(CommunicationChannel):
+class MockGmailChannel(GmailChannel):
 
     def send(self, employee: Employee, data):
         return
 
 class MockedCommunicationsProvider(
         CommunicationsProvider,
-        MockCommunicationChannel):
+        MockGmailChannel):
     'Inject a mock into the CommunicationsProvider dependency'
 
 class TestCore(TestCase):
