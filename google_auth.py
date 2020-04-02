@@ -3,7 +3,7 @@ from evalytics.server.auth import GoogleAuth
 
 def main():
     GoogleAuth.authenticate()
-    print('\nFile "token.pickle" should be generated')
+    print('File "token.pickle" should be generated')
 
 if __name__ == '__main__':
     main()

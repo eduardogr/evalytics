@@ -5,39 +5,43 @@ from email.mime.multipart import MIMEMultipart
 from googleapiclient.discovery import build
 
 from .auth import GoogleAuth
+from .models import Employee
 
 
 class CommunicationsChannel:
 
     @classmethod
-    def send(cls, destiny, data):
+    def send(cls, employee: Employee, data):
         raise NotImplementedError
 
 
 class StdOutputChannel(CommunicationsChannel):
 
     @classmethod
-    def send(cls, destiny, data):
-        print('To: %s\nData: %s' %(destiny, data))
+    def send(cls, employee: Employee, data):
+        print('To: %s\nData: %s' %(employee.uid, data))
 
 
 class GmailChannel(CommunicationsChannel):
 
     GMAIL_SERVICE_ID = 'gmail'
     GMAIL_SERVICE_VERSION = 'v1'
+    MY_GOOGLE_USER_ID = 'me'
+
+    EVAL_SUBJECT = 'Evalytics: You can now complete your evaluation assignments!'
 
     __credentials = None
     __gmail_service = None
 
-
     @classmethod
-    def send(cls, destiny, data):
+    def send(cls, employee: Employee, data):
+        destiny = employee.mail
         cls.__send_message(
-            user_id='me',
+            user_id=cls.MY_GOOGLE_USER_ID,
             message=cls.__create_message(
-                sender='me',
+                sender=cls.MY_GOOGLE_USER_ID,
                 to=destiny,
-                subject='Eval 180 Test',
+                subject=cls.EVAL_SUBJECT,
                 message_text=data
             )
         )
@@ -60,7 +64,10 @@ class GmailChannel(CommunicationsChannel):
         message['from'] = sender
         message['subject'] = subject
         message.attach(MIMEText(message_text, 'plain'))
-        return {'raw': base64.urlsafe_b64encode(message.as_string().encode()).decode()}
+        return {
+            'raw': base64.urlsafe_b64encode(
+                message.as_string().encode()).decode()
+        }
 
     @classmethod
     def __send_message(cls, user_id, message):

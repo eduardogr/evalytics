@@ -17,6 +17,7 @@ class WelcomeHandler(tornado.web.RequestHandler):
             'message': 'Welcome this is the evalytics server!',
             'entrypoints': [
                 '/',
+                '/setup',
                 '/start',
                 '/status',
                 '/finish',

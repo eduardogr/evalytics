@@ -28,11 +28,9 @@ class StartUseCase:
 
         reviews = []
         for employee in employees:
-            data = """
-eval self: %s
-eval_manager: %s
-            """ % (employee.eval_180.self_eval, employee.eval_180.self_eval)
-            self.__comms_provider.send(destiny=employee.mail, data=data)
+            self.__comms_provider.send(
+                destiny=employee,
+                data=EmployeeAdapter.build_eval_message(employee))
             reviews.append(employee)
 
         return reviews
