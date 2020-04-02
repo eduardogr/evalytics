@@ -2,15 +2,15 @@
 
 This project proposal is to manage the evaluation cycle for a company.
 
-## Setting up the project
+## Setting up the project 
 
-### Create a Google project
+### Create a Google project :zap:
 
 Just access to [Google APIs](https://console.developers.google.com/).
 
   - Or [click here](https://console.developers.google.com/projectcreate) for a quick project creation.
 
-### Create credentials for your project
+### Create credentials for your project :key:
 
 Once you have created your project, you can create your project's credentials.
 
@@ -20,19 +20,19 @@ To manage project's credentials you have the section [api/credentials](https://c
   - Once the consent is already created and you have a name for you google app you can create your credentials:
       - Go to *+ Create Credentials* and select *OAuth ID client*
       - Or access to (api/credentials/oauthclient)[https://console.developers.google.com/apis/credentials/oauthclient]
-      - The OAuth client type is *other* and choose the name you prefer.
+      - The OAuth client type is *other* and choose the name you prefer :smiley:
 
 So, you have already created your credentials! 
 
-### Enable APIs
+### Enable APIs :books:
 
 You can see where you have to access for each google api in the doc [google apis usage](doc/google-apis/usage.md)
 
-### Generating your token.pickle
+### Generating your token.pickle :unlock:
 
 To authenticate us we have to send a token.pickle to Google APIs, this token.pickle is generated using the file credentials.json.
 
 To generate this we have the make target google-auth, so, you just have to tun
 
-`make google-auth`
+  - `make google-auth`
 
