@@ -24,6 +24,8 @@ To manage project's credentials you have the section [api/credentials](https://c
 
 So, you have already created your credentials! 
 
+You just have to placed the `credentials.json` file in the root of this repository.
+
 ### :books: Enable APIs
 
 You can see where you have to access for each google api in the doc [google apis usage](doc/google-apis/usage.md)
@@ -35,4 +37,7 @@ To authenticate us we have to send a token.pickle to Google APIs, this token.pic
 To generate this we have the make target google-auth, so, you just have to tun
 
   - `make google-auth`
+
+
+:warning: Credentials files files to authenticate yourself are included in our (.gitignore)[.gitignore] :angel:
 
