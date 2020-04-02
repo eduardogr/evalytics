@@ -1,47 +1,28 @@
 from .adapters import EmployeeAdapter
+from .core import DataRepository, CommunicationsProvider
 
-
-class SetupUseCase:
-
-    __repository = None
-    __comms_provider = None
-
-    def __init__(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
+class SetupUseCase(DataRepository):
 
     def execute(self):
-        setup = self.__repository.setup()
+        setup = super().setup_storage()
         return setup
 
-class StartUseCase:
-
-    __repository = None
-    __comms_provider = None
-
-    def __init__(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
+class StartUseCase(DataRepository, CommunicationsProvider, EmployeeAdapter):
 
     def execute(self):
-        employees = self.__repository.get_employee_list()
+        employees = super().get_employees()
 
         reviews = []
         for employee in employees:
-            self.__comms_provider.send(
+            super().send_communication(
                 employee=employee,
-                data=EmployeeAdapter.build_eval_message(employee))
+                data=super().build_eval_message(employee))
             reviews.append(employee)
 
         return reviews
 
 
 class GetEvaluationStatusUseCase:
-
-    __repository = None
-
-    def __init__(self, repository):
-        self.__repository = repository
 
     def get(self):
         pass

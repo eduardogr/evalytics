@@ -5,13 +5,6 @@ from .usecases import SetupUseCase, StartUseCase
 class WelcomeHandler(tornado.web.RequestHandler):
     path = r"/"
 
-    __repository = None
-    __comms_provider = None
-
-    def initialize(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
-
     async def get(self):
         self.finish({
             'message': 'Welcome this is the evalytics server!',
@@ -27,16 +20,9 @@ class WelcomeHandler(tornado.web.RequestHandler):
 class SetupHandler(tornado.web.RequestHandler):
     path = r"/setup"
 
-    __repository = None
-    __comms_provider = None
-
-    def initialize(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
-
     async def post(self):
         try:
-            setup_usecase = SetupUseCase(self.__repository, self.__comms_provider)
+            setup_usecase = SetupUseCase()
             setup = setup_usecase.execute()
             self.finish({
                 'setup': setup.to_json()
@@ -50,16 +36,9 @@ class SetupHandler(tornado.web.RequestHandler):
 class StartHandler(tornado.web.RequestHandler):
     path = r"/start"
 
-    __repository = None
-    __comms_provider = None
-
-    def initialize(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
-
     async def post(self):
         id = str(self.get_argument('id', -1, True))
-        start_usecase = StartUseCase(self.__repository, self.__comms_provider)
+        start_usecase = StartUseCase()
         reviewers = start_usecase.execute()
 
         self.finish({
@@ -73,13 +52,6 @@ class StartHandler(tornado.web.RequestHandler):
 class StatusHandler(tornado.web.RequestHandler):
     path = r"/status"
 
-    __repository = None
-    __comms_provider = None
-
-    def initialize(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
-
     async def get(self):
         id = str(self.get_argument('id', -1, True))
 
@@ -90,13 +62,6 @@ class StatusHandler(tornado.web.RequestHandler):
 
 class FinishHandler(tornado.web.RequestHandler):
     path = r"/finish"
-
-    __repository = None
-    __comms_provider = None
-
-    def initialize(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
 
     async def post(self):
         id = str(self.get_argument('id', -1, True))

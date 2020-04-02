@@ -36,3 +36,11 @@ def employee_nodes():
         'minion_2': minion_2,
         'minion_3': minion_3
     }
+
+def employees():
+    return {
+        'best_employee': Employee(
+            mail='myemail@email.com',
+            manager='mymanager',
+            eval_180=None)
+    }

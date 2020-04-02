@@ -1,28 +1,49 @@
 from unittest import TestCase
-from unittest.mock import MagicMock
 
-from evalytics.server.storages import Storage
-from evalytics.server.communications_channels import CommunicationsChannel
+from evalytics.server.storages import GoogleStorage
+from evalytics.server.communications_channels import GmailChannel
 from evalytics.server.core import DataRepository, CommunicationsProvider
+from evalytics.server.models import Employee
+
+
+class MockGoogleStorage(GoogleStorage):
+
+    def setup(self):
+        return
+
+    def get_employee_list(self):
+        return
+
+class MockedDataRepository(DataRepository, MockGoogleStorage):
+    'Inject a mock into the DataRepository dependency'
+
+class MockGmailChannel(GmailChannel):
+
+    def send(self, employee: Employee, data):
+        return
+
+class MockedCommunicationsProvider(
+        CommunicationsProvider,
+        MockGmailChannel):
+    'Inject a mock into the CommunicationsProvider dependency'
 
 class TestCore(TestCase):
 
-    def test_data_repository(self):
-        mock_storage = MagicMock(autospec=Storage)
+    def setUp(self):
+        self.data_repository = MockedDataRepository()
+        self.comms_provider = MockedCommunicationsProvider()
 
-        data_repository = DataRepository(storage=mock_storage)
-        data_repository.get_employee_list()
+    def test_data_repository_setup_simple_call(self):
+        self.data_repository.setup_storage()
 
-        mock_storage.get_employee_list.assert_called_once()
+    def test_data_repository_get_employees_simple_call(self):
+        self.data_repository.get_employees()
 
-    def test_communications_provider(self):
-        destiny = "email"
+    def test_communications_provider_send_communication_simple_call(self):
+        employee = Employee(
+            mail='myemail@email.com',
+            manager='mymanager',
+            eval_180=None)
         data = "this is ypur email"
-        mock_comm_channel = MagicMock(autospec=CommunicationsChannel)
 
-        comms_provider = CommunicationsProvider(
-            communication_channel=mock_comm_channel)
-        comms_provider.send(destiny, data)
-
-        mock_comm_channel.send.assert_called_once()
-    
+        self.comms_provider.send_communication(employee, data)
