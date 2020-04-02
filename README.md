@@ -19,7 +19,7 @@ To manage project's credentials you have the section [api/credentials](https://c
   - First, you have to create the [consent](https://console.developers.google.com/apis/credentials/consent) for your project
   - Once the consent is already created and you have a name for you google app you can create your credentials:
       - Go to *+ Create Credentials* and select *OAuth ID client*
-      - Or access to (api/credentials/oauthclient)[https://console.developers.google.com/apis/credentials/oauthclient]
+      - Or access to [api/credentials/oauthclient](https://console.developers.google.com/apis/credentials/oauthclient)
       - The OAuth client type is *other* and choose the name you prefer :smiley:
 
 So, you have already created your credentials! 
