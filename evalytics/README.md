@@ -1,13 +1,35 @@
 # evalytics
 
-## Architecture fo classes
 
-handlers -> use cases -> repository (data access) -> domain (models and adapters) -> storage (outter layer. frameworks, external apis, ..., etc)
-                      -> communications providers (notifications layer)
+## Usage
 
-- main.py pass instances as arguments to handlers.
-- handlers receive ALL instances but pass necessary instances to use cases that will NOT know which concrete implementations are using.
-    - storages are an outter layer that keep our data repository abtracted of which concrete storage implementation we are using.
-    - communications_channels are an outter layer that keep our communications provider abstracted of which channel implementation we are using.
-- use cases logic just perform business logic in an agnostic way without knowledge about implementations, just interfaces and models of the domain.
-- entities are supposed to not have dependencies and just represent domain of the application.
+Preparing local environment to run evalytics:
+
+```
+# Could be env=dev for development
+make build env=prod 
+make google-auth
+make run-server
+# If you are developing, for reload code within docker container
+make run  stop-server && make start-server 
+```
+
+Requesting evalytics:
+
+```
+curl -s localhost:8080/start -d 'id=201' | json_pp
+{
+   "message" : "You have started an evaluation process",
+   "id" : "201",
+   "success" : true
+}
+```
+
+## Examples
+
+```
+examples/
+        eval-process/: Example documents for each eval subprocess
+        google-api-client/: Example clients for each google api that we use
+```
+
