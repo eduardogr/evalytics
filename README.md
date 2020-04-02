@@ -4,13 +4,13 @@ This project proposal is to manage the evaluation cycle for a company.
 
 ## Setting up the project 
 
-### Create a Google project :zap:
+### :zap: Create a Google project
 
 Just access to [Google APIs](https://console.developers.google.com/).
 
   - Or [click here](https://console.developers.google.com/projectcreate) for a quick project creation.
 
-### Create credentials for your project :key:
+### :key: Create credentials for your project
 
 Once you have created your project, you can create your project's credentials.
 
@@ -24,11 +24,11 @@ To manage project's credentials you have the section [api/credentials](https://c
 
 So, you have already created your credentials! 
 
-### Enable APIs :books:
+### :books: Enable APIs
 
 You can see where you have to access for each google api in the doc [google apis usage](doc/google-apis/usage.md)
 
-### Generating your token.pickle :unlock:
+### :unlock: Generating your token.pickle
 
 To authenticate us we have to send a token.pickle to Google APIs, this token.pickle is generated using the file credentials.json.
 
