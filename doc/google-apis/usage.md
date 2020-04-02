@@ -5,7 +5,7 @@
 We should have a credentials.json file to use for the authentication process.
 You could obtain your credentials using [google developer console](https://console.developers.google.com/apis/)
 
-With same credentials we could specify all scopes we need, e.g:
+Using the same credentials you could specify all scopes you need, e.g:
 
     - 'https://www.googleapis.com/auth/drive'
     - 'https://www.googleapis.com/auth/script.projects'
