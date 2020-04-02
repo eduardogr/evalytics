@@ -4,23 +4,28 @@
 from evalytics.server.models import EmployeeNode, Employee
 
 jane = EmployeeNode(employee=Employee(
-        name='Jane of hte jungle',
-        mail='jane@tuenti.com'))
+        mail='jane@tuenti.com',
+        manager='',
+        eval_180=None))
 jhon = EmployeeNode(employee=Employee(
-        name='John Ahtelstan',
-        mail='jhon@tuenti.com'
+        mail='jhon@tuenti.com',
+        manager='jane',
+        eval_180=None
     ), supervisor=jane)
 minion_1 = EmployeeNode(employee=Employee(
-        name='Minion the First',
-        mail='minion1@tuenti.com'
+        mail='minion1@tuenti.com',
+        manager='jhon',
+        eval_180=None
     ), supervisor=jhon)
 minion_2 = EmployeeNode(employee=Employee(
-        name='Minion the Second',
-        mail='minion2@tuenti.com'
+        mail='minion2@tuenti.com',
+        manager='jhon',
+        eval_180=None
     ), supervisor=jhon)
 minion_3 = EmployeeNode(employee=Employee(
-        name='Minion The Third',
-        mail='minion3@tuenti.com'
+        mail='minion3@tuenti.com',
+        manager='jhon',
+        eval_180=None
     ), supervisor=jhon)
 
 def employee_nodes():
