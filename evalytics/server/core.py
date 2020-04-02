@@ -1,20 +1,16 @@
 from .models import Setup, Employee
+from .storages import GoogleStorage
+from .communications_channels import GmailChannel
 
-class DataRepository:
+class DataRepository(GoogleStorage):
 
-    def __init__(self, storage):
-        self.__storage = storage
+    def setup_storage(self) -> Setup:
+        return super().setup()
 
-    def setup(self) -> Setup:
-        return self.__storage.setup()
+    def get_employees(self):
+        return super().get_employee_list()
 
-    def get_employee_list(self):
-        return self.__storage.get_employee_list()
+class CommunicationsProvider(GmailChannel):
 
-class CommunicationsProvider:
-
-    def __init__(self, communication_channel):
-        self.__communication_channel = communication_channel
-
-    def send(self, employee: Employee, data):
-        return self.__communication_channel.send(employee, data)
+    def send_communication(self, employee: Employee, data):
+        return super().send(employee, data)

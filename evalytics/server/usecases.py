@@ -1,34 +1,24 @@
 from .adapters import EmployeeAdapter
-
+from .core import DataRepository, CommunicationsProvider
 
 class SetupUseCase:
 
-    __repository = None
-    __comms_provider = None
-
-    def __init__(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
-
     def execute(self):
-        setup = self.__repository.setup()
+        repository = DataRepository()
+        setup = repository.setup()
         return setup
 
 class StartUseCase:
 
-    __repository = None
-    __comms_provider = None
-
-    def __init__(self, repository, comms_provider):
-        self.__repository = repository
-        self.__comms_provider = comms_provider
-
     def execute(self):
-        employees = self.__repository.get_employee_list()
+        repository = DataRepository()
+        comms_provider = CommunicationsProvider()
+
+        employees = repository.get_employees()
 
         reviews = []
         for employee in employees:
-            self.__comms_provider.send(
+            comms_provider.send_communication(
                 employee=employee,
                 data=EmployeeAdapter.build_eval_message(employee))
             reviews.append(employee)
@@ -37,11 +27,6 @@ class StartUseCase:
 
 
 class GetEvaluationStatusUseCase:
-
-    __repository = None
-
-    def __init__(self, repository):
-        self.__repository = repository
 
     def get(self):
         pass
