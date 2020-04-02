@@ -18,7 +18,7 @@ build:
 		--tag $(CONTAINER_NAME):$(IMAGE_VERSION)
 
 google-auth:
-	python3 auth.py
+	python3 google_auth.py
 
 run-server:
 	docker run -d \

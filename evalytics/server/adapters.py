@@ -37,3 +37,13 @@ class EmployeeAdapter:
     def build_org_chart(cls, employees):
         # TODO: build OrgChart from list of employees
         pass
+
+    @classmethod
+    def build_eval_message(cls, employee):
+        return """
+You have new assignments:
+
+    - eval self: %s
+    - eval_manager: %s""" % (
+        employee.eval_180.self_eval, 
+        employee.eval_180.self_eval)
