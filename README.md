@@ -22,9 +22,9 @@ To manage project's credentials you have the section [api/credentials](https://c
       - Or access to [api/credentials/oauthclient](https://console.developers.google.com/apis/credentials/oauthclient)
       - The OAuth client type is *other* and choose the name you prefer :smiley:
 
-So, you have already created your credentials! 
+:fireworks: You have already created your credentials!
 
-You just have to placed the `credentials.json` file in the root of this repository.
+:heavy_exclamation_mark: Just place them in a `credentials.json` file in the root of this repository.
 
 ### :books: Enable APIs
 
