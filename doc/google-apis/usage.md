@@ -27,7 +27,7 @@ Note that we are using python for this but you could try other programming langu
 
 ## google sheets
 
-- [quickstar])https://developers.google.com/sheets/api/quickstart/python)
+- [quickstar](https://developers.google.com/sheets/api/quickstart/python)
 - [enabling api](https://console.developers.google.com/apis/api/sheets.googleapis.com/overview)
 - [api reference](https://developers.google.com/sheets/api/reference/rest)
 - [permissions level doc](https://developers.google.com/sheets/api/guides/authorizing)
@@ -35,7 +35,7 @@ Note that we are using python for this but you could try other programming langu
 
 ## gmail
 
-- [quickstart](https://developers.google.com/gmail/api/quickstart/python
+- [quickstart](https://developers.google.com/gmail/api/quickstart/python)
 - [enabling api](https://console.developers.google.com/apis/api/gmail.googleapis.com/overview)
 - [api reference](https://developers.google.com/gmail/api/v1/reference/)
 - [permissions level doc](https://developers.google.com/gmail/api/auth/scopes)
