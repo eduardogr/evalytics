@@ -43,7 +43,7 @@ class GmailChannel(CommunicationChannel, GoogleAPI):
         message['to'] = to
         message['from'] = sender
         message['subject'] = subject
-        message.attach(MIMEText(message_text, 'plain'))
+        message.attach(MIMEText(message_text, 'html'))
         return {
             'raw': base64.urlsafe_b64encode(
                 message.as_string().encode()).decode()

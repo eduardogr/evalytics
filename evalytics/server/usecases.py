@@ -15,10 +15,10 @@ class StartUseCase(DataRepository, CommunicationsProvider, EmployeeAdapter):
 
         reviewers = []
         employees = super().add_evals(employees, forms)
-        for employee in employees:
-        #    super().send_communication(
-        #        employee=employee,
-        #        data=super().build_eval_message(employee))
+        for _, employee in employees.items():
+            super().send_communication(
+                employee=employee,
+                data=super().build_eval_message(employee))
             reviewers.append(employee)
 
         return employees

@@ -80,7 +80,7 @@ class GoogleStorage(Storage, GoogleAPI, Config):
         forms = {}
         if values:
             for row in values:
-                form_area = row[0]
+                form_area = row[0].strip()
                 self_eval = row[1]
                 peer_manager_eval = row[2]
                 manager_peer_eval = row[3]

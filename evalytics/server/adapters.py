@@ -75,10 +75,27 @@ class EmployeeAdapter:
         return employees
 
     def build_eval_message(self, employee: Employee):
-        return """
-You have new assignments:
+        list_of_evals = ''
+        for e_eval in employee.evals:
+            if e_eval.kind is EvalKind.SELF:
+                reviewee = 'Your self review'
+            else:
+                reviewee = e_eval.reviewee
 
-    - eval self: %s
-    - eval_manager: %s""" % (
-        employee.eval_180.self_eval, 
-        employee.eval_180.eval_manager)
+            list_of_evals = list_of_evals + \
+                    '<a href="' + e_eval.form \
+                    + '" style="color:#0ADA7C;display:block;margin:5px 0" target="_blank"><b>'\
+                    + reviewee + '</b></a>'
+
+        return '''<div><table style="font-family:HelveticaNeue-Light,Helvetica Neue Light,Helvetica Neue,Helvetica,Arial,Lucida Grande,sans-serif;text-align:center;color:#F6F6F6;font-size:15px" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#EEEEEE">
+	<tbody><tr height="60" bgcolor="#000000;"><td style="text-align:left"></td></tr><tr><td>
+			<table style="max-width:615px;padding:30px 7% 30px;border-bottom:2px solid #EEEEEE;border-radius:5px;text-align:center" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#fff" align="center">
+			<tbody><tr><td><h1 style="font-size:25px;font-weight:normal;letter-spacing:-1px;color:#757575;padding:0 0 10px">
+            Hi {0},</h1>
+            <b></b><p style="color:#757575;line-height:23px;padding:30px auto">
+                You have new assignments !	
+            </b></p></td>
+            </tr>
+            <tr><td style="padding:10px 0">
+                    {1}
+            </td></tr></tbody></tr></table></div>'''.format(employee.uid, list_of_evals)
