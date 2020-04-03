@@ -14,9 +14,9 @@ class StartUseCase(DataRepository, CommunicationsProvider, EmployeeAdapter):
 
         reviews = []
         for employee in employees:
-            super().send_communication(
-                employee=employee,
-                data=super().build_eval_message(employee))
+        #    super().send_communication(
+        #        employee=employee,
+        #        data=super().build_eval_message(employee))
             reviews.append(employee)
 
         return reviews

@@ -28,20 +28,14 @@ class GoogleFile:
 @dataclass
 class GoogleSetup(Setup):
 
-    def __init__(self, folder: GoogleFile, orgchart_file: GoogleFile):
+    def __init__(self, folder: GoogleFile, files: [GoogleFile]):
         self.folder = folder
-        self.orgchart_file = orgchart_file
+        self.files = files
 
     def to_json(self):
         return {
-            'folder': {
-                'name': self.folder.name,
-                'id': self.folder.id,
-            },
-            'orgchart_file': {
-                'name': self.orgchart_file.name,
-                'id': self.orgchart_file.id,
-            }
+            'folder': self.folder.to_json(),
+            'files': [f.to_json() for f in self.files]
         }
 
 
