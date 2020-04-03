@@ -6,8 +6,9 @@ from google.auth.transport.requests import Request
 class GoogleAuth:
     # If modifying these scopes, delete the file token.pickle.
     SCOPES = [
-        # drive: Per-file access to files created or opened by the app.
-        'https://www.googleapis.com/auth/drive.file',
+        # drive: Full, permissive scope to access all of a user's files,
+        #        excluding the Application Data folder.
+        'https://www.googleapis.com/auth/drive',
         # gmail: Send messages only. No read or modify privileges on mailbox.
         'https://www.googleapis.com/auth/gmail.send',
         # docs: Per-file access to files that the app created or opened.

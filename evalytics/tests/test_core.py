@@ -11,7 +11,7 @@ class MockGoogleStorage(GoogleStorage):
     def setup(self):
         return
 
-    def get_employee_list(self):
+    def get_employee_map(self):
         return
 
 class MockedDataRepository(DataRepository, MockGoogleStorage):
@@ -43,7 +43,7 @@ class TestCore(TestCase):
         employee = Employee(
             mail='myemail@email.com',
             manager='mymanager',
-            eval_180=None)
+            area=None)
         data = "this is ypur email"
 
         self.comms_provider.send_communication(employee, data)

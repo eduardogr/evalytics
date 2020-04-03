@@ -22,7 +22,7 @@ Note that we are using python for this but you could try other programming langu
 - [enabling api](https://console.developers.google.com/apis/api/drive.googleapis.com/overview)
 - [api reference](https://developers.google.com/drive/api/v3/reference/)
 - [permissions level doc](https://developers.google.com/drive/api/v3/about-auth)
-    - permissions used: "https://www.googleapis.com/auth/drive.file"
+    - permissions used: "https://www.googleapis.com/auth/drive"
 
 
 ## google sheets

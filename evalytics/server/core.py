@@ -8,7 +8,10 @@ class DataRepository(GoogleStorage):
         return super().setup()
 
     def get_employees(self):
-        return super().get_employee_list()
+        return super().get_employee_map()
+
+    def get_forms(self):
+        return super().get_forms_map()
 
 class CommunicationsProvider(GmailChannel):
 

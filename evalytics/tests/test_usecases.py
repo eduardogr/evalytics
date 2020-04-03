@@ -5,7 +5,7 @@ from evalytics.server.adapters import EmployeeAdapter
 from evalytics.server.usecases import SetupUseCase, StartUseCase
 from evalytics.server.models import GoogleSetup, GoogleFile, Employee
 
-from evalytics.tests.fixtures.employees import employees
+from evalytics.tests.fixtures.employees import employees_collection
 
 MOCK_FILENAME = 'mockfolder'
 MOCK_FILEID = 'mockid'
@@ -15,12 +15,15 @@ class MockDataRepository(DataRepository):
     def setup_storage(self):
         folder = GoogleFile(name=MOCK_FILENAME, id=MOCK_FILEID)
         orgchart = GoogleFile(name=MOCK_FILENAME, id=MOCK_FILEID)
-        return GoogleSetup(folder=folder, orgchart_file=orgchart)
+        return GoogleSetup(folder=folder, files=[orgchart])
 
     def get_employees(self):
-        return [
-            employees().get('best_employee')
-        ]
+        return {
+            'best_employee': employees_collection().get('best_employee')
+        }
+    
+    def get_forms(self):
+        return {}
 
 class MockCommunicationsProvider(CommunicationsProvider):
 
@@ -28,6 +31,9 @@ class MockCommunicationsProvider(CommunicationsProvider):
         return
 
 class MockEmployeeAdapter(EmployeeAdapter):
+
+    def add_evals(self, employees, forms):
+        return employees
 
     def build_eval_message(self, employee: Employee):
         return ""
@@ -57,4 +63,4 @@ class TestUseCases(TestCase):
 
         reviewers = start_usecase.execute()
 
-        self.assertEqual(employees().get('best_employee'), reviewers[0])
+        self.assertEqual(employees_collection().get('best_employee'), reviewers['best_employee'])

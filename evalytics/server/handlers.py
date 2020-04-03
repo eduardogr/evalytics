@@ -39,14 +39,14 @@ class StartHandler(tornado.web.RequestHandler):
     async def post(self):
         id = str(self.get_argument('id', -1, True))
         start_usecase = StartUseCase()
-        reviewers = start_usecase.execute()
+        employees = start_usecase.execute()
 
         self.finish({
             'success': True,
             'eval': {
                 'id': id
             },
-            'reviewers': [e.to_json() for e in reviewers]
+            'employees': [e.to_json() for uid, e in employees.items()]
         })
   
 class StatusHandler(tornado.web.RequestHandler):
@@ -57,7 +57,7 @@ class StatusHandler(tornado.web.RequestHandler):
 
         self.finish({
             'id': id,
-            'message': 'With this entrypoint you querying the process of the evaluation process!',
+            'eval': {},
         })
 
 class FinishHandler(tornado.web.RequestHandler):
@@ -68,5 +68,5 @@ class FinishHandler(tornado.web.RequestHandler):
 
         self.finish({
             'id': id,
-            'message': 'With this entrypoint you are finishing the process and processing results!',
+            'eval': {},
         })
