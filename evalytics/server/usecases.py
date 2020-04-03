@@ -11,15 +11,17 @@ class StartUseCase(DataRepository, CommunicationsProvider, EmployeeAdapter):
 
     def execute(self):
         employees = super().get_employees()
+        forms = super().get_forms()
 
-        reviews = []
+        reviewers = []
+        employees = super().add_evals(employees, forms)
         for employee in employees:
         #    super().send_communication(
         #        employee=employee,
         #        data=super().build_eval_message(employee))
-            reviews.append(employee)
+            reviewers.append(employee)
 
-        return reviews
+        return employees
 
 
 class GetEvaluationStatusUseCase:

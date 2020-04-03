@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable
-from json import JSONEncoder
 
 from anytree import NodeMixin, PreOrderIter, RenderTree
 
@@ -39,40 +38,73 @@ class GoogleSetup(Setup):
         }
 
 
-@dataclass
-class Eval180:
+class EvalKind(Enum):
+    SELF = 1
+    PEER = 2
+    PEER_MANAGER = 3
+    MANAGER_PEER = 4
 
-    def __init__(self, self_eval: str, manager_eval: str):
-        self.self_eval = self_eval
-        self.manager_eval = manager_eval
-    
+@dataclass
+class Eval:
+
+    def __init__(self, reviewee: str, kind: EvalKind, form: str):
+        self.reviewee = reviewee
+        self.kind = kind
+        self.form = form
+
     def to_json(self):
         return {
-            'self_eval': self.self_eval,
-            'manager_eval': self.manager_eval
+            'reviewee': self.reviewee,
+            'kind': self.kind.name,
+            'form': self.form
         }
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.reviewee == other.reviewee and \
+                self.kind == other.kind and \
+                self.form == other.form
+
+        return False
+
+    def __hash__(self):
+        return hash("%s-%s-%s " %(self.reviewee, self.kind, self.form))
 
 
 @dataclass
 class Employee:
 
-    def __init__(self, mail: str, manager: str, eval_180: Eval180):
+    def __init__(self, mail: str, manager: str, area: str, evals={}):
         assert '@' in mail
         self.mail = mail
         self.manager = manager
-        self.eval_180 = eval_180
+        self.area = area
+        self.evals = evals
 
     @property
     def uid(self) -> str:
         return self.mail.split('@')[0]
+
+    @property
+    def has_manager(self) -> bool:
+        return bool(self.manager)
 
     def to_json(self):
         return {
             'mail': self.mail,
             'uid': self.uid,
             'manager': self.manager,
-            'eval': self.eval_180.to_json()
+            'area': self.area,
+            'evals': [e.to_json()  for e in self.evals]
         }
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.uid == other.uid
+        return False
+
+    def __hash__(self):
+        return hash(self.uid)
 
 
 @dataclass
@@ -136,7 +168,7 @@ class EvalType(Enum):
 
 
 @dataclass
-class Eval:
+class EvalNode:
     """
     examples;
 
@@ -150,7 +182,7 @@ class Eval:
         self.type_ = type_
 
     def __str__(self):
-        return '<Eval: {0.from_.name} --> {0.to_.name} ({0.type_.name})>'\
+        return '<EvalNode: {0.from_.name} --> {0.to_.name} ({0.type_.name})>'\
             .format(self)
 
     @classmethod
@@ -172,7 +204,7 @@ class Eval:
 
 
 @dataclass
-class EvalSuite:
+class EvalNodeSuite:
 
     def __init__(self):
         self.evals = []

@@ -6,26 +6,26 @@ from evalytics.server.models import EmployeeNode, Employee
 jane = EmployeeNode(employee=Employee(
         mail='jane@tuenti.com',
         manager='',
-        eval_180=None))
+        area=None))
 jhon = EmployeeNode(employee=Employee(
         mail='jhon@tuenti.com',
         manager='jane',
-        eval_180=None
+        area=None
     ), supervisor=jane)
 minion_1 = EmployeeNode(employee=Employee(
         mail='minion1@tuenti.com',
         manager='jhon',
-        eval_180=None
+        area=None
     ), supervisor=jhon)
 minion_2 = EmployeeNode(employee=Employee(
         mail='minion2@tuenti.com',
         manager='jhon',
-        eval_180=None
+        area=None
     ), supervisor=jhon)
 minion_3 = EmployeeNode(employee=Employee(
         mail='minion3@tuenti.com',
         manager='jhon',
-        eval_180=None
+        area=None
     ), supervisor=jhon)
 
 def employee_nodes():
@@ -37,10 +37,10 @@ def employee_nodes():
         'minion_3': minion_3
     }
 
-def employees():
+def employees_collection():
     return {
         'best_employee': Employee(
             mail='myemail@email.com',
             manager='mymanager',
-            eval_180=None)
+            area=None)
     }

@@ -39,14 +39,14 @@ class StartHandler(tornado.web.RequestHandler):
     async def post(self):
         id = str(self.get_argument('id', -1, True))
         start_usecase = StartUseCase()
-        reviewers = start_usecase.execute()
+        employees = start_usecase.execute()
 
         self.finish({
             'success': True,
             'eval': {
                 'id': id
             },
-            'reviewers': [e.to_json() for e in reviewers]
+            'reviewers': [e.to_json() for uid, e in employees.items()]
         })
   
 class StatusHandler(tornado.web.RequestHandler):
