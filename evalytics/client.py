@@ -4,76 +4,56 @@ import json
 import sys
 import requests
 
+from evalytics.server.mappers import Mapper
 from evalytics.server.models import Reviewer, Employee, Eval, EvalKind
 
-BASE_URL = "http://localhost:8080"
 
-# extracting data in json format
+class EvalyticsClient(Mapper):
 
-def get_reviewers():
-    response = requests.get(
-        url="%s/reviewers" % BASE_URL,
-        params={})
+    BASE_URL = "http://localhost:8080"
 
-    data = response.json()
-    return data['reviewers']
+    def get_reviewers(self):
+        response = requests.get(
+            url="%s/reviewers" % self.BASE_URL,
+            params={})
 
-def print_reviewers():
-    for reviewer in get_reviewers():
-        print(json.dumps(reviewer, indent=2))
-
-def send_eval():
-    response_reviewers = get_reviewers()
-    reviewers = []
-    for r in response_reviewers:
-        r_employee = r['employee']
-        employee = Employee(
-            mail=r_employee['mail'],
-            manager=r_employee['manager'],
-            area=r_employee['area'],
-        )
-        evals = []
-        for e in r['evals']:
-            evals.append(
-                Eval(
-                    reviewee=e['reviewee'],
-                    kind=EvalKind.from_str(e['kind']),
-                    form=e['form'],
-                ))
-        reviewer = Reviewer(
-            employee=employee,
-            evals=evals
-        )
-        reviewers.append(reviewer)
-
-    json_reviewers = json.dumps(
-        reviewers,
-        default=lambda o: o.__dict__ if type(o) is not EvalKind else str(o.name))
-
-    response = requests.post(
-        url="%s/sendmail" % BASE_URL,
-        data={
-            "reviewers": json_reviewers
-        }
-    )
-
-    if response.ok:
         data = response.json()
-        for r in data['reviewers']:
-            print(json.dumps(r, indent=2))
-    else:
-        print(response)
-        print(response.__dict__)
+        return data['reviewers']
 
+    def print_reviewers(self):
+        for reviewer in self.get_reviewers():
+            print(json.dumps(reviewer, indent=2))
 
-def command_factory(command):
-    if command == 'print_reviewers':
-        print_reviewers()
-    elif command == 'sendmail':
-        send_eval()
-    else:
-        print("Command '%s' not expected" % command)
+    def send_eval(self):
+        response_reviewers = self.get_reviewers()
+        reviewers = super().json_to_reviewer(response_reviewers)
+        reviewers = [reviewer for r_uid, reviewer in reviewers.items()]
 
+        json_reviewers = super().reviewer_to_json(reviewers)
+
+        response = requests.post(
+            url="%s/sendmail" % self.BASE_URL,
+            data={
+                "reviewers": json_reviewers
+            }
+        )
+
+        if response.ok:
+            data = response.json()
+            for r in data['reviewers']:
+                print(json.dumps(r, indent=2))
+        else:
+            print(response)
+            print(response.__dict__)
+
+class CommandFactory(EvalyticsClient):
+    def execute(self, command):
+        if command == 'print_reviewers':
+            super().print_reviewers()
+        elif command == 'sendmail':
+            super().send_eval()
+        else:
+            print("Command '%s' not expected" % command)
 
 if __name__ == "__main__":
-    command_factory(sys.argv[1])
+    CommandFactory().execute(sys.argv[1])

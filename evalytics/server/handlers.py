@@ -1,9 +1,9 @@
+import json
 import tornado.web
 
-import json
+from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
+from .mappers import Mapper
 
-from .usecases import SetupUseCase, GetReviewersUseCase, SendEmailUseCase
-from .models import Reviewer, Employee, EvalKind, Eval
 
 class SetupHandler(tornado.web.RequestHandler):
     path = r"/setup"
@@ -33,37 +33,14 @@ class ReviewersHandler(tornado.web.RequestHandler):
             'reviewers': [r.to_json() for uid, r in reviewers.items()]
         })
 
-class SendMailHandler(tornado.web.RequestHandler):
+class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
     path = r"/sendmail"
 
     async def post(self):
-        arg_reviewers = json.loads(self.get_argument('reviewers', [], strip=False))
+        reviewer_arg = self.get_argument('reviewers', "[]", strip=False)
+        reviewers = super().json_to_reviewer(json.loads(reviewer_arg))
 
-        reviewers = {}
-        for reviewer in arg_reviewers:
-            employee = reviewer['employee']
-            evals = []
-            for e in reviewer['evals']:
-                evals.append(Eval(
-                        reviewee=e['reviewee'],
-                        kind=EvalKind.from_str(e['kind']),
-                        form=e['form'],
-                    )
-                )
-            employee = Employee(
-                    mail=employee['mail'],
-                    manager=employee['manager'],
-                    area=employee['area']
-                )
-            reviewers.update({
-                employee.uid: Reviewer(
-                    employee=employee,
-                    evals=evals)
-            })
-        
-        send_email = SendEmailUseCase()
-        send_email.execute(reviewers)
-
+        reviewers = super().send_mail(reviewers)
         self.finish({
             'reviewers': [r.to_json() for uid, r in reviewers.items()],
         })
@@ -72,7 +49,7 @@ class EvalsHandler(tornado.web.RequestHandler):
     path = r"/evals"
 
     async def get(self):
-        id = str(self.get_argument('id', -1, True))
+        id = str(self.get_argument('id', None, True))
 
         self.finish({
             'id': id,

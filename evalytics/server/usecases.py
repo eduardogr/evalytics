@@ -14,10 +14,9 @@ class GetReviewersUseCase(DataRepository, EmployeeAdapter):
             super().get_employees(),
             super().get_forms())
 
+class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
 
-class SendEmailUseCase(CommunicationsProvider, EmployeeAdapter):
-
-    def execute(self, revieweers):
+    def send_mail(self, revieweers):
         for _, reviewer in revieweers.items():
             super().send_communication(
                 employee=reviewer,

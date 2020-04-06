@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from evalytics.server.core import DataRepository, CommunicationsProvider
 from evalytics.server.adapters import EmployeeAdapter
-from evalytics.server.usecases import SetupUseCase, GetReviewersUseCase, SendEmailUseCase
+from evalytics.server.usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
 from evalytics.server.models import GoogleSetup, GoogleFile, Employee, Reviewer
 
 from evalytics.tests.fixtures.employees import employees_collection
@@ -47,8 +47,8 @@ class MockedGetReviewersUseCase(
         MockEmployeeAdapter):
     'Inject a mock into the GetReviewersUseCase dependency'
 
-class MockedSendEmailUseCase(
-        SendEmailUseCase,
+class MockedSendMailUseCase(
+        SendMailUseCase,
         MockCommunicationsProvider,
         MockEmployeeAdapter):
     'Inject a mock into the SendEmailUseCase dependency'
@@ -77,8 +77,8 @@ class TestUseCases(TestCase):
             'best_employee': employees_collection().get('best_employee')
         }
 
-        send_email = MockedSendEmailUseCase()
-        send_email.execute(reviewers)
+        send_mail = MockedSendMailUseCase()
+        send_mail.send_mail(reviewers)
 
         self.assertEqual(
             employees_collection().get('best_employee'),
