@@ -1,5 +1,5 @@
 from __future__ import print_function
-from evalytics.server.auth import GoogleAuth
+from evalytics.server.google_api import GoogleAuth
 
 def main():
     GoogleAuth.authenticate()

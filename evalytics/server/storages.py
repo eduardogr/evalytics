@@ -1,4 +1,4 @@
-from evalytics.server.api import GoogleAPI
+from evalytics.server.google_api import GoogleAPI
 from evalytics.server.config import Config
 from evalytics.server.models import GoogleSetup, GoogleFile
 from evalytics.server.models import Employee, EvalKind

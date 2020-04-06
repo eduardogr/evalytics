@@ -2,7 +2,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import base64
 
-from .api import GoogleAPI
+from .google_api import GoogleAPI
 from .models import Reviewer
 
 
