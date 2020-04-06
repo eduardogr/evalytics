@@ -40,9 +40,10 @@ class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
         reviewer_arg = self.get_argument('reviewers', "[]", strip=False)
         reviewers = super().json_to_reviewer(json.loads(reviewer_arg))
 
-        reviewers = super().send_mail(reviewers)
+        evals_sent, evals_not_sent = super().send_mail(reviewers)
         self.finish({
-            'reviewers': [r.to_json() for uid, r in reviewers.items()],
+            'evals_sent': evals_sent,
+            'evals_not_sent': evals_not_sent
         })
 
 class EvalsHandler(tornado.web.RequestHandler):

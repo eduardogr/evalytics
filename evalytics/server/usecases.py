@@ -17,9 +17,15 @@ class GetReviewersUseCase(DataRepository, EmployeeAdapter):
 class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
 
     def send_mail(self, revieweers):
+        evals_sent = []
+        evals_not_sent = []
         for _, reviewer in revieweers.items():
-            super().send_communication(
-                employee=reviewer,
-                data=super().build_eval_message(reviewer))
+            try:
+                super().send_communication(
+                    employee=reviewer,
+                    data=super().build_eval_message(reviewer))
+                evals_sent.append(reviewer.uid)
+            except:
+                evals_not_sent.append(reviewer.uid)
 
-        return revieweers
+        return evals_sent, evals_not_sent

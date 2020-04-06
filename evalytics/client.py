@@ -40,8 +40,8 @@ class EvalyticsClient(Mapper):
 
         if response.ok:
             data = response.json()
-            for r in data['reviewers']:
-                print(json.dumps(r, indent=2))
+            print("Evals sent: %s" % data['evals_sent'])
+            print("Evals NOT sent: %s" % data['evals_not_sent'])
         else:
             print(response)
             print(response.__dict__)
