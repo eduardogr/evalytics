@@ -2,7 +2,7 @@ import tornado.web
 
 import json
 
-from .usecases import SetupUseCase, GetReviewersUseCase
+from .usecases import SetupUseCase, GetReviewersUseCase, SendEmailUseCase
 from .models import Reviewer, Employee, EvalKind, Eval
 
 class SetupHandler(tornado.web.RequestHandler):
@@ -60,6 +60,9 @@ class SendMailHandler(tornado.web.RequestHandler):
                     employee=employee,
                     evals=evals)
             })
+        
+        send_email = SendEmailUseCase()
+        send_email.execute(reviewers)
 
         self.finish({
             'reviewers': [r.to_json() for uid, r in reviewers.items()],

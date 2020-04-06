@@ -128,6 +128,10 @@ class Reviewer:
     def uid(self) -> str:
         return self.employee.uid
 
+    @property
+    def mail(self) -> str:
+        return self.employee.mail
+
     def __str__(self):
         return "%s" % self.to_json()
 

@@ -3,20 +3,20 @@ from email.mime.multipart import MIMEMultipart
 import base64
 
 from .api import GoogleAPI
-from .models import Employee
+from .models import Reviewer
 
 
 class CommunicationChannel:
 
-    def send(self, employee: Employee, data):
+    def send(self, employee: Reviewer, data):
         raise NotImplementedError
 
 class GmailChannel(CommunicationChannel, GoogleAPI):
 
     EVAL_SUBJECT = 'Evalytics: You can now complete your evaluation assignments!'
 
-    def send(self, employee: Employee, data):
-        destiny = employee.mail
+    def send(self, reviewer: Reviewer, data):
+        destiny = reviewer.mail
         super().send_message(
             user_id=GoogleAPI.AUTHENTICATED_USER,
             message=self.__create_message(
