@@ -1,4 +1,4 @@
-from .models import EvalKind, Eval, Employee
+from .models import EvalKind, Eval, Employee, Reviewer
 from .models import EvalNode, EvalNodeSuite, OrgChart
 
 
@@ -45,9 +45,10 @@ class EmployeeAdapter:
 
         return managers
 
-    def add_evals(self, employees, forms):
+    def build_reviewers(self, employees, forms):
         employees_by_manager = self.get_employees_by_manager(employees)
 
+        reviewers = {}
         for uid, employee in employees.items():
             evals = []
             employee_forms = forms[employee.area]
@@ -70,13 +71,17 @@ class EmployeeAdapter:
                         kind=EvalKind.MANAGER_PEER,
                         form=employee_forms[EvalKind.MANAGER_PEER]))
 
-            employee.evals = evals
+            reviewer = Reviewer(
+                employee=employee,
+                evals=evals
+            )
+            reviewers.update({reviewer.uid: reviewer})
 
-        return employees
+        return reviewers
 
-    def build_eval_message(self, employee: Employee):
+    def build_eval_message(self, reviewer: Reviewer):
         list_of_evals = ''
-        for e_eval in employee.evals:
+        for e_eval in reviewer.evals:
             if e_eval.kind is EvalKind.SELF:
                 reviewee = 'Your self review'
             else:
@@ -98,4 +103,4 @@ class EmployeeAdapter:
             </tr>
             <tr><td style="padding:10px 0">
                     {1}
-            </td></tr></tbody></tr></table></div>'''.format(employee.uid, list_of_evals)
+            </td></tr></tbody></tr></table></div>'''.format(reviewer.uid, list_of_evals)

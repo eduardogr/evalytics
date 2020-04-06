@@ -1,21 +1,6 @@
 import tornado.web
 
-from .usecases import SetupUseCase, StartUseCase
-
-class WelcomeHandler(tornado.web.RequestHandler):
-    path = r"/"
-
-    async def get(self):
-        self.finish({
-            'message': 'Welcome this is the evalytics server!',
-            'entrypoints': [
-                '/',
-                '/setup',
-                '/start',
-                '/status',
-                '/finish',
-            ]
-        })
+from .usecases import SetupUseCase, GetReviewersUseCase
 
 class SetupHandler(tornado.web.RequestHandler):
     path = r"/setup"
@@ -33,37 +18,33 @@ class SetupHandler(tornado.web.RequestHandler):
                 'message': 'Something went wrong setting up evalytics',
             })
 
-class StartHandler(tornado.web.RequestHandler):
-    path = r"/start"
+class ReviewersHandler(tornado.web.RequestHandler):
+    path = r"/reviewers"
 
-    async def post(self):
-        id = str(self.get_argument('id', -1, True))
-        start_usecase = StartUseCase()
-        employees = start_usecase.execute()
+    async def get(self):
+        get_reviewers = GetReviewersUseCase()
+        reviewers = get_reviewers.execute()
 
         self.finish({
             'success': True,
-            'eval': {
-                'id': id
-            },
-            'employees': [e.to_json() for uid, e in employees.items()]
+            'reviewers': [r.to_json() for uid, r in reviewers.items()]
         })
-  
-class StatusHandler(tornado.web.RequestHandler):
-    path = r"/status"
 
-    async def get(self):
-        id = str(self.get_argument('id', -1, True))
+class SendMailHandler(tornado.web.RequestHandler):
+    path = r"/sendmail"
+
+    async def post(self):
+        revieweers = self.get_argument('revieweers', [], True)
 
         self.finish({
             'id': id,
-            'eval': {},
+            'revieweers': revieweers,
         })
 
-class FinishHandler(tornado.web.RequestHandler):
-    path = r"/finish"
+class EvalsHandler(tornado.web.RequestHandler):
+    path = r"/evals"
 
-    async def post(self):
+    async def get(self):
         id = str(self.get_argument('id', -1, True))
 
         self.finish({

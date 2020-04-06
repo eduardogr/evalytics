@@ -74,12 +74,11 @@ class Eval:
 @dataclass
 class Employee:
 
-    def __init__(self, mail: str, manager: str, area: str, evals={}):
+    def __init__(self, mail: str, manager: str, area: str):
         assert '@' in mail
         self.mail = mail
         self.manager = manager
         self.area = area
-        self.evals = evals
 
     @property
     def uid(self) -> str:
@@ -95,7 +94,6 @@ class Employee:
             'uid': self.uid,
             'manager': self.manager,
             'area': self.area,
-            'evals': [e.to_json()  for e in self.evals]
         }
 
     def __eq__(self, other):
@@ -106,6 +104,22 @@ class Employee:
     def __hash__(self):
         return hash(self.uid)
 
+@dataclass
+class Reviewer:
+
+    def __init__(self, employee: Employee, evals={}):
+        self.employee = employee
+        self.evals = evals
+
+    @property
+    def uid(self) -> str:
+        return self.employee.uid
+
+    def to_json(self):
+        return {
+            'employee': self.employee.to_json(),
+            'evals': [e.to_json() for e in self.evals]
+        }
 
 @dataclass
 class EmployeeNode(NodeMixin):

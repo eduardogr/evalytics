@@ -6,8 +6,9 @@ import tornado.web
 from tornado.options import define, options
 
 from evalytics.server.handlers import \
-    WelcomeHandler, SetupHandler, \
-    StartHandler, StatusHandler, FinishHandler
+    SetupHandler, \
+    ReviewersHandler, SendMailHandler, \
+    EvalsHandler
 
 define(
     "port", default=8080,
@@ -16,11 +17,10 @@ define(
 class EvalyticsServer(tornado.web.Application):
     def __init__(self):
         handlers = [
-            WelcomeHandler,
             SetupHandler,
-            StartHandler,
-            StatusHandler,
-            FinishHandler,
+            ReviewersHandler,
+            SendMailHandler,
+            EvalsHandler,
         ]
 
         paths_by_handler = [(h.path, h) for h in handlers]

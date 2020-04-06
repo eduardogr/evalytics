@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from evalytics.server.core import DataRepository, CommunicationsProvider
 from evalytics.server.adapters import EmployeeAdapter
-from evalytics.server.usecases import SetupUseCase, StartUseCase
-from evalytics.server.models import GoogleSetup, GoogleFile, Employee
+from evalytics.server.usecases import SetupUseCase, GetReviewersUseCase, SendEmailUseCase
+from evalytics.server.models import GoogleSetup, GoogleFile, Employee, Reviewer
 
 from evalytics.tests.fixtures.employees import employees_collection
 
@@ -21,7 +21,7 @@ class MockDataRepository(DataRepository):
         return {
             'best_employee': employees_collection().get('best_employee')
         }
-    
+
     def get_forms(self):
         return {}
 
@@ -32,21 +32,26 @@ class MockCommunicationsProvider(CommunicationsProvider):
 
 class MockEmployeeAdapter(EmployeeAdapter):
 
-    def add_evals(self, employees, forms):
+    def build_reviewers(self, employees, forms):
         return employees
 
-    def build_eval_message(self, employee: Employee):
+    def build_eval_message(self, reviewer: Reviewer):
         return ""
 
 class MockedSetupUseCase(SetupUseCase, MockDataRepository):
     'Inject a mock into the SetupUseCase dependency'
 
-class MockedStartUseCase(
-        StartUseCase, 
-        MockDataRepository, 
+class MockedGetReviewersUseCase(
+        GetReviewersUseCase,
+        MockDataRepository,
+        MockEmployeeAdapter):
+    'Inject a mock into the GetReviewersUseCase dependency'
+
+class MockedSendEmailUseCase(
+        SendEmailUseCase,
         MockCommunicationsProvider,
         MockEmployeeAdapter):
-    'Inject a mock into the StartUseCase dependency'
+    'Inject a mock into the SendEmailUseCase dependency'
 
 class TestUseCases(TestCase):
 
@@ -58,9 +63,23 @@ class TestUseCases(TestCase):
         self.assertEqual(MOCK_FILEID, setup.folder.id)
         self.assertEqual(MOCK_FILENAME, setup.folder.name)
 
-    def test_start_usecase(self):
-        start_usecase = MockedStartUseCase()
+    def test_get_reviewers_usecase(self):
+        get_reviewers = MockedGetReviewersUseCase()
 
-        reviewers = start_usecase.execute()
+        reviewers = get_reviewers.execute()
 
-        self.assertEqual(employees_collection().get('best_employee'), reviewers['best_employee'])
+        self.assertEqual(
+            employees_collection().get('best_employee'),
+            reviewers['best_employee'])
+
+    def test_send_email_usecase(self):
+        reviewers = {
+            'best_employee': employees_collection().get('best_employee')
+        }
+
+        send_email = MockedSendEmailUseCase()
+        send_email.execute(reviewers)
+
+        self.assertEqual(
+            employees_collection().get('best_employee'),
+            reviewers['best_employee'])
