@@ -5,8 +5,6 @@ import sys
 import requests
 
 from evalytics.server.mappers import Mapper
-from evalytics.server.models import Reviewer, Employee, Eval, EvalKind
-
 
 class EvalyticsClient(Mapper):
 
