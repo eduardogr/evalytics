@@ -11,4 +11,4 @@ COPY . .
 RUN pip install --no-cache-dir -r evalytics/requirements/${BUILD_ENV}.txt
 
 ENV PYTHONPATH /usr
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT ["python3", "api.py"]

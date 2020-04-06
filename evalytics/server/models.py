@@ -44,6 +44,19 @@ class EvalKind(Enum):
     PEER_MANAGER = 3
     MANAGER_PEER = 4
 
+    @staticmethod
+    def from_str(label):
+        if label == 'SELF':
+            return EvalKind.SELF
+        elif label == 'PEER':
+            return EvalKind.PEER
+        elif label == 'PEER_MANAGER':
+            return EvalKind.PEER_MANAGER
+        elif label == 'MANAGER_PEER':
+            return EvalKind.MANAGER_PEER
+        else:
+            raise NotImplementedError(label)
+
 @dataclass
 class Eval:
 
@@ -54,9 +67,9 @@ class Eval:
 
     def to_json(self):
         return {
-            'reviewee': self.reviewee,
-            'kind': self.kind.name,
-            'form': self.form
+            "reviewee": self.reviewee,
+            "kind": self.kind.name,
+            "form": self.form
         }
 
     def __eq__(self, other):
@@ -90,10 +103,10 @@ class Employee:
 
     def to_json(self):
         return {
-            'mail': self.mail,
-            'uid': self.uid,
-            'manager': self.manager,
-            'area': self.area,
+            "mail": self.mail,
+            "uid": self.uid,
+            "manager": self.manager,
+            "area": self.area,
         }
 
     def __eq__(self, other):
@@ -115,10 +128,13 @@ class Reviewer:
     def uid(self) -> str:
         return self.employee.uid
 
+    def __str__(self):
+        return "%s" % self.to_json()
+
     def to_json(self):
         return {
-            'employee': self.employee.to_json(),
-            'evals': [e.to_json() for e in self.evals]
+            "employee": self.employee.to_json(),
+            "evals": [e.to_json() for e in self.evals]
         }
 
 @dataclass
