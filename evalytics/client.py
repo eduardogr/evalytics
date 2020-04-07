@@ -7,18 +7,44 @@ import requests
 
 from evalytics.server.mappers import Mapper
 
-class EvalyticsClient(Mapper):
+class EvalyticsRequests:
 
     BASE_URL = "http://localhost:8080"
 
-    EVALS_NOT_SENT_CSV = 'evals_not_sent.csv'
-
-    def get_reviewers(self):
+    def reviewers(self):
         response = requests.get(
             url="%s/reviewers" % self.BASE_URL,
             params={})
 
-        success, response = self.get_data_response(response)
+        return self.get_data_response(response)
+
+    def sendmail(self, json_reviewers):
+        response = requests.post(
+            url="%s/sendmail" % self.BASE_URL,
+            data={
+                "reviewers": json_reviewers
+            }
+        )
+
+        return self.get_data_response(response)
+
+    def get_data_response(self, response):
+        if response.ok:
+            data = response.json()
+            data_response = data['response']
+            if data['success']:
+                return True, data_response
+            else:
+                return False, data_response
+        else:
+            return False, response
+
+class EvalyticsClient(EvalyticsRequests, Mapper):
+
+    EVALS_NOT_SENT_CSV = 'evals_not_sent.csv'
+
+    def get_reviewers(self):
+        success, response = super().reviewers()
         if success:
             return response['reviewers']
         else:
@@ -44,14 +70,7 @@ class EvalyticsClient(Mapper):
 
         json_reviewers = super().reviewer_to_json(reviewers)
 
-        response = requests.post(
-            url="%s/sendmail" % self.BASE_URL,
-            data={
-                "reviewers": json_reviewers
-            }
-        )
-
-        success, response = self.get_data_response(response)
+        success, response = super().sendmail(json_reviewers)
         if success:
             print("Evals sent: %s" % response['evals_sent'])
             print("Evals NOT sent: %s" % response['evals_not_sent'])
@@ -84,17 +103,6 @@ class EvalyticsClient(Mapper):
         print("Available commands: ")
         print("  - %s" % " ".join('get_reviewers'.split('_')))
         print("  - %s" % " ".join('send_evals'.split('_')))
-
-    def get_data_response(self, response):
-        if response.ok:
-            data = response.json()
-            data_response = data['response']
-            if data['success']:
-                return True, data_response
-            else:
-                return False, data_response
-        else:
-            return False, response
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):

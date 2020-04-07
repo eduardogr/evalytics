@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from evalytics.server.adapters import EmployeeAdapter
-from evalytics.server.models import Employee, EvalKind, Eval
+from evalytics.server.models import Employee, EvalKind, Eval, Reviewer
 
 class TestCore(TestCase):
 
@@ -105,3 +105,18 @@ class TestCore(TestCase):
             Eval(reviewee='sw5',
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
         ])
+
+    def test_employee_adapter_build_eval_message_correct(self):
+        employee = self.employees['cto']
+        reviewer = Reviewer(
+            employee=employee,
+            evals=[
+                Eval(reviewee=employee.uid, kind=EvalKind.SELF, form="coolform"),
+                Eval(reviewee='another', kind=EvalKind.MANAGER_PEER, form="coolformformanagers"),
+            ]
+        )
+
+        adapter = EmployeeAdapter()
+        eval_message = adapter.build_eval_message(reviewer)
+
+        self.assertIn(employee.uid, eval_message)
