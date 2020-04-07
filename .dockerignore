@@ -1,0 +1,56 @@
+.git
+.ipynb_checkpoints/*
+/notebooks/*
+/unused/*
+Dockerfile
+.DS_Store
+.gitignore
+*.md
+env.*
+/devops/*
+
+# To prevent storing dev/temporary container data
+*.csv
+/tmp/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__
+*.py[cod]
+*$py.class
+
+# Unit test / coverage reports
+htmlcov
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+.env
+.venv
+env/
+venv
+ENV
+env.bak
+venv.bak
+
+LICENSE
+Makefile
+credentials*.json
+.travis.yml
+.pylintrc
+.coveragerc
+.coverage
+examples
+doc
+
+# Specific of evalytics project
+
+google_auth.py
