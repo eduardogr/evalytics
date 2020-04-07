@@ -15,8 +15,14 @@ class EvalyticsClient(Mapper):
             url="%s/reviewers" % self.BASE_URL,
             params={})
 
-        data = response.json()
-        return data['reviewers']
+        success, response = self.get_data_response(response)
+        if success:
+            return response['reviewers']
+        else:
+            print("Something failed")
+            print(response)
+            print(response.__dict__)
+            return []
 
     def print_reviewers(self):
         for reviewer in self.get_reviewers():
@@ -36,13 +42,25 @@ class EvalyticsClient(Mapper):
             }
         )
 
-        if response.ok:
-            data = response.json()
-            print("Evals sent: %s" % data['evals_sent'])
-            print("Evals NOT sent: %s" % data['evals_not_sent'])
+        success, response = self.get_data_response(response)
+        if success:
+            print("Evals sent: %s" % response['evals_sent'])
+            print("Evals NOT sent: %s" % response['evals_not_sent'])
         else:
+            print("Something failed")
             print(response)
             print(response.__dict__)
+
+    def get_data_response(self, response):
+        if response.ok:
+            data = response.json()
+            data_response = data['response']
+            if data['success']:
+                return True, data_response
+            else:
+                return False, data_response
+        else:
+            return False, response
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):
@@ -52,6 +70,10 @@ class CommandFactory(EvalyticsClient):
             super().send_eval()
         else:
             print("Command '%s' not expected" % command)
+            print("Available commands: ")
+            print("  - print_reviewers")
+            print("  - sendmail")
 
 if __name__ == "__main__":
-    CommandFactory().execute(sys.argv[1])
+    command_arg = sys.argv[1] if len(sys.argv) > 1 else ""
+    CommandFactory().execute(command_arg)

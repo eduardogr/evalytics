@@ -16,14 +16,16 @@ class SetupHandler(tornado.web.RequestHandler):
             setup = setup_usecase.execute()
             self.finish({
                 'success': True,
-                'setup': setup.to_json()
+                'response': {
+                    'setup': setup.to_json()
+                }
             })
         except:
             error = sys.exc_info()[0]
             self.finish({
                 'success': False,
-                'error': { 
-                    'message': error,
+                'response': {
+                    'error': error,
                 }
             })
 
@@ -37,14 +39,16 @@ class ReviewersHandler(tornado.web.RequestHandler):
 
             self.finish({
                 'success': True,
-                'reviewers': [r.to_json() for uid, r in reviewers.items()]
+                'response': {
+                    'reviewers': [r.to_json() for uid, r in reviewers.items()]
+                }
             })
         except:
             error = sys.exc_info()[0]
             self.finish({
                 'success': False,
-                'error': { 
-                    'message': error,
+                'response': {
+                    'error': error,
                 }
             })
 
@@ -58,16 +62,18 @@ class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
 
             evals_sent, evals_not_sent = super().send_mail(reviewers)
             self.finish({
-                'sucess': True,
-                'evals_sent': evals_sent,
-                'evals_not_sent': evals_not_sent
+                'success': True,
+                'response': {
+                    'evals_sent': evals_sent,
+                    'evals_not_sent': evals_not_sent
+                }
             })
         except:
             error = sys.exc_info()[0]
             self.finish({
                 'success': False,
-                'error': { 
-                    'message': error,
+                'response': {
+                    'error': error,
                 }
             })
 
@@ -78,15 +84,17 @@ class EvalsHandler(tornado.web.RequestHandler):
         try:
             id = str(self.get_argument('id', None, True))
             self.finish({
-                'sucess': True,
-                'id': id,
-                'eval': {},
+                'success': True,
+                'response': {
+                    'id': id,
+                    'eval': {},
+                }
             })
         except:
             error = sys.exc_info()[0]
             self.finish({
                 'success': False,
-                'error': { 
-                    'message': error,
+                'response': {
+                    'error': error,
                 }
             })
