@@ -22,7 +22,7 @@ class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
         for _, reviewer in revieweers.items():
             try:
                 super().send_communication(
-                    employee=reviewer,
+                    reviewer=reviewer,
                     data=super().build_eval_message(reviewer))
                 evals_sent.append(reviewer.uid)
             except:

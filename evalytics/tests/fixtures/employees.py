@@ -39,8 +39,12 @@ def employee_nodes():
 
 def employees_collection():
     return {
-        'best_employee': Employee(
-            mail='myemail@email.com',
+        'em_email': Employee(
+            mail='em_email@email.com',
             manager='mymanager',
-            area=None)
+            area=None),
+        'manager_em': Employee(
+            mail='manager_em@email.com',
+            manager='cto',
+            area=None),
     }

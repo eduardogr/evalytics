@@ -1,4 +1,4 @@
-from .models import Setup, Employee
+from .models import Setup, Reviewer
 from .storages import GoogleStorage
 from .communications_channels import GmailChannel
 
@@ -15,5 +15,5 @@ class DataRepository(GoogleStorage):
 
 class CommunicationsProvider(GmailChannel):
 
-    def send_communication(self, employee: Employee, data):
-        return super().send(employee, data)
+    def send_communication(self, reviewer: Reviewer, data):
+        return super().send(reviewer, data)
