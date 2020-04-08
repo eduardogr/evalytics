@@ -5,6 +5,7 @@ import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
 from .mappers import Mapper
+from .exceptions import MissingDataException, NoFormsException
 
 
 class SetupHandler(tornado.web.RequestHandler):
@@ -20,12 +21,15 @@ class SetupHandler(tornado.web.RequestHandler):
                     'setup': setup.to_json()
                 }
             })
-        except:
-            error = sys.exc_info()[0]
+        except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
             self.finish({
                 'success': False,
                 'response': {
-                    'error': error,
+                    'error': message,
                 }
             })
 
@@ -43,12 +47,22 @@ class ReviewersHandler(tornado.web.RequestHandler):
                     'reviewers': [r.to_json() for uid, r in reviewers.items()]
                 }
             })
-        except:
-            error = sys.exc_info()[0]
+        except (MissingDataException, NoFormsException) as exception:
             self.finish({
                 'success': False,
                 'response': {
-                    'error': error,
+                    'error': exception.message,
+                }
+            })
+        except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
                 }
             })
 
@@ -68,12 +82,15 @@ class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
                     'evals_not_sent': evals_not_sent
                 }
             })
-        except:
-            error = sys.exc_info()[0]
+        except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
             self.finish({
                 'success': False,
                 'response': {
-                    'error': error,
+                    'error': message,
                 }
             })
 
@@ -90,11 +107,14 @@ class EvalsHandler(tornado.web.RequestHandler):
                     'eval': {},
                 }
             })
-        except:
-            error = sys.exc_info()[0]
+        except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
             self.finish({
                 'success': False,
                 'response': {
-                    'error': error,
+                    'error': message,
                 }
             })

@@ -2,7 +2,7 @@ from evalytics.server.google_api import GoogleAPI
 from evalytics.server.config import Config
 from evalytics.server.models import GoogleSetup, GoogleFile
 from evalytics.server.models import Employee, EvalKind
-
+from evalytics.server.exceptions import MissingDataException, NoFormsException
 
 class Storage:
 
@@ -12,6 +12,9 @@ class Storage:
     def get_employee_map(self):
         raise NotImplementedError
 
+    def get_forms_map(self):
+        raise NotImplementedError
+
 class GoogleStorage(Storage, GoogleAPI, Config):
 
     ORGCHART_RANGE = 'A2:C10'
@@ -19,8 +22,7 @@ class GoogleStorage(Storage, GoogleAPI, Config):
 
     def setup(self):
         folder_name = super().read_google_folder()
-        orgchart_filename = super().read_google_orgchart()
-        formmap_filename = super().read_google_form_map()
+        needed_spreadsheets = super().read_needed_spreadsheets()
 
         # Folder setup
         folder = super().get_folder(name=folder_name)
@@ -31,7 +33,7 @@ class GoogleStorage(Storage, GoogleAPI, Config):
 
         # Sheet setup
         files = []
-        for filename in [orgchart_filename, formmap_filename]:
+        for filename in needed_spreadsheets:
             spreadheet_id = super().get_file_id_from_folder(
                 folder_id=folder.get('id'),
                 filename=filename)
@@ -39,7 +41,8 @@ class GoogleStorage(Storage, GoogleAPI, Config):
             if spreadheet_id is None:
                 spreadheet_id = super().create_spreadhsheet(
                     folder=folder,
-                    folder_parent=folder_parent
+                    folder_parent=folder_parent,
+                    filename=filename
                 )
             files.append(GoogleFile(name=filename, id=spreadheet_id))
 
@@ -56,17 +59,19 @@ class GoogleStorage(Storage, GoogleAPI, Config):
 
         # Creating models
         employees = {}
-        if values:
-            for row in values:
-                employee_mail = row[0].strip()
-                manager = row[1].strip()
-                area = row[2].strip()
+        for row in values:
+            if len(row) < 3:
+                raise MissingDataException("Missing data in employees, row: %s" % (row))
 
-                employee = Employee(
-                    mail=employee_mail,
-                    manager=manager,
-                    area=area)
-                employees.update({employee.uid : employee})
+            employee_mail = row[0].strip()
+            manager = row[1].strip()
+            area = row[2].strip()
+
+            employee = Employee(
+                mail=employee_mail,
+                manager=manager,
+                area=area)
+            employees.update({employee.uid : employee})
 
         return employees
 
@@ -76,21 +81,26 @@ class GoogleStorage(Storage, GoogleAPI, Config):
             filename=super().read_google_form_map(),
             rows_range=self.FORM_MAP_RANGE)
 
+        if len(values) == 0:
+            raise NoFormsException("Missing forms in google")
+
         # Creating models
         forms = {}
-        if values:
-            for row in values:
-                form_area = row[0].strip()
-                self_eval = row[1]
-                peer_manager_eval = row[2]
-                manager_peer_eval = row[3]
+        for row in values:
+            if len(row) < 4:
+                raise MissingDataException("Missing data in forms, row: %s" % (row))
 
-                forms.update({
-                    form_area: {
-                        EvalKind.SELF: self_eval,
-                        EvalKind.PEER_MANAGER: peer_manager_eval,
-                        EvalKind.MANAGER_PEER: manager_peer_eval,
-                    }
-                })
+            form_area = row[0].strip()
+            self_eval = row[1]
+            peer_manager_eval = row[2]
+            manager_peer_eval = row[3]
+
+            forms.update({
+                form_area: {
+                    EvalKind.SELF: self_eval,
+                    EvalKind.PEER_MANAGER: peer_manager_eval,
+                    EvalKind.MANAGER_PEER: manager_peer_eval,
+                }
+            })            
 
         return forms

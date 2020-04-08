@@ -4,7 +4,7 @@ from evalytics.server.core import DataRepository, CommunicationsProvider
 from evalytics.server.adapters import EmployeeAdapter
 from evalytics.server.usecases import SetupUseCase
 from evalytics.server.usecases import GetReviewersUseCase, SendMailUseCase
-from evalytics.server.models import GoogleSetup, GoogleFile, Employee, Reviewer
+from evalytics.server.models import GoogleSetup, GoogleFile, Reviewer
 
 from evalytics.tests.fixtures.employees import employees_collection
 

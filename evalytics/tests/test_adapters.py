@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from evalytics.server.adapters import EmployeeAdapter
 from evalytics.server.models import Employee, EvalKind, Eval, Reviewer
+from evalytics.server.exceptions import MissingDataException
 
 class TestCore(TestCase):
 
@@ -32,6 +33,13 @@ class TestCore(TestCase):
         }
         self.forms = {
             self.AREA: {
+                EvalKind.SELF: self.SELF_FORM,
+                EvalKind.PEER_MANAGER: self.PEER_MANAGER_FORM,
+                EvalKind.MANAGER_PEER: self.MANAGER_PEER_FORM,
+            }
+        }
+        self.forms_with_other_area = {
+            'NO_AREA': {
                 EvalKind.SELF: self.SELF_FORM,
                 EvalKind.PEER_MANAGER: self.PEER_MANAGER_FORM,
                 EvalKind.MANAGER_PEER: self.MANAGER_PEER_FORM,
@@ -105,6 +113,20 @@ class TestCore(TestCase):
             Eval(reviewee='sw5',
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
         ])
+
+    def test_test_employee_adapter_build_reviewers_with_no_forms(self):
+        no_forms = {}
+        adapter = EmployeeAdapter()
+
+        with self.assertRaises(MissingDataException):
+            adapter.build_reviewers(self.employees, no_forms)
+
+    def test_test_employee_adapter_build_reviewers_with_other_area_forms(self):
+        form_with_other_area = self.forms_with_other_area
+        adapter = EmployeeAdapter()
+
+        with self.assertRaises(MissingDataException):
+            adapter.build_reviewers(self.employees, form_with_other_area)
 
     def test_employee_adapter_build_eval_message_correct(self):
         employee = self.employees['cto']

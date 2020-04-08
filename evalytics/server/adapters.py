@@ -1,6 +1,5 @@
-from .models import EvalKind, Eval, Employee, Reviewer
-from .models import EvalNode, EvalNodeSuite, OrgChart
-
+from .models import EvalKind, Eval, Reviewer
+from .exceptions import MissingDataException
 
 class EmployeeAdapter:
 
@@ -21,6 +20,10 @@ class EmployeeAdapter:
         reviewers = {}
         for uid, employee in employees.items():
             evals = []
+
+            if employee.area not in forms:
+                raise MissingDataException("Missing area '%s' in forms" % employee.area)
+
             employee_forms = forms[employee.area]
 
             if employee.has_manager:
