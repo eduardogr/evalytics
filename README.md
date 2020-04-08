@@ -40,7 +40,7 @@ To generate this we have the make target google-auth, so, you just have to tun
 
 
 
-:warning: Credentials files to authenticate yourself are included in our (.gitignore)[.gitignore] 
+:warning: Credentials files to authenticate yourself are included in our [.gitignore](.gitignore) 
 
 :angel: So, you don't have to worry about that :smiley:
 
