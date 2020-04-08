@@ -1,35 +1,5 @@
-from .models import EvalKind, Eval, Employee
+from .models import EvalKind, Eval, Employee, Reviewer
 from .models import EvalNode, EvalNodeSuite, OrgChart
-
-
-class OrgChartAdapter:
-
-    def create_initial_eval_suite(
-            self, org_chart: OrgChart, consider_peers=None) -> EvalNodeSuite:
-        """OrgChart => EvalNodeSuite
-
-        by default it will only consider a '180' eval
-        """
-        eval_suite = EvalNodeSuite()
-
-        for employee_node in org_chart:
-            eval_suite.add_eval(EvalNode.new_self_eval(employee_node))
-
-            supervisor = employee_node.parent
-            if supervisor:
-                eval_suite.add_eval(
-                    EvalNode.new_supervisor_eval(employee_node, supervisor))
-                if consider_peers:
-                    for peer in supervisor.minions:
-                        if peer is not employee_node:
-                            eval_suite.add_eval(
-                                EvalNode.new_peer_eval(employee_node, peer))
-
-            for minion in employee_node.minions:
-                eval_suite.add_eval(
-                    EvalNode.new_minion_eval(employee_node, minion))
-
-        return eval_suite
 
 
 class EmployeeAdapter:
@@ -45,9 +15,10 @@ class EmployeeAdapter:
 
         return managers
 
-    def add_evals(self, employees, forms):
+    def build_reviewers(self, employees, forms):
         employees_by_manager = self.get_employees_by_manager(employees)
 
+        reviewers = {}
         for uid, employee in employees.items():
             evals = []
             employee_forms = forms[employee.area]
@@ -70,13 +41,17 @@ class EmployeeAdapter:
                         kind=EvalKind.MANAGER_PEER,
                         form=employee_forms[EvalKind.MANAGER_PEER]))
 
-            employee.evals = evals
+            reviewer = Reviewer(
+                employee=employee,
+                evals=evals
+            )
+            reviewers.update({reviewer.uid: reviewer})
 
-        return employees
+        return reviewers
 
-    def build_eval_message(self, employee: Employee):
+    def build_eval_message(self, reviewer: Reviewer):
         list_of_evals = ''
-        for e_eval in employee.evals:
+        for e_eval in reviewer.evals:
             if e_eval.kind is EvalKind.SELF:
                 reviewee = 'Your self review'
             else:
@@ -98,4 +73,4 @@ class EmployeeAdapter:
             </tr>
             <tr><td style="padding:10px 0">
                     {1}
-            </td></tr></tbody></tr></table></div>'''.format(employee.uid, list_of_evals)
+            </td></tr></tbody></tr></table></div>'''.format(reviewer.uid, list_of_evals)

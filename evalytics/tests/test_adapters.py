@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from evalytics.server.adapters import EmployeeAdapter
-from evalytics.server.models import Employee, EvalKind, Eval
+from evalytics.server.models import Employee, EvalKind, Eval, Reviewer
 
 class TestCore(TestCase):
 
@@ -47,31 +47,31 @@ class TestCore(TestCase):
         self.assertEqual(managers['tl1'], ['sw1', 'sw2'])
         self.assertEqual(managers['tl2'], ['sw3', 'sw4', 'sw5'])
 
-    def test_employee_adapter_add_evals_correct_number_of_evals(self):
+    def test_employee_adapter_build_reviewers_correct_number_of_evals(self):
         adapter = EmployeeAdapter()
-        employees = adapter.add_evals(self.employees, self.forms)
+        reviewers = adapter.build_reviewers(self.employees, self.forms)
 
-        self.assertEqual(2, len(employees['ceo'].evals))
-        self.assertEqual(4, len(employees['cto'].evals))
-        self.assertEqual(4, len(employees['tl1'].evals))
-        self.assertEqual(5, len(employees['tl2'].evals))
-        self.assertEqual(2, len(employees['sw1'].evals))
-        self.assertEqual(2, len(employees['sw2'].evals))
-        self.assertEqual(2, len(employees['sw3'].evals))
-        self.assertEqual(2, len(employees['sw4'].evals))
-        self.assertEqual(2, len(employees['sw5'].evals))
+        self.assertEqual(2, len(reviewers['ceo'].evals))
+        self.assertEqual(4, len(reviewers['cto'].evals))
+        self.assertEqual(4, len(reviewers['tl1'].evals))
+        self.assertEqual(5, len(reviewers['tl2'].evals))
+        self.assertEqual(2, len(reviewers['sw1'].evals))
+        self.assertEqual(2, len(reviewers['sw2'].evals))
+        self.assertEqual(2, len(reviewers['sw3'].evals))
+        self.assertEqual(2, len(reviewers['sw4'].evals))
+        self.assertEqual(2, len(reviewers['sw5'].evals))
 
-    def test_employee_adapter_add_evals_correct_evals(self):
+    def test_employee_adapter_build_reviewers_correct_evals(self):
         adapter = EmployeeAdapter()
-        employees = adapter.add_evals(self.employees, self.forms)
+        reviewers = adapter.build_reviewers(self.employees, self.forms)
 
-        self.assertEqual(employees['ceo'].evals, [
+        self.assertEqual(reviewers['ceo'].evals, [
             Eval(reviewee='ceo',
                  kind=EvalKind.SELF, form=self.SELF_FORM),
             Eval(reviewee='cto', kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
         ])
 
-        self.assertEqual(employees['cto'].evals, [
+        self.assertEqual(reviewers['cto'].evals, [
             Eval(reviewee='ceo',
                  kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
             Eval(reviewee='cto',
@@ -82,7 +82,7 @@ class TestCore(TestCase):
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
         ])
 
-        self.assertEqual(employees['tl1'].evals, [
+        self.assertEqual(reviewers['tl1'].evals, [
             Eval(reviewee='cto',
                  kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
             Eval(reviewee='tl1',
@@ -93,7 +93,7 @@ class TestCore(TestCase):
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
         ])
 
-        self.assertEqual(employees['tl2'].evals, [
+        self.assertEqual(reviewers['tl2'].evals, [
             Eval(reviewee='cto',
                  kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
             Eval(reviewee='tl2',
@@ -105,3 +105,18 @@ class TestCore(TestCase):
             Eval(reviewee='sw5',
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
         ])
+
+    def test_employee_adapter_build_eval_message_correct(self):
+        employee = self.employees['cto']
+        reviewer = Reviewer(
+            employee=employee,
+            evals=[
+                Eval(reviewee=employee.uid, kind=EvalKind.SELF, form="coolform"),
+                Eval(reviewee='another', kind=EvalKind.MANAGER_PEER, form="coolformformanagers"),
+            ]
+        )
+
+        adapter = EmployeeAdapter()
+        eval_message = adapter.build_eval_message(reviewer)
+
+        self.assertIn(employee.uid, eval_message)

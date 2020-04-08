@@ -7,24 +7,25 @@ class SetupUseCase(DataRepository):
         setup = super().setup_storage()
         return setup
 
-class StartUseCase(DataRepository, CommunicationsProvider, EmployeeAdapter):
+class GetReviewersUseCase(DataRepository, EmployeeAdapter):
 
     def execute(self):
-        employees = super().get_employees()
-        forms = super().get_forms()
+        return super().build_reviewers(
+            super().get_employees(),
+            super().get_forms())
 
-        reviewers = []
-        employees = super().add_evals(employees, forms)
-        for _, employee in employees.items():
-            super().send_communication(
-                employee=employee,
-                data=super().build_eval_message(employee))
-            reviewers.append(employee)
+class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
 
-        return employees
+    def send_mail(self, revieweers):
+        evals_sent = []
+        evals_not_sent = []
+        for _, reviewer in revieweers.items():
+            try:
+                super().send_communication(
+                    reviewer=reviewer,
+                    data=super().build_eval_message(reviewer))
+                evals_sent.append(reviewer.uid)
+            except:
+                evals_not_sent.append(reviewer.uid)
 
-
-class GetEvaluationStatusUseCase:
-
-    def get(self):
-        pass
+        return evals_sent, evals_not_sent

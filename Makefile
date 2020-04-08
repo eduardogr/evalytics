@@ -3,7 +3,7 @@ PROJECT_FOLDER="."
 DOCKERFILE_PATH="Dockerfile"
 
 CONTAINER_NAME=evalytics
-IMAGE_VERSION=0.1
+IMAGE_VERSION=0.1.2
 PORT=8080
 
 env ?= dev # get from cl or 'dev' by default
@@ -22,7 +22,7 @@ google-auth:
 
 run-server:
 	docker run -d \
-		--volume $(CURRENT_PATH)/evalytics:/usr/evalytics \
+		--volume $(CURRENT_PATH)/evalytics:/usr/app/evalytics \
 		--publish $(PORT):$(PORT) \
 		--name $(CONTAINER_NAME) \
 		-ti $(CONTAINER_NAME):$(IMAGE_VERSION)
