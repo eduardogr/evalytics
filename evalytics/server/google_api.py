@@ -70,10 +70,10 @@ class FilesAPI:
             fields='id, parents').execute()
         return folder
 
-    def create_spreadhsheet(self, folder, folder_parent):
+    def create_spreadhsheet(self, folder_parent, folder, filename: str):
         spreadsheet = {
             'properties': {
-                'title': 'orgchart',
+                'title': filename,
             }
         }
         spreadsheet = self.__get_sheets_service().spreadsheets().create(

@@ -48,9 +48,12 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
         if success:
             return response['reviewers']
         else:
-            print("[ERROR] Something failed in get reviewers")
-            print("  - HTTP code: %s" % response.status_code)
-            print("  - Error response: %s" % response.content)
+            if 'error' in response:
+                print("[Controlled Error] %s" % response['error'])
+            else:
+                print("[ERROR] Something failed in get reviewers")
+                print("  - HTTP code: %s" % response.status_code)
+                print("  - Error response: %s" % response.content)
             return []
 
     def print_reviewers(self):
