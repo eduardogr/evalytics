@@ -5,6 +5,7 @@ import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
 from .mappers import Mapper
+from .exceptions import MissingDataException, NoFormsException
 
 
 class SetupHandler(tornado.web.RequestHandler):
@@ -44,6 +45,13 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 'success': True,
                 'response': {
                     'reviewers': [r.to_json() for uid, r in reviewers.items()]
+                }
+            })
+        except (MissingDataException, NoFormsException) as exception:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': exception.message,
                 }
             })
         except Exception as e:
