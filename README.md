@@ -4,8 +4,8 @@ This project proposal is to manage the evaluation cycle for a company.
 
 ## Table of Contents
 
-0. [Setting up the project](#Setting up the project)
-0. [Running evalytics](#Running evalytics)
+0. [Setting up the project](#setting-up-the-project)
+0. [Running evalytics](#running-evalytics)
 
 ## Setting up the project 
 
