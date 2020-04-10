@@ -51,6 +51,7 @@ and you'll need to have your *PYTHONPATH* environment variable with the value of
 
 Optionally you can running it on your local machine with [docker](https://www.docker.com/) + [make](https://www.gnu.org/software/make/manual/html_node/Introduction.html), running:
   - make build
+  - make google-auth
   - make run-server
 
 Once you have that set up, run:
