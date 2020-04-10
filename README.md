@@ -2,6 +2,11 @@
 
 This project proposal is to manage the evaluation cycle for a company.
 
+## Table of Contents
+
+0. [Setting up the project](#Setting up the project)
+0. [Running evalytics](#Running evalytics)
+
 ## Setting up the project 
 
 ### :zap: Create a Google project
@@ -46,7 +51,7 @@ To generate this we have the make target google-auth, so, you just have to tun
 
 
 
-## Usage
+## Running evalytics
 
 Preparing local environment to run evalytics:
 
