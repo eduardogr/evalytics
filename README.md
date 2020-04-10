@@ -61,17 +61,17 @@ make build env=prod
 make google-auth
 make run-server
 # If you are developing, for reload code within docker container
-make run  stop-server && make start-server 
+make stop-server && make start-server 
 ```
 
 Requesting evalytics:
 
 ```
-curl -s localhost:8080/start -d 'id=201' | json_pp
+curl -s localhost:8080/reviewers | json_pp
 {
-   "message" : "You have started an evaluation process",
-   "id" : "201",
-   "success" : true
+   "reviewers" : 
+   ...
+   ...
 }
 ```
 
