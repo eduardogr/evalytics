@@ -4,10 +4,10 @@ This project proposal is to manage the evaluation cycle for a company.
 
 ## Table of Contents
 
-0. [Setting up the project](#setting-up-the-project)
+0. [Setting up the project](#setting-up-evalytics)
 0. [Running evalytics](#running-evalytics)
 
-## Setting up the project 
+## Setting up Evalytics 
 
 ### :zap: Create a Google project
 
