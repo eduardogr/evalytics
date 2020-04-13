@@ -78,6 +78,25 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
                 print("  - Error response: %s" % response.content)
             return []
 
+    def get_reviewers_stats(self):
+        all_reviewers = self.get_reviewers()
+        reviewers_by_evals_numbers = {}
+        for reviewer in all_reviewers:
+            uid = reviewer['employee']['uid']
+            evals_number = len(reviewer['evals'])
+
+            if evals_number in reviewers_by_evals_numbers:
+                reviewers_by_evals_numbers[evals_number].append(uid)
+            else:
+                reviewers_by_evals_numbers.update({
+                    evals_number: [uid]
+                })
+        for evals_number in sorted(reviewers_by_evals_numbers):
+            reviewers = reviewers_by_evals_numbers[evals_number]
+            print('Number of evals: %d' % evals_number)
+            print('Reviewers: %s' % reviewers)
+
+
     def print_reviewers(self):
         for reviewer in self.get_reviewers():
             print(json.dumps(reviewer, indent=2))
@@ -136,6 +155,8 @@ class CommandFactory(EvalyticsClient):
             super().post_setup()
         elif command == 'get reviewers':
             super().print_reviewers()
+        elif command == 'get reviewers --stats':
+            super().get_reviewers_stats()
         elif command == 'send evals':
             super().send_eval()
         elif command == 'send evals --retry':
