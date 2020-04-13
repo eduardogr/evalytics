@@ -132,3 +132,4 @@ credentials*.json
 token.pickle
 .vscode/
 evals_not_sent.csv
+evals_whitelisted.csv
