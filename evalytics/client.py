@@ -11,6 +11,13 @@ class EvalyticsRequests:
 
     BASE_URL = "http://localhost:8080"
 
+    def setup(self):
+        response = requests.post(
+            url="%s/setup" % self.BASE_URL,
+            data={})
+
+        return self.get_data_response(response)
+
     def reviewers(self):
         response = requests.get(
             url="%s/reviewers" % self.BASE_URL,
@@ -43,6 +50,21 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
 
     EVALS_NOT_SENT_CSV = 'evals_not_sent.csv'
 
+    def post_setup(self):
+        success, response = super().setup()
+        if success:
+            setup = response['setup']
+            print(json.dumps(setup, indent=2))
+            return setup
+        else:
+            if 'error' in response:
+                print("[Controlled Error] %s" % response['error'])
+            else:
+                print("[ERROR] Something failed in get reviewers")
+                print("  - HTTP code: %s" % response.status_code)
+                print("  - Error response: %s" % response.content)
+            return []
+
     def get_reviewers(self):
         success, response = super().reviewers()
         if success:
@@ -55,6 +77,25 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
                 print("  - HTTP code: %s" % response.status_code)
                 print("  - Error response: %s" % response.content)
             return []
+
+    def get_reviewers_stats(self):
+        all_reviewers = self.get_reviewers()
+        reviewers_by_evals_numbers = {}
+        for reviewer in all_reviewers:
+            uid = reviewer['employee']['uid']
+            evals_number = len(reviewer['evals'])
+
+            if evals_number in reviewers_by_evals_numbers:
+                reviewers_by_evals_numbers[evals_number].append(uid)
+            else:
+                reviewers_by_evals_numbers.update({
+                    evals_number: [uid]
+                })
+        for evals_number in sorted(reviewers_by_evals_numbers):
+            reviewers = reviewers_by_evals_numbers[evals_number]
+            print('Number of evals: %d' % evals_number)
+            print('Reviewers: %s' % reviewers)
+
 
     def print_reviewers(self):
         for reviewer in self.get_reviewers():
@@ -104,13 +145,20 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
     def help(self, command):
         print("Command '%s' not expected" % command)
         print("Available commands: ")
+        print("  - %s" % " ".join('post_setup'.split('_')))
         print("  - %s" % " ".join('get_reviewers'.split('_')))
+        print("  - %s --stats" % " ".join('get_reviewers'.split('_')))
         print("  - %s" % " ".join('send_evals'.split('_')))
+        print("  - %s --retry" % " ".join('send_evals'.split('_')))
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):
-        if command == 'get reviewers':
+        if command == 'post setup':
+            super().post_setup()
+        elif command == 'get reviewers':
             super().print_reviewers()
+        elif command == 'get reviewers --stats':
+            super().get_reviewers_stats()
         elif command == 'send evals':
             super().send_eval()
         elif command == 'send evals --retry':

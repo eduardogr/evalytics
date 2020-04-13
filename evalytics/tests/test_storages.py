@@ -79,6 +79,12 @@ class MockConfig(Config):
 
     def read_needed_spreadsheets(self):
         return self.needed_spreadsheets
+    
+    def read_company_domain(self):
+        return "company.com"
+
+    def read_company_number_of_employees(self):
+        return 1000
 
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
