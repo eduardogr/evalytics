@@ -5,8 +5,8 @@ This project proposal is to manage the evaluation cycle for a company.
 ## :bookmark_tabs: Table of Contents
 
 0. [Setting up Evalytics project](#settings-up-evalytics-project)
-0. [Setting up Evalytics config](#:pencil:-setting-up-evalytics-config)
-0. [Running evalytics](#:rocket:-running-evalytics)
+0. [Setting up Evalytics config](#setting-up-evalytics-config)
+0. [Running evalytics](#running-evalytics)
 0. [Evalytics files examples](#evalytics-files-examples)
 
 ## :wrench: Setting up Evalytics project
