@@ -62,7 +62,7 @@ class TestEvalKind(TestCase):
 class TestEmployee(TestCase):
 
     def setUp(self):
-        self.employee = employee = Employee(
+        self.employee = Employee(
             mail='some@employee.com',
             manager='manager',
             area='Area'
@@ -82,6 +82,16 @@ class TestEmployee(TestCase):
 
     def test_employee_when_has_manager(self):
         self.assertTrue(self.employee.has_manager)
+
+    def test_employee_set_manager(self):
+        employee = Employee(
+            mail='some@employee.com',
+            manager='',
+            area='Area'
+        )
+        employee.manager = 'will'
+
+        self.assertEqual('will', employee.manager)
 
     def test_employee_to_json(self):
         jsondict = self.employee.to_json()
@@ -147,6 +157,24 @@ class TestReviewer(TestCase):
         )
 
         self.assertEqual('some@employee.com', reviewer.mail)
+
+    def test_reviewer_add_eval(self):
+        employee = Employee(
+            mail='some@employee.com',
+            manager='manager',
+            area='Area'
+        )
+        reviewer = Reviewer(
+            employee=employee,
+            evals=[]
+        )
+        reviewer.evals.append(Eval(
+            reviewee='peer',
+            kind=EvalKind.MANAGER_PEER,
+            form='form'
+        ))
+
+        self.assertEqual(1, len(reviewer.evals))
 
     def test_reviewer_to_json(self):
         employee = Employee(

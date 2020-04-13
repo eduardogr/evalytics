@@ -34,7 +34,7 @@ class MockConfig(Config):
 class EmployeeAdapterSut(EmployeeAdapter, MockConfig):
     'Inject mocks into EmployeeAdapter dependencies'
 
-class TestAdapter(TestCase):
+class TestEmployeeAdapter(TestCase):
 
     def setUp(self):
         self.SELF_FORM = 'self form'
@@ -64,6 +64,8 @@ class TestAdapter(TestCase):
         self.employees_with_blacklisted_reviewers = {
             'cto': Employee(
                 mail='cto@company.com', manager='ceo', area=self.AREA),
+            'cto2': Employee(
+                mail='cto2@company.com', manager='ceo', area=self.AREA),
             'tl1': Employee(
                 mail='tl1@company.com', manager='cto', area=self.AREA),
             'sw1': Employee(
@@ -95,19 +97,28 @@ class TestAdapter(TestCase):
         self.assertEqual(managers['tl1'], ['sw1', 'sw2'])
         self.assertEqual(managers['tl2'], ['sw3', 'sw4', 'sw5'])
 
-    def test_employee_adapter_get_manager_of_uncompleted_employees(self):
+    def test_employee_adapter_get_manager_when_uncompleted_employees(self):
         adapter = EmployeeAdapterSut()
-        managers = adapter.get_employees_by_manager(self.employees_with_blacklisted_reviewers)
+        employees_by_manager = adapter.get_employees_by_manager(self.employees_with_blacklisted_reviewers)
 
-        self.assertEqual(managers['ceo'], ['cto'])
-        self.assertEqual(managers['cto'], ['tl1'])
-        self.assertEqual(managers['tl1'], ['sw1', 'sw2'])
+        self.assertNotIn('ceo', employees_by_manager)
+        self.assertEqual(employees_by_manager['cto'], ['tl1'])
+        self.assertEqual(employees_by_manager['tl1'], ['sw1', 'sw2'])
 
 
     def test_employee_adapter_build_reviewers_correct_number_of_evals(self):
         adapter = EmployeeAdapterSut()
         reviewers = adapter.build_reviewers(self.employees, self.forms)
 
+        self.assertIn('ceo', reviewers)
+        self.assertIn('cto', reviewers)
+        self.assertIn('tl1', reviewers)
+        self.assertIn('tl2', reviewers)
+        self.assertIn('sw1', reviewers)
+        self.assertIn('sw2', reviewers)
+        self.assertIn('sw3', reviewers)
+        self.assertIn('sw4', reviewers)
+        self.assertIn('sw5', reviewers)
         self.assertEqual(2, len(reviewers['ceo'].evals))
         self.assertEqual(4, len(reviewers['cto'].evals))
         self.assertEqual(4, len(reviewers['tl1'].evals))
@@ -117,6 +128,31 @@ class TestAdapter(TestCase):
         self.assertEqual(2, len(reviewers['sw3'].evals))
         self.assertEqual(2, len(reviewers['sw4'].evals))
         self.assertEqual(2, len(reviewers['sw5'].evals))
+
+    def test_employee_adapter_build_reviewers_correct_if_not_an_employee_and_is_manager(self):
+        adapter = EmployeeAdapterSut()
+        reviewers = adapter.build_reviewers(self.employees_with_blacklisted_reviewers, self.forms)
+
+        self.assertIn('ceo', reviewers)
+        self.assertEqual(2, len(reviewers['ceo'].evals))
+
+    def test_employee_adapter_build_reviewers_correct_number_of_evals_when_uncompleted_employees(self):
+        adapter = EmployeeAdapterSut()
+        reviewers = adapter.build_reviewers(
+            self.employees_with_blacklisted_reviewers,
+            self.forms)
+
+        self.assertIn('ceo', reviewers)
+        self.assertIn('cto', reviewers)
+        self.assertIn('cto2', reviewers)
+        self.assertIn('tl1', reviewers)
+        self.assertIn('sw1', reviewers)
+        self.assertIn('sw2', reviewers)
+        self.assertEqual(2, len(reviewers['ceo'].evals))
+        self.assertEqual(3, len(reviewers['cto'].evals))
+        self.assertEqual(4, len(reviewers['tl1'].evals))
+        self.assertEqual(2, len(reviewers['sw1'].evals))
+        self.assertEqual(2, len(reviewers['sw2'].evals))
 
     def test_employee_adapter_build_reviewers_correct_evals(self):
         adapter = EmployeeAdapterSut()
@@ -129,10 +165,10 @@ class TestAdapter(TestCase):
         ])
 
         self.assertEqual(reviewers['cto'].evals, [
+             Eval(reviewee='cto',
+                 kind=EvalKind.SELF, form=self.SELF_FORM),
             Eval(reviewee='ceo',
                  kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
-            Eval(reviewee='cto',
-                 kind=EvalKind.SELF, form=self.SELF_FORM),
             Eval(reviewee='tl1',
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
             Eval(reviewee='tl2',
@@ -140,10 +176,10 @@ class TestAdapter(TestCase):
         ])
 
         self.assertEqual(reviewers['tl1'].evals, [
-            Eval(reviewee='cto',
-                 kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
             Eval(reviewee='tl1',
                  kind=EvalKind.SELF, form=self.SELF_FORM),
+            Eval(reviewee='cto',
+                 kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
             Eval(reviewee='sw1',
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
             Eval(reviewee='sw2',
@@ -151,10 +187,10 @@ class TestAdapter(TestCase):
         ])
 
         self.assertEqual(reviewers['tl2'].evals, [
-            Eval(reviewee='cto',
-                 kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
             Eval(reviewee='tl2',
                  kind=EvalKind.SELF, form=self.SELF_FORM),
+            Eval(reviewee='cto',
+                 kind=EvalKind.PEER_MANAGER, form=self.PEER_MANAGER_FORM),
             Eval(reviewee='sw3',
                  kind=EvalKind.MANAGER_PEER, form=self.MANAGER_PEER_FORM),
             Eval(reviewee='sw4',

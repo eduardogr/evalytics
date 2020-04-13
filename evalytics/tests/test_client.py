@@ -12,6 +12,9 @@ class MockEvalyticsClient(EvalyticsClient):
     def print_reviewers(self):
         self.update_calls('print_reviewers')
 
+    def post_setup(self):
+        self.update_calls('post_setup')
+
     def send_eval(self):
         self.update_calls('send_eval')
 
@@ -37,6 +40,13 @@ class MockCommandFactory(CommandFactory, MockEvalyticsClient):
 
 
 class TestCommandFactory(TestCase):
+
+    def test_command_factory_post_setup(self):
+        factory = MockCommandFactory()
+        factory.execute('post setup')
+
+        self.assertIn('post_setup', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['post_setup'])
 
     def test_command_factory_get_reviewers(self):
         factory = MockCommandFactory()
