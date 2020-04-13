@@ -7,6 +7,20 @@ import requests
 
 from evalytics.server.mappers import Mapper
 
+
+class MockFile:
+    def readlines(self):
+        return []
+
+    def close(self):
+        return
+
+class FileManager:
+
+    def open(self, filename: str, mode: str):
+        return open(filename, mode)
+
+
 class EvalyticsRequests:
 
     BASE_URL = "http://localhost:8080"
@@ -16,14 +30,14 @@ class EvalyticsRequests:
             url="%s/setup" % self.BASE_URL,
             data={})
 
-        return self.get_data_response(response)
+        return self.__get_data_response(response)
 
     def reviewers(self):
         response = requests.get(
             url="%s/reviewers" % self.BASE_URL,
             params={})
 
-        return self.get_data_response(response)
+        return self.__get_data_response(response)
 
     def sendmail(self, json_reviewers):
         response = requests.post(
@@ -33,9 +47,9 @@ class EvalyticsRequests:
             }
         )
 
-        return self.get_data_response(response)
+        return self.__get_data_response(response)
 
-    def get_data_response(self, response):
+    def __get_data_response(self, response):
         if response.ok:
             data = response.json()
             data_response = data['response']
@@ -46,7 +60,7 @@ class EvalyticsRequests:
         else:
             return False, response
 
-class EvalyticsClient(EvalyticsRequests, Mapper):
+class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
     EVALS_NOT_SENT_CSV = 'evals_not_sent.csv'
     EVALS_WHITELISTED = 'evals_whitelisted.csv'
@@ -147,7 +161,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
 
     def retry_send_eval(self, dry_run: bool = False):
         evals_not_sent = []
-        evals_not_sent_file = open(self.EVALS_NOT_SENT_CSV, "r")
+        evals_not_sent_file = super().open(self.EVALS_NOT_SENT_CSV, "r")
         for reviewer in evals_not_sent_file.readlines():
             evals_not_sent.append(reviewer.strip())
         evals_not_sent_file.close()
@@ -155,7 +169,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
 
     def whitelist_send_eval(self, dry_run: bool = False):
         whitelisted_evals = []
-        whitelisted_evals_file = open(self.EVALS_WHITELISTED, "r")
+        whitelisted_evals_file = super().open(self.EVALS_WHITELISTED, "r")
         for reviewer in whitelisted_evals_file.readlines():
             whitelisted_evals.append(reviewer.strip())
         whitelisted_evals_file.close()
