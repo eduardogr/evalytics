@@ -62,8 +62,8 @@ There's an [Evalytics config](./config.ini) to help you configure your Evalytics
 
 * *Company*
 
-  - DOMAIN:
-  - NUMBER_OF_EMPLOYEES
+  - DOMAIN: domain of your company, e.g. mycompany.com. This will be used for email delivery.
+  - NUMBER_OF_EMPLOYEES: number of employees in your [orgchart file]((./examples/eval-process/0_existing_OrgChart.csv))
 
 Fill the [Evalytics config](./config.ini) to let it work properly.
 
