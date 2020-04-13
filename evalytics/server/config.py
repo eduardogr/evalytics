@@ -22,3 +22,11 @@ class Config(ConfigParser):
             orgchart_filename,
             formmap_filename
         ]
+
+    def read_company_domain(self):
+        super().read('config.ini')
+        return super().get('COMPANY', 'DOMAIN')
+
+    def read_company_number_of_employees(self):
+        super().read('config.ini')
+        return super().get('COMPANY', 'NUMBER_OF_EMPLOYEES')

@@ -17,7 +17,6 @@ class Storage:
 
 class GoogleStorage(Storage, GoogleAPI, Config):
 
-    ORGCHART_RANGE = 'A2:C10'
     FORM_MAP_RANGE = 'A2:D3'
 
     def setup(self):
@@ -52,18 +51,26 @@ class GoogleStorage(Storage, GoogleAPI, Config):
             files=files)
 
     def get_employee_map(self):
+        employees = {}
+        number_of_employees = int(super().read_company_number_of_employees())
+
+        if number_of_employees == 0:
+            return employees
+
+        org_chart_range = 'A2:C' + str(number_of_employees + 1)
         values = super().get_file_rows(
             foldername=super().read_google_folder(),
             filename=super().read_google_orgchart(),
-            rows_range=self.ORGCHART_RANGE)
+            rows_range=org_chart_range)
+        company_domain = super().read_company_domain()
 
         # Creating models
-        employees = {}
         for row in values:
             if len(row) < 3:
                 raise MissingDataException("Missing data in employees, row: %s" % (row))
 
-            employee_mail = row[0].strip()
+            employee_uid = row[0].strip()
+            employee_mail = employee_uid + '@' + company_domain
             manager = row[1].strip()
             area = row[2].strip()
 

@@ -1,10 +1,40 @@
 from unittest import TestCase
 
 from evalytics.server.adapters import EmployeeAdapter
+from evalytics.server.config import Config
 from evalytics.server.models import Employee, EvalKind, Eval, Reviewer
 from evalytics.server.exceptions import MissingDataException
 
-class TestCore(TestCase):
+class MockConfig(Config):
+
+    def __init__(self):
+        super().__init__()
+        self.needed_spreadsheets = []
+
+    def read_google_folder(self):
+        return "google_folder"
+
+    def read_google_orgchart(self):
+        return "google_orgchart"
+
+    def read_google_form_map(self):
+        return "google_form_map"
+
+    def read_needed_spreadsheets(self):
+        return self.needed_spreadsheets
+    
+    def read_company_domain(self):
+        return "company.com"
+
+    def read_company_number_of_employees(self):
+        return 1000
+
+    def set_needed_spreadhseets(self, needed_spreadhseets):
+        self.needed_spreadsheets = needed_spreadhseets
+class EmployeeAdapterSut(EmployeeAdapter, MockConfig):
+    'Inject mocks into EmployeeAdapter dependencies'
+
+class TestAdapter(TestCase):
 
     def setUp(self):
         self.SELF_FORM = 'self form'
@@ -31,6 +61,16 @@ class TestCore(TestCase):
             'sw5': Employee(
                 mail='sw5@company.com', manager='tl2', area=self.AREA),
         }
+        self.employees_with_blacklisted_reviewers = {
+            'cto': Employee(
+                mail='cto@company.com', manager='ceo', area=self.AREA),
+            'tl1': Employee(
+                mail='tl1@company.com', manager='cto', area=self.AREA),
+            'sw1': Employee(
+                mail='sw1@company.com', manager='tl1', area=self.AREA),
+            'sw2': Employee(
+                mail='sw2@company.com', manager='tl1', area=self.AREA),
+        }
         self.forms = {
             self.AREA: {
                 EvalKind.SELF: self.SELF_FORM,
@@ -47,7 +87,7 @@ class TestCore(TestCase):
         }
 
     def test_employee_adapter_get_managers(self):
-        adapter = EmployeeAdapter()
+        adapter = EmployeeAdapterSut()
         managers = adapter.get_employees_by_manager(self.employees)
 
         self.assertEqual(managers['ceo'], ['cto'])
@@ -55,8 +95,17 @@ class TestCore(TestCase):
         self.assertEqual(managers['tl1'], ['sw1', 'sw2'])
         self.assertEqual(managers['tl2'], ['sw3', 'sw4', 'sw5'])
 
+    def test_employee_adapter_get_manager_of_uncompleted_employees(self):
+        adapter = EmployeeAdapterSut()
+        managers = adapter.get_employees_by_manager(self.employees_with_blacklisted_reviewers)
+
+        self.assertEqual(managers['ceo'], ['cto'])
+        self.assertEqual(managers['cto'], ['tl1'])
+        self.assertEqual(managers['tl1'], ['sw1', 'sw2'])
+
+
     def test_employee_adapter_build_reviewers_correct_number_of_evals(self):
-        adapter = EmployeeAdapter()
+        adapter = EmployeeAdapterSut()
         reviewers = adapter.build_reviewers(self.employees, self.forms)
 
         self.assertEqual(2, len(reviewers['ceo'].evals))
@@ -70,7 +119,7 @@ class TestCore(TestCase):
         self.assertEqual(2, len(reviewers['sw5'].evals))
 
     def test_employee_adapter_build_reviewers_correct_evals(self):
-        adapter = EmployeeAdapter()
+        adapter = EmployeeAdapterSut()
         reviewers = adapter.build_reviewers(self.employees, self.forms)
 
         self.assertEqual(reviewers['ceo'].evals, [
@@ -116,14 +165,14 @@ class TestCore(TestCase):
 
     def test_test_employee_adapter_build_reviewers_with_no_forms(self):
         no_forms = {}
-        adapter = EmployeeAdapter()
+        adapter = EmployeeAdapterSut()
 
         with self.assertRaises(MissingDataException):
             adapter.build_reviewers(self.employees, no_forms)
 
     def test_test_employee_adapter_build_reviewers_with_other_area_forms(self):
         form_with_other_area = self.forms_with_other_area
-        adapter = EmployeeAdapter()
+        adapter = EmployeeAdapterSut()
 
         with self.assertRaises(MissingDataException):
             adapter.build_reviewers(self.employees, form_with_other_area)
@@ -138,7 +187,7 @@ class TestCore(TestCase):
             ]
         )
 
-        adapter = EmployeeAdapter()
+        adapter = EmployeeAdapterSut()
         eval_message = adapter.build_eval_message(reviewer)
 
         self.assertIn(employee.uid, eval_message)

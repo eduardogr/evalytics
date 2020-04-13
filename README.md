@@ -4,10 +4,11 @@ This project proposal is to manage the evaluation cycle for a company.
 
 ## Table of Contents
 
-0. [Setting up the project](#setting-up-evalytics)
+0. [Setting up Evalytics project](#setting-up-evalytics-project)
+0. [Setting up Evalytics config](#setting-up-evalytics-config)
 0. [Running evalytics](#running-evalytics)
 
-## Setting up Evalytics 
+## Setting up Evalytics project
 
 ### :zap: Create a Google project
 
@@ -49,37 +50,84 @@ To generate this we have the make target google-auth, so, you just have to tun
 
 :angel: So, you don't have to worry about that :smiley:
 
+## Setting up Evalytics config
 
+There's an [Evalytics config](./config.ini) to help you configure your Evalytics instance:
+
+* *Google*
+
+  - FOLDER: Google Drive folder where files are stored.
+  - ORGCHART: Google Spreadsheet where employees are listed. [See the example](./examples/eval-process/0_existing_OrgChart.csv).
+  - FORM_MAP: Google Spreadsheet where employees forms are listed by kind of form. [See the example](./examples/eval-process/0_existing_FormMap.csv).
+
+* *Company*
+
+  - DOMAIN:
+  - NUMBER_OF_EMPLOYEES
+
+Fill the [Evalytics config](./config.ini) to let it work properly.
 
 ## Running evalytics
 
 Preparing local environment to run evalytics:
 
+### Prerequisites to running it locally
+
+From the root path of this project:
+
 ```
-# Could be env=dev for development
-make build env=prod 
+python3 -m venv env
+source env/bin/activate
+pip install -r evalytics/requirements/dev.txt
+export PYTHONPATH=`pwd`
 make google-auth
+```
+
+Check values of [evalytics config](./config.ini)
+
+### Running Evalytics server
+
+Using docker:
+
+```
+make build
 make run-server
-# If you are developing, for reload code within docker container
-make stop-server && make start-server 
 ```
 
-Requesting evalytics:
+Using Python virtual envs:
 
 ```
-curl -s localhost:8080/reviewers | json_pp
-{
-   "reviewers" : 
-   ...
-   ...
-}
+python3 evalytics/server.py
 ```
 
-## Examples
+### Making requests to Evalytics
+
+API Endpoints:
+
+  - /setup
+  - /reviewers
+  - /sendmail
+
+Using provided Python client:
+
+```
+python3 evalytics/client.py post setup
+python3 evalytics/client.py get reviewers
+python3 evalytics/client.py send evals
+```
+
+or using cURL directly:
+```
+curl -X POST localhost:8080/setup | json_pp
+curl localhost:8080/reviewers | json_pp
+curl -X POST localhost:8080/sendmail -d '.....' | json_pp (better use the Python client for this endpoint to avoid write all of the data that has to be sent :) )
+
+```
+
+## Evalytics files examples
 
 ```
 examples/
         eval-process/: Example documents for each eval subprocess
         google-api-client/: Example clients for each google api that we use
 ```
-

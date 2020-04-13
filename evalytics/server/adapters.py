@@ -1,11 +1,12 @@
 from .models import EvalKind, Eval, Reviewer
+from .config import Config
 from .exceptions import MissingDataException
 
-class EmployeeAdapter:
+class EmployeeAdapter(Config):
 
     def get_employees_by_manager(self, employees):
         managers = {
-            employees[e.manager].uid:[]
+            e.manager:[]
             for uid, e in employees.items() if e.has_manager}
 
         for _, e in employees.items():
