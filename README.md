@@ -113,7 +113,9 @@ Using provided Python client:
 ```
 python3 evalytics/client.py post setup
 python3 evalytics/client.py get reviewers
+python3 evalytics/client.py get reviewers --stats
 python3 evalytics/client.py send evals
+python3 evalytics/client.py send evals --retry
 ```
 
 or using cURL directly:

@@ -147,7 +147,9 @@ class EvalyticsClient(EvalyticsRequests, Mapper):
         print("Available commands: ")
         print("  - %s" % " ".join('post_setup'.split('_')))
         print("  - %s" % " ".join('get_reviewers'.split('_')))
+        print("  - %s --stats" % " ".join('get_reviewers'.split('_')))
         print("  - %s" % " ".join('send_evals'.split('_')))
+        print("  - %s --retry" % " ".join('send_evals'.split('_')))
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):
