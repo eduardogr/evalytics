@@ -2,21 +2,21 @@
 
 This project proposal is to manage the evaluation cycle for a company.
 
-## Table of Contents
+## :bookmark_tabs: Table of Contents
 
-0. [Setting up Evalytics project](#setting-up-evalytics-project)
+0. [Setting up Evalytics project](#:wrench:-setting-up-evalytics-project)
 0. [Setting up Evalytics config](#setting-up-evalytics-config)
 0. [Running evalytics](#running-evalytics)
 
-## Setting up Evalytics project
+## :wrench: Setting up Evalytics project
 
-### :zap: Create a Google project
+### Create a Google project :zap:
 
 Just access to [Google APIs](https://console.developers.google.com/).
 
   - Or [click here](https://console.developers.google.com/projectcreate) for a quick project creation.
 
-### :key: Create credentials for your project
+### Create credentials for your project :key:
 
 Once you have created your project, you can create your project's credentials.
 
@@ -32,11 +32,11 @@ To manage project's credentials you have the section [api/credentials](https://c
 
 :heavy_exclamation_mark: Just place them in a `credentials.json` file in the root of this repository.
 
-### :books: Enable APIs
+### Enable APIs :books:
 
 You can see where you have to access for each google api in the doc [google apis usage](doc/google-apis/usage.md)
 
-### :unlock: Generating your token.pickle
+### Generating your token.pickle :unlock:
 
 To authenticate us we have to send a token.pickle to Google APIs, this token.pickle is generated using the file credentials.json.
 
