@@ -4,9 +4,9 @@ This project proposal is to manage the evaluation cycle for a company.
 
 ## :bookmark_tabs: Table of Contents
 
-0. [Setting up Evalytics project](#:wrench:-setting-up-evalytics-project)
-0. [Setting up Evalytics config](#setting-up-evalytics-config)
-0. [Running evalytics](#running-evalytics)
+0. [Setting up Evalytics project](#:wrench:-settings-up-evalytics-project)
+0. [Setting up Evalytics config](#:pencil:-setting-up-evalytics-config)
+0. [Running evalytics](#:rocket:-running-evalytics)
 
 ## :wrench: Setting up Evalytics project
 
@@ -28,9 +28,9 @@ To manage project's credentials you have the section [api/credentials](https://c
       - Or access to [api/credentials/oauthclient](https://console.developers.google.com/apis/credentials/oauthclient)
       - The OAuth client type is *other* and choose the name you prefer :smiley:
 
-:fireworks: You have already created your credentials!
+You have already created your credentials! :fireworks:
 
-:heavy_exclamation_mark: Just place them in a `credentials.json` file in the root of this repository.
+Just place them in a `credentials.json` file in the root of this repository. :heavy_exclamation_mark::heavy_exclamation_mark:
 
 ### Enable APIs :books:
 
@@ -50,7 +50,7 @@ To generate this we have the make target google-auth, so, you just have to tun
 
 :angel: So, you don't have to worry about that :smiley:
 
-## Setting up Evalytics config
+## :pencil: Setting up Evalytics config
 
 There's an [Evalytics config](./config.ini) to help you configure your Evalytics instance:
 
@@ -67,7 +67,7 @@ There's an [Evalytics config](./config.ini) to help you configure your Evalytics
 
 Fill the [Evalytics config](./config.ini) to let it work properly.
 
-## Running evalytics
+## :rocket: Running evalytics
 
 Preparing local environment to run evalytics:
 
