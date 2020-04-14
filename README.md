@@ -1,6 +1,6 @@
 # Evalytics &middot; [![GitHub license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/eduardogr/evalytics/blob/master/.github/LICENSE) [![Python](https://img.shields.io/badge/Python-v3.6%2B-blue)]() [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/eduardogr/evalytics/blob/master/.github/CONTRIBUTING.md) [![Build Status](https://travis-ci.org/eduardogr/evalytics.svg?branch=master)](https://travis-ci.org/eduardogr/evalytics) [![codecov](https://codecov.io/gh/eduardogr/evalytics/branch/master/graph/badge.svg)](https://codecov.io/gh/eduardogr/evalytics)
 
-This project proposal is to manage the Performance Evaluation Cycle for a company.
+The objective of this project is to manage the Performance Evaluation Cycle of a company.
 
 ## :bookmark_tabs: Table of Contents
 
