@@ -15,6 +15,18 @@
     * QuestionN
       * AnswerN
 
+  * kind: self evaluation
+  * Reviewer: cto
+
+    * Question1
+      * Answer1
+
+    ...
+    ...
+
+    * QuestionN
+      * AnswerN
+
   * kind: manager-reporter evaluation
   * Reviewer: ceo
 
