@@ -3,15 +3,17 @@
 
 ## 2020Q1
 
-* kind: self-evaluation
-* Reviewer: ctanganite
+  * kind: self-evaluation
+  * Reviewer: ctanganite
 
-Question1
-Answer1
-...
-...
-QuestionN
-AnswerN
+    * Question1
+      * Answer1
+
+    ...
+    ...
+
+    * QuestionN
+      * AnswerN
 
 * kind: manager-evaluation
 * Reviewer: techlead
