@@ -39,6 +39,19 @@
     * QuestionN
       * AnswerN
 
+
+  * kind: self evaluation
+  * Reviewer: techlead
+
+    * Question1
+      * Answer1
+
+    ...
+    ...
+
+    * QuestionN
+      * AnswerN
+
   * kind: manager-reporter evaluation
   * Reviewer: cto
 
