@@ -1,21 +1,10 @@
 from unittest import TestCase
 
-from evalytics.storages import Storage, GoogleStorage
+from evalytics.storages import GoogleStorage
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.models import EvalKind
-
-class MockStorage(Storage):
-
-    def get_employee_map(self):
-        return {}
-    
-    def get_forms_map(self):
-        return {}
-
-    def setup(self):
-        pass
 
 class MockGoogleAPI(GoogleAPI):
 
@@ -89,7 +78,7 @@ class MockConfig(Config):
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
 
-class MockGoogleStorage(GoogleStorage, MockStorage, MockGoogleAPI, MockConfig):
+class MockGoogleStorage(GoogleStorage, MockGoogleAPI, MockConfig):
     'Inject mocks into GoogleStorage dependencies'
 
 
@@ -251,17 +240,3 @@ class TestGoogleStorage(TestCase):
         with self.assertRaises(MissingDataException):
             mock_google_storage.get_forms_map()
 
-
-class TestStorage(TestCase):
-
-    def test_storage_setup_will_raise_exception(self):
-        with self.assertRaises(NotImplementedError):
-            Storage().setup()
-
-    def test_storage_get_employee_map_will_raise_exception(self):
-        with self.assertRaises(NotImplementedError):
-            Storage().get_employee_map()
-
-    def test_storage_get_forms_map_will_raise_exception(self):
-        with self.assertRaises(NotImplementedError):
-            Storage().get_forms_map()

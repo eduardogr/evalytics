@@ -55,11 +55,11 @@ class EmployeeAdapter(Config):
                             manager='',
                             area=employee.area) # Manager has the same area
                         reviewer_manager = Reviewer(
-                                employee=manager,
-                                evals=[
-                                    manager_peer_eval
-                                ]
-                            )
+                            employee=manager,
+                            evals=[
+                                manager_peer_eval
+                            ]
+                        )
                     reviewers.update({
                             manager.uid: reviewer_manager
                         })

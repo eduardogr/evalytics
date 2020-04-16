@@ -93,28 +93,3 @@ class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
                     'error': message,
                 }
             })
-
-class EvalsHandler(tornado.web.RequestHandler):
-    path = r"/evals"
-
-    async def get(self):
-        try:
-            id = str(self.get_argument('id', None, True))
-            self.finish({
-                'success': True,
-                'response': {
-                    'id': id,
-                    'eval': {},
-                }
-            })
-        except Exception as e:
-            if hasattr(e, 'message'):
-                message = e.message
-            else:
-                message = str(e)
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': message,
-                }
-            })

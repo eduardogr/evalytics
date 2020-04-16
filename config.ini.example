@@ -1,0 +1,11 @@
+[APP]
+NAME=Evalytics
+
+[GOOGLE]
+FOLDER=2020 Q1 Evals
+ORGCHART=My Employee List
+FORM_MAP=Form mapping
+
+[COMPANY]
+DOMAIN=company.com
+NUMBER_OF_EMPLOYEES=1000

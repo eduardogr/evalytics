@@ -4,18 +4,7 @@ from evalytics.models import GoogleSetup, GoogleFile
 from evalytics.models import Employee, EvalKind
 from evalytics.exceptions import MissingDataException, NoFormsException
 
-class Storage:
-
-    def setup(self):
-        raise NotImplementedError
-
-    def get_employee_map(self):
-        raise NotImplementedError
-
-    def get_forms_map(self):
-        raise NotImplementedError
-
-class GoogleStorage(Storage, GoogleAPI, Config):
+class GoogleStorage(GoogleAPI, Config):
 
     FORM_MAP_RANGE = 'A2:D3'
 
