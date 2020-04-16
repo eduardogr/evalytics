@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from evalytics.server.storages import GoogleStorage
-from evalytics.server.communications_channels import GmailChannel
-from evalytics.server.core import DataRepository, CommunicationsProvider
-from evalytics.server.models import Reviewer, Employee
+from evalytics.storages import GoogleStorage
+from evalytics.communications_channels import GmailChannel
+from evalytics.core import DataRepository, CommunicationsProvider
+from evalytics.models import Reviewer, Employee
 
 
 class MockGoogleStorage(GoogleStorage):

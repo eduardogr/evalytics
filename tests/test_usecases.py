@@ -1,12 +1,12 @@
 from unittest import TestCase
 
-from evalytics.server.core import DataRepository, CommunicationsProvider
-from evalytics.server.adapters import EmployeeAdapter
-from evalytics.server.usecases import SetupUseCase
-from evalytics.server.usecases import GetReviewersUseCase, SendMailUseCase
-from evalytics.server.models import GoogleSetup, GoogleFile, Reviewer
+from evalytics.core import DataRepository, CommunicationsProvider
+from evalytics.adapters import EmployeeAdapter
+from evalytics.usecases import SetupUseCase
+from evalytics.usecases import GetReviewersUseCase, SendMailUseCase
+from evalytics.models import GoogleSetup, GoogleFile, Reviewer
 
-from evalytics.tests.fixtures.employees import employees_collection
+from tests.fixtures.employees import employees_collection
 
 MOCK_FILENAME = 'mockfolder'
 MOCK_FILEID = 'mockid'

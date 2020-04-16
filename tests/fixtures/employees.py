@@ -1,7 +1,7 @@
 # pylint: disable=invalid-name
 # No need to shout here
 
-from evalytics.server.models import Employee
+from evalytics.models import Employee
 
 def employees_collection():
     return {

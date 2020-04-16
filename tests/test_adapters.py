@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from evalytics.server.adapters import EmployeeAdapter
-from evalytics.server.config import Config
-from evalytics.server.models import Employee, EvalKind, Eval, Reviewer
-from evalytics.server.exceptions import MissingDataException
+from evalytics.adapters import EmployeeAdapter
+from evalytics.config import Config
+from evalytics.models import Employee, EvalKind, Eval, Reviewer
+from evalytics.exceptions import MissingDataException
 
 class MockConfig(Config):
 

@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 from unittest import TestCase
 
-from evalytics.server.config import Config
+from evalytics.config import Config
 
 class MockConfigParser(ConfigParser):
 

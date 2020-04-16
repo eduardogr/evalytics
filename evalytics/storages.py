@@ -1,8 +1,8 @@
-from evalytics.server.google_api import GoogleAPI
-from evalytics.server.config import Config
-from evalytics.server.models import GoogleSetup, GoogleFile
-from evalytics.server.models import Employee, EvalKind
-from evalytics.server.exceptions import MissingDataException, NoFormsException
+from evalytics.google_api import GoogleAPI
+from evalytics.config import Config
+from evalytics.models import GoogleSetup, GoogleFile
+from evalytics.models import Employee, EvalKind
+from evalytics.exceptions import MissingDataException, NoFormsException
 
 class Storage:
 

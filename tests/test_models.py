@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from evalytics.server.models import Employee, Eval, EvalKind, Reviewer
+from evalytics.models import Employee, Eval, EvalKind, Reviewer
 
 
 class TestEval(TestCase):

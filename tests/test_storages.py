@@ -1,10 +1,10 @@
 from unittest import TestCase
 
-from evalytics.server.storages import Storage, GoogleStorage
-from evalytics.server.google_api import GoogleAPI
-from evalytics.server.config import Config
-from evalytics.server.exceptions import MissingDataException, NoFormsException
-from evalytics.server.models import EvalKind
+from evalytics.storages import Storage, GoogleStorage
+from evalytics.google_api import GoogleAPI
+from evalytics.config import Config
+from evalytics.exceptions import MissingDataException, NoFormsException
+from evalytics.models import EvalKind
 
 class MockStorage(Storage):
 

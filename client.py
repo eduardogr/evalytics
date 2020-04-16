@@ -5,8 +5,7 @@ import sys
 import os
 import requests
 
-from evalytics.server.mappers import Mapper
-
+from evalytics.mappers import Mapper
 
 class MockFile:
     def readlines(self):
@@ -184,6 +183,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         print("  - %s" % 'send_evals')
         print("  - %s --retry" % 'send_evals')
         print("  - %s --whitelist" % 'send_evals')
+        print("  - %s --dry-run" % 'send_evals')
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):

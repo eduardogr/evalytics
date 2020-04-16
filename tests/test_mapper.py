@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from evalytics.server.mappers import JsonToReviewer, ReviewerToJson
-from evalytics.server.models import Reviewer, Employee, Eval, EvalKind
+from evalytics.mappers import JsonToReviewer, ReviewerToJson
+from evalytics.models import Reviewer, Employee, Eval, EvalKind
 
 class TestMappers(TestCase):
 

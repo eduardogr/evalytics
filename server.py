@@ -1,34 +1,36 @@
 #!/usr/bin/python3
 
 import tornado.ioloop
-import tornado.web
+from tornado.web import Application
 
 from tornado.options import define, options
 
-from evalytics.server.handlers import \
+from evalytics.handlers import \
     SetupHandler, \
-    ReviewersHandler, SendMailHandler, \
-    EvalsHandler
+    ReviewersHandler, SendMailHandler
 
 define(
     "port", default=8080,
     help="Run tornado server on the given port", type=int)
 
-class EvalyticsServer(tornado.web.Application):
-    def __init__(self):
+class GetPathAndHandler:
+
+    def get(self):
         handlers = [
             SetupHandler,
             ReviewersHandler,
             SendMailHandler,
-            EvalsHandler,
         ]
 
-        paths_by_handler = [(h.path, h) for h in handlers]
-        tornado.web.Application.__init__(self, paths_by_handler)
+        return [(h.path, h) for h in handlers]
 
-
-if __name__ == "__main__":
+def main():
     tornado.options.parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(EvalyticsServer())
+    path_and_handler = GetPathAndHandler().get()
+    app = Application(path_and_handler)
+    http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
     tornado.ioloop.IOLoop.current().start()
+
+if __name__ == "__main__":
+    main()

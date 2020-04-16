@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from evalytics.client import CommandFactory
-from evalytics.client import EvalyticsClient
-from evalytics.client import EvalyticsRequests
-from evalytics.client import FileManager
+from client import CommandFactory
+from client import EvalyticsClient
+from client import EvalyticsRequests
+from client import FileManager
 
 
 class MockFile:
