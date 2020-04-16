@@ -1,10 +1,10 @@
-from .models import Setup, Reviewer
+from .models import Reviewer
 from .storages import GoogleStorage
 from .communications_channels import GmailChannel
 
 class DataRepository(GoogleStorage):
 
-    def setup_storage(self) -> Setup:
+    def setup_storage(self):
         return super().setup()
 
     def get_employees(self):

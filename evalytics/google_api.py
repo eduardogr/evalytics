@@ -49,109 +49,35 @@ class GoogleAuth:
 
         return creds
 
-class FilesAPI:
+class DriveService:
 
     DRIVE_SERVICE_ID = 'drive'
     DRIVE_SERVICE_VERSION = 'v3'
-    SHEETS_SERVICE_ID = 'sheets'
-    SHEETS_SERVICE_VERISON = 'v4'
 
     __credentials = None
     __drive_service = None
-    __sheets_service = None
 
-    def create_folder(self, name: str):
-        file_metadata = {
-            'name': name,
-            'mimeType': 'application/vnd.google-apps.folder'
-        }
-        folder = self.__get_drive_service().files().create(
+    def create_drive_folder(self, file_metadata):
+        return self.__get_drive_service().files().create(
             body=file_metadata,
             fields='id, parents').execute()
-        return folder
 
-    def create_spreadhsheet(self, folder_parent, folder, filename: str):
-        spreadsheet = {
-            'properties': {
-                'title': filename,
-            }
-        }
-        spreadsheet = self.__get_sheets_service().spreadsheets().create(
-            body=spreadsheet,
-            fields='spreadsheetId').execute()
+    def update_file_parent(self, file_id, current_parent, new_parent):
         file_update = self.__get_drive_service().files().update(
-            fileId=spreadsheet.get('spreadsheetId'),
-            addParents=folder.get('id'),
-            removeParents=folder_parent)
+            fileId=file_id,
+            addParents=new_parent,
+            removeParents=current_parent)
         file_update.execute()
-        return spreadsheet.get('spreadsheetId')
 
-    def get_folder(self, name):
-        # TODO: differentiate between file and folder,
-        # to not return a file with the same name
-        try:
-            drive_service = self.__get_drive_service()
-
-            page_token = None
-            while True:
-                response = drive_service.files().list(
-                    pageSize=20,
-                    spaces='drive',
-                    fields='nextPageToken, files(id, name, parents)',
-                    pageToken=page_token).execute()
-
-                for file in response.get('files', []):
-                    if file.get('name') == name:
-                        return file
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
-                    break
-
-            return None
-        except HttpError as err:
-            # TODO: manage this
-            print(err)
-            raise err
-
-    def get_file_id_from_folder(self, folder_id, filename):
-        try:
-            drive_service = self.__get_drive_service()
-
-            page_token = None
-            while True:
-                response = drive_service.files().list(
-                    q="'%s' in parents" % folder_id,
-                    spaces='drive',
-                    fields='nextPageToken, files(id, name)',
-                    pageToken=page_token).execute()
-
-                for file in response.get('files', []):
-                    if file.get('name') == filename:
-                        return file.get('id')
-
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
-                    break
-            return None
-        except HttpError as err:
-            # TODO: manage this
-            print(err)
-            raise err
-
-    def get_file_rows(self, foldername: str, filename: str, rows_range: str):
-        sheet = self.__get_sheets_service().spreadsheets()
-
-        folder = self.get_folder(name=foldername)
-        spreadsheet_id = self.get_file_id_from_folder(
-            folder_id=folder.get('id'),
-            filename=filename)
-
-        result = sheet.values().get(
-            spreadsheetId=spreadsheet_id,
-            range=rows_range
-        ).execute()
-
-        return result.get('values', [])
+    def list_files(self, page_token: str, query: str):
+        drive_service = self.__get_drive_service()
+        return drive_service.files().list(
+            q=query,
+            pageSize=100,
+            spaces='drive',
+            corpora='user',
+            fields='nextPageToken, files(id, name, parents)',
+            pageToken=page_token).execute()
 
     def __get_drive_service(self):
         if self.__drive_service is None:
@@ -161,6 +87,32 @@ class FilesAPI:
                 credentials=self.__get_credentials(),
                 cache_discovery=False)
         return self.__drive_service
+
+    def __get_credentials(self):
+        if self.__credentials is None:
+            self.__credentials = GoogleAuth.authenticate()
+        return self.__credentials
+
+class SheetsService:
+
+    SHEETS_SERVICE_ID = 'sheets'
+    SHEETS_SERVICE_VERISON = 'v4'
+
+    __credentials = None
+    __sheets_service = None
+
+    def create_spreadsheet(self, file_metadata):
+        spreadsheet = self.__get_sheets_service().spreadsheets().create(
+            body=file_metadata,
+            fields='spreadsheetId').execute()
+        return spreadsheet
+
+    def get_file_rows_from_folder(self, spreadsheet_id, rows_range):
+        sheet = self.__get_sheets_service().spreadsheets()
+        return sheet.values().get(
+            spreadsheetId=spreadsheet_id,
+            range=rows_range
+        ).execute()
 
     def __get_sheets_service(self):
         if self.__sheets_service is None:
@@ -175,6 +127,76 @@ class FilesAPI:
         if self.__credentials is None:
             self.__credentials = GoogleAuth.authenticate()
         return self.__credentials
+
+class FilesAPI(DriveService, SheetsService):
+
+    def create_folder(self, name: str):
+        file_metadata = {
+            'name': name,
+            'mimeType': 'application/vnd.google-apps.folder'
+        }
+        folder = super().create_drive_folder(file_metadata)
+        return folder
+
+    def create_spreadhsheet(self, folder_parent, folder, filename: str):
+        file_metadata = {
+            'properties': {
+                'title': filename,
+            }
+        }
+        spreadsheet = super().create_spreadsheet(file_metadata)
+        super().update_file_parent(
+            file_id=spreadsheet.get('spreadsheetId'),
+            current_parent=folder_parent,
+            new_parent=folder.get('id')
+        )
+        return spreadsheet.get('spreadsheetId')
+
+    def get_folder(self, name):
+        query = "mimeType='application/vnd.google-apps.folder'"
+        return self.__get_file(query, name)
+
+    def get_file_id_from_folder(self, folder_id, filename):
+        query = "'%s' in parents" % folder_id
+        file = self.__get_file(query, filename)
+        
+        if file is not None:
+            return file.get('id')
+        else:
+            return file
+
+    def __get_file(self, query: str, filename):
+        try:
+            page_token = None
+            while True:
+                response = super().list_files(
+                    page_token=page_token,
+                    query=query
+                )
+                for file in response.get('files', []):
+                    if file.get('name') == filename:
+                        return file
+
+                page_token = response.get('nextPageToken', None)
+                if page_token is None:
+                    break
+            return None
+        except HttpError as err:
+            # TODO: manage this
+            print(err)
+            raise err
+
+    def get_file_rows(self, foldername: str, filename: str, rows_range: str):
+        folder = self.get_folder(name=foldername)
+        spreadsheet_id = self.get_file_id_from_folder(
+            folder_id=folder.get('id'),
+            filename=filename)
+
+        result = super().get_file_rows_from_folder(
+            spreadsheet_id,
+            rows_range)
+
+        return result.get('values', [])
 
 class GmailAPI:
 

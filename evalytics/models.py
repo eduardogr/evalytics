@@ -1,12 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-
-@dataclass
-class Setup:
-    pass
-
-
 @dataclass
 class GoogleFile:
 
@@ -22,7 +16,7 @@ class GoogleFile:
 
 
 @dataclass
-class GoogleSetup(Setup):
+class GoogleSetup():
 
     def __init__(self, folder: GoogleFile, files: [GoogleFile]):
         self.folder = folder
