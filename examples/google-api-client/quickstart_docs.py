@@ -4,7 +4,6 @@ import datetime
 
 from auth import GoogleAuth
 
-
 def main():
     creds = GoogleAuth.authenticate()
 
