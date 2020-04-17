@@ -7,13 +7,6 @@ import requests
 
 from evalytics.mappers import Mapper
 
-class MockFile:
-    def readlines(self):
-        return []
-
-    def close(self):
-        return
-
 class FileManager:
 
     def open(self, filename: str, mode: str):

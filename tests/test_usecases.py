@@ -1,95 +1,64 @@
 from unittest import TestCase
 
-from evalytics.core import DataRepository, CommunicationsProvider
-from evalytics.adapters import EmployeeAdapter
 from evalytics.usecases import SetupUseCase
 from evalytics.usecases import GetReviewersUseCase, SendMailUseCase
-from evalytics.models import GoogleSetup, GoogleFile, Reviewer
 
-from tests.fixtures.employees import employees_collection
+from tests.common.employees import employees_collection
+from tests.common.mocks import MockDataRepository, MockEmployeeAdapter
+from tests.common.mocks import MockCommunicationsProvider
 
-MOCK_FILENAME = 'mockfolder'
-MOCK_FILEID = 'mockid'
-
-class MockDataRepository(DataRepository):
-
-    def setup_storage(self):
-        folder = GoogleFile(name=MOCK_FILENAME, id=MOCK_FILEID)
-        orgchart = GoogleFile(name=MOCK_FILENAME, id=MOCK_FILEID)
-        return GoogleSetup(folder=folder, files=[orgchart])
-
-    def get_employees(self):
-        return {
-            'em_email': employees_collection().get('em_email'),
-            'manager_em': employees_collection().get('manager_em'),
-        }
-
-    def get_forms(self):
-        return {}
-
-class MockCommunicationsProvider(CommunicationsProvider):
-
-    def __init__(self):
-        self.raise_exception_for_reviewers = []
-
-    def add_raise_exception_for_reviewer(self, reviewer_uid: str):
-        self.raise_exception_for_reviewers.append(reviewer_uid)
-
-    def send_communication(self, reviewer: Reviewer, data):
-        if reviewer.uid in self.raise_exception_for_reviewers:
-            raise Exception("MockCommunicationsProvider was asked to throw this exception")
-        return
-
-class MockEmployeeAdapter(EmployeeAdapter):
-
-    def build_reviewers(self, employees, forms):
-        return employees
-
-    def build_eval_message(self, reviewer: Reviewer):
-        return ""
-
-class MockedSetupUseCase(SetupUseCase, MockDataRepository):
+class SetupUseCaseSut(SetupUseCase, MockDataRepository):
     'Inject a mock into the SetupUseCase dependency'
 
-class MockedGetReviewersUseCase(
+class GetReviewersUseCaseSut(
         GetReviewersUseCase,
         MockDataRepository,
         MockEmployeeAdapter):
     'Inject a mock into the GetReviewersUseCase dependency'
 
-class MockedSendMailUseCase(
+class SendMailUseCaseSut(
         SendMailUseCase,
         MockCommunicationsProvider,
         MockEmployeeAdapter):
     'Inject a mock into the SendEmailUseCase dependency'
 
-class TestUseCases(TestCase):
+class TestSetupUseCase(TestCase):
+
+    def setUp(self):
+        self.mock_fileid = 'mockid'
+        self.mock_filename = 'mockfolder'
+        self.sut = SetupUseCaseSut()
 
     def test_setup_usecase(self):
-        setup_usecase = MockedSetupUseCase()
+        setup = self.sut.execute()
 
-        setup = setup_usecase.execute()
+        self.assertEqual(self.mock_fileid, setup.folder.id)
+        self.assertEqual(self.mock_filename, setup.folder.name)
 
-        self.assertEqual(MOCK_FILEID, setup.folder.id)
-        self.assertEqual(MOCK_FILENAME, setup.folder.name)
+class TestGetReviewersUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GetReviewersUseCaseSut()
 
     def test_get_reviewers_usecase(self):
-        get_reviewers = MockedGetReviewersUseCase()
-
-        reviewers = get_reviewers.execute()
+        reviewers = self.sut.execute()
 
         self.assertEqual(
             employees_collection().get('em_email'),
             reviewers['em_email'])
+
+class TestSendMailUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = SendMailUseCaseSut()
 
     def test_send_email_usecase(self):
         reviewers = {
             'em_email': employees_collection().get('em_email'),
             'manager_em': employees_collection().get('manager_em'),
         }
-        send_mail = MockedSendMailUseCase()
 
-        evals_sent, evals_not_sent = send_mail.send_mail(reviewers)
+        evals_sent, evals_not_sent = self.sut.send_mail(reviewers)
 
         self.assertIn('em_email', evals_sent)
         self.assertIn('manager_em', evals_sent)
@@ -100,10 +69,9 @@ class TestUseCases(TestCase):
             'em_email': employees_collection().get('em_email'),
             'manager_em': employees_collection().get('manager_em'),
         }
-        send_mail = MockedSendMailUseCase()
-        send_mail.add_raise_exception_for_reviewer(reviewers['manager_em'].uid)
+        self.sut.add_raise_exception_for_reviewer(reviewers['manager_em'].uid)
 
-        evals_sent, evals_not_sent = send_mail.send_mail(reviewers)
+        evals_sent, evals_not_sent = self.sut.send_mail(reviewers)
 
         self.assertIn('em_email', evals_sent)
         self.assertEqual(1, len(evals_sent))

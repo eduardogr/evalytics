@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from evalytics.models import Employee, Eval, EvalKind, Reviewer
 
-
 class TestEval(TestCase):
 
     def setUp(self):
