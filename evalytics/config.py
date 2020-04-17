@@ -3,6 +3,10 @@ from configparser import ConfigParser
 
 class Config(ConfigParser):
 
+    def read_mail_subject(self):
+        super().read('config.ini')
+        return super().get('APP', 'MAIL_SUBJECT')
+
     def read_google_folder(self):
         super().read('config.ini')
         return super().get('GOOGLE', 'FOLDER')

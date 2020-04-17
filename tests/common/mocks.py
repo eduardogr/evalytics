@@ -60,6 +60,7 @@ class MockGoogleAPI(GoogleAPI):
         self.response = []
         self.folder = None
         self.fileid_by_name = {}
+        self.send_message_calls = {}
 
     def get_file_rows(self, foldername: str, filename: str, rows_range: str):
         return self.response
@@ -85,6 +86,24 @@ class MockGoogleAPI(GoogleAPI):
         spreasheet_id = filename
         self.set_fileid_by_name(folder['id'], spreasheet_id, spreasheet_id)
         return spreasheet_id
+
+    def send_message(self, user_id, message):
+        current_call_number = 0
+
+        if len(self.send_message_calls) > 0:
+            sorted_keys = sorted(self.send_message_calls.keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+        self.send_message_calls.update({
+            current_call_number: {
+                'user_id': user_id,
+                'message': message
+            }
+        })
+
+    def get_send_message_calls(self):
+        return self.send_message_calls
 
     def set_file_rows_response(self, response):
         self.response = response
@@ -121,6 +140,9 @@ class MockConfig(Config):
         super().__init__()
         self.needed_spreadsheets = []
 
+    def read_mail_subject(self):
+        return "important subject"
+
     def read_google_folder(self):
         return "google_folder"
 
@@ -146,6 +168,9 @@ class MockConfigParser(ConfigParser):
 
     def read(self, filename: str = ''):
         return {
+            'APP': {
+                'MAIL_SUBJECT': 'this is the mail subject'
+            },
             'GOOGLE': {
                 'FOLDER': 'mock_folder',
                 'ORGCHART': 'mock_orgchart',

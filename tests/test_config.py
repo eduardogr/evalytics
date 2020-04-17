@@ -12,6 +12,11 @@ class TestConfig(TestCase):
     def setUp(self):
         self.sut = ConfigSut()
 
+    def test_read_mail_subject(self):
+        mail_subject = self.sut.read_mail_subject()
+
+        self.assertEqual('this is the mail subject', mail_subject)
+
     def test_read_google_folder(self):
         google_folder = self.sut.read_google_folder()
 
