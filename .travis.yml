@@ -6,7 +6,7 @@ python:
   - "3.8"
 # command to install dependencies
 install:
-  - pip install -r requirements/dev.txt
+  - pip install -r requirements/prod.txt
 # command to run tests
 script:
   - pytest --cov=./ --cov-report=html
