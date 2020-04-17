@@ -4,7 +4,8 @@ from .models import Reviewer, Employee, EvalKind, Eval
 
 class JsonToReviewer:
 
-    def json_to_reviewer(self, json_reviewers):
+    def json_to_reviewers(self, json_reviewers):
+        json_reviewers = json.loads(json_reviewers)
         reviewers = {}
         for reviewer in json_reviewers:
             employee = reviewer['employee']

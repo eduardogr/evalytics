@@ -1,5 +1,6 @@
 
 from configparser import ConfigParser
+import tornado.web
 
 from evalytics.config import Config
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
@@ -7,7 +8,9 @@ from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage
 from evalytics.google_api import GoogleAPI
 from evalytics.core import DataRepository, CommunicationsProvider
+from evalytics.usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
 from evalytics.adapters import EmployeeAdapter
+from evalytics.mappers import Mapper
 
 from client import EvalyticsRequests
 from client import EvalyticsClient
@@ -154,7 +157,7 @@ class MockConfig(Config):
 
     def read_needed_spreadsheets(self):
         return self.needed_spreadsheets
-    
+
     def read_company_domain(self):
         return "company.com"
 
@@ -185,12 +188,84 @@ class MockConfigParser(ConfigParser):
     def get(self, key, section):
         return self.read()[key][section]
 
+class MockMapper(Mapper):
+
+    def __init__(self):
+        self.reviewers = []
+
+    def set_reviewers(self, reviewers):
+        self.reviewers = reviewers
+
+    def json_to_reviewers(self, json_reviewers):
+        return self.reviewers
+
+class SendMailUseCaseMock(SendMailUseCase):
+
+    def __init__(self):
+        self.evals_sent = []
+        self.evals_not_sent = []
+
+    def set_response(self, evals_sent, evals_not_sent):
+        self.evals_sent = evals_sent
+        self.evals_not_sent = evals_not_sent
+
+    def send_mail(self, reviewers):
+        return self.evals_sent, self.evals_not_sent
+
+    def get_response(self):
+        return self.response
+
+class GetReviewersUseCaseMock(GetReviewersUseCase, MockDataRepository, MockEmployeeAdapter):
+
+    def __init__(self):
+        self.response = {}
+
+    def set_get_reviewers(self, response):
+        self.response = response
+
+    def get_reviewers(self):
+        return self.response
+
+class SetupUseCaseMock(SetupUseCase, MockDataRepository):
+
+    def __init__(self):
+        self.response = {}
+
+    def set_setup(self, setup):
+        self.response = setup
+
+    def setup(self):
+        return self.response
+
+class RequestHandlerMock(tornado.web.RequestHandler):
+    
+    def __init__(self):
+        self.finish_data = {}
+        self.arguments = {}
+
+    def data_received(self):
+        pass
+
+    def set_argument(self, argument: str, value: str):
+        self.arguments.update({
+            argument: value
+        })
+
+    def get_argument(self, argument: str, default: str, strip):
+        return self.arguments.get(argument)
+
+    def finish(self, data):
+        self.finish_data = data
+
+    def get_finish_data(self):
+        return self.finish_data
 
 #
 # client.py mocks
 #
 
 class MockFile:
+
     def readlines(self):
         return []
 
@@ -198,10 +273,12 @@ class MockFile:
         return
 
 class MockFileManager(FileManager):
+
     def open(self, filename: str, mode: str):
         return MockFile()
 
 class MockEvalyticsRequests(EvalyticsRequests):
+
     BASE_URL = "mock:8080"
 
     def __init__(self):

@@ -1,20 +1,15 @@
-import json
-import sys
-
 import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
 
-
-class SetupHandler(tornado.web.RequestHandler):
+class SetupHandler(tornado.web.RequestHandler, SetupUseCase):
     path = r"/setup"
 
     async def post(self):
         try:
-            setup_usecase = SetupUseCase()
-            setup = setup_usecase.execute()
+            setup = super().setup()
             self.finish({
                 'success': True,
                 'response': {
@@ -33,13 +28,12 @@ class SetupHandler(tornado.web.RequestHandler):
                 }
             })
 
-class ReviewersHandler(tornado.web.RequestHandler):
+class ReviewersHandler(tornado.web.RequestHandler, GetReviewersUseCase):
     path = r"/reviewers"
 
     async def get(self):
         try:
-            get_reviewers = GetReviewersUseCase()
-            reviewers = get_reviewers.execute()
+            reviewers = super().get_reviewers()
 
             self.finish({
                 'success': True,
@@ -71,8 +65,8 @@ class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
 
     async def post(self):
         try:
-            reviewer_arg = self.get_argument('reviewers', "[]", strip=False)
-            reviewers = super().json_to_reviewer(json.loads(reviewer_arg))
+            reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
+            reviewers = super().json_to_reviewers(reviewers_arg)
 
             evals_sent, evals_not_sent = super().send_mail(reviewers)
             self.finish({

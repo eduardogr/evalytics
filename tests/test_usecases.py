@@ -30,7 +30,7 @@ class TestSetupUseCase(TestCase):
         self.sut = SetupUseCaseSut()
 
     def test_setup_usecase(self):
-        setup = self.sut.execute()
+        setup = self.sut.setup()
 
         self.assertEqual(self.mock_fileid, setup.folder.id)
         self.assertEqual(self.mock_filename, setup.folder.name)
@@ -41,7 +41,7 @@ class TestGetReviewersUseCase(TestCase):
         self.sut = GetReviewersUseCaseSut()
 
     def test_get_reviewers_usecase(self):
-        reviewers = self.sut.execute()
+        reviewers = self.sut.get_reviewers()
 
         self.assertEqual(
             employees_collection().get('em_email'),

@@ -19,26 +19,14 @@ class TestJsonToReviewer(TestCase):
         self.json_reviewer_with_no_evals = '{"employee": {"mail": "mail@mail", "manager": "manager", "area": "Area"}, "evals": []}'
         self.json_reviewer_with_evals = '{"employee": {"mail": "mail@mail", "manager": "manager", "area": "Area"}, "evals": [{"reviewee": "jaime", "kind": "SELF", "form": "finalform"}]}'
         self.jsondict_reviewer_with_evals = {
-            'employee': {
-                'mail': 'mail@mail@mail',
-                'manager': 'manager',
-                'area': 'area'
+            "employee": {
+                "mail": "mail@mail@mail",
+                "manager": "manager",
+                "area": "area"
             },
-            'evals': [
-                {
-                    'reviewee': 'jaime',
-                    'kind': 'SELF',
-                    'form': 'finalform'
-                }
+            "evals": [
+                {"reviewee": "jaime","kind": "SELF","form": "finalform"}
             ]
-        }
-        self.jsondict_reviewer_with_no_evals = {
-            'employee': {
-                'mail': 'mail@mail@mail',
-                'manager': 'manager',
-                'area': 'area'
-            },
-            'evals': []
         }
         self.reviewer_with_no_evals = Reviewer(
             employee=employee,
@@ -50,13 +38,15 @@ class TestJsonToReviewer(TestCase):
         )
 
     def test_json_to_reviewer_with_no_evals(self):
-        reviewer = self.sut.json_to_reviewer([self.jsondict_reviewer_with_no_evals])
+        json_reviewers = "[%s]" % self.json_reviewer_with_no_evals
+        reviewer = self.sut.json_to_reviewers(json_reviewers)
 
         self.assertEqual(self.reviewer_with_no_evals, reviewer['mail'])
 
 
     def test_json_to_reviewer_with_evals(self):
-        reviewer = self.sut.json_to_reviewer([self.jsondict_reviewer_with_evals])
+        json_reviewers = "[%s]" % self.json_reviewer_with_evals
+        reviewer = self.sut.json_to_reviewers(json_reviewers)
 
         self.assertEqual(self.reviewer_with_evals, reviewer['mail'])
 
@@ -88,14 +78,6 @@ class TestReviewerToJson(TestCase):
                     'form': 'finalform'
                 }
             ]
-        }
-        self.jsondict_reviewer_with_no_evals = {
-            'employee': {
-                'mail': 'mail@mail@mail',
-                'manager': 'manager',
-                'area': 'area'
-            },
-            'evals': []
         }
         self.reviewer_with_no_evals = Reviewer(
             employee=employee,

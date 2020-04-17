@@ -1,14 +1,17 @@
 from unittest import TestCase
 
+from evalytics.models import Employee, Reviewer
+
 from client import CommandFactory
 from client import EvalyticsClient
 
-from tests.common.mocks import MockFileManager
+from tests.common.mocks import MockFileManager, MockMapper
 from tests.common.mocks import MockEvalyticsRequests, MockEvalyticsClient
 
 class EvalyticsClientSut(
         EvalyticsClient,
         MockEvalyticsRequests,
+        MockMapper,
         MockFileManager):
     'Inject mocks into EvalyticsClient dependencies'
 
@@ -126,6 +129,18 @@ class TestEvalyticsClient(TestCase):
                 },
             ]
         }
+        mapped_reviewers = {
+            'uid1': Reviewer(
+                employee=Employee(mail='uid1@', manager='',area='')
+            ),
+            'uid2': Reviewer(
+                employee=Employee(mail='uid2@', manager='',area='')
+            ),
+            'uid3': Reviewer(
+                employee=Employee(mail='uid3@', manager='',area='')
+            ),
+        }
+        self.sut.set_reviewers(mapped_reviewers)
 
     def test_correct_setup(self):
         self.sut.set_setup_response({
@@ -155,7 +170,7 @@ class TestEvalyticsClient(TestCase):
         self.assertEqual(1, self.sut.get_calls()['reviewers'])
 
     def test_correct_print_reviewers(self):
-        self.sut.set_reviewers_response({
+        reviewers_response = {
             'reviewers': [
                 {
                     "employee": {
@@ -173,7 +188,8 @@ class TestEvalyticsClient(TestCase):
                     },
                 },
             ]
-        })
+        }
+        self.sut.set_reviewers_response(reviewers_response)
 
         self.sut.print_reviewers()
 

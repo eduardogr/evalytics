@@ -116,7 +116,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
     def send_eval(self, whitelist=None, dry_run: bool = False):
         response_reviewers = self.get_reviewers()
-        reviewers = super().json_to_reviewer(response_reviewers)
+        reviewers = super().json_to_reviewers(response_reviewers)
 
         if whitelist is not None:
             reviewers = [reviewer

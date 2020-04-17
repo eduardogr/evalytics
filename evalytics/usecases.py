@@ -3,13 +3,13 @@ from .core import DataRepository, CommunicationsProvider
 
 class SetupUseCase(DataRepository):
 
-    def execute(self):
+    def setup(self):
         setup = super().setup_storage()
         return setup
 
 class GetReviewersUseCase(DataRepository, EmployeeAdapter):
 
-    def execute(self):
+    def get_reviewers(self):
         return super().build_reviewers(
             super().get_employees(),
             super().get_forms())
