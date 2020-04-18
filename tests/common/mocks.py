@@ -6,9 +6,10 @@ from evalytics.config import Config
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage
-from evalytics.google_api import GoogleAPI
+from evalytics.google_api import GoogleAPI, GmailService, DriveService, SheetsService
 from evalytics.core import DataRepository, CommunicationsProvider
-from evalytics.usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
+from evalytics.usecases import SetupUseCase, GetReviewersUseCase
+from evalytics.usecases import SendMailUseCase
 from evalytics.adapters import EmployeeAdapter
 from evalytics.mappers import Mapper
 
@@ -57,6 +58,156 @@ class MockEmployeeAdapter(EmployeeAdapter):
     def build_eval_message(self, reviewer: Reviewer):
         return ""
 
+class MockDriveService(DriveService):
+
+    def __init__(self):
+        self.calls = {}
+        self.response_files = []
+        self.pages_requested = 0
+
+    def create_drive_folder(self, file_metadata):
+        self.__update_calls(
+            'create_drive_folder',
+            params={
+                'file_metadata': file_metadata
+            }
+        )
+        return {
+            'folder': file_metadata
+        }
+
+    def update_file_parent(self, file_id, current_parent, new_parent):
+        self.__update_calls(
+            'update_file_parent',
+            params={
+                'file_id': file_id,
+                'current_parent': current_parent,
+                'new_parent': new_parent,
+            }
+        )
+
+    def list_files(self, page_token: str, query: str):
+        self.__update_calls(
+            'list_files',
+            params={
+                'page_token': page_token,
+                'query': query,
+            }
+        )
+        if self.pages_requested > 0:
+            self.pages_requested -= 1
+            return {
+                'files': self.response_files,
+                'nextPageToken': 'pagetoken::{}'.format(self.pages_requested)
+            }
+
+        return {
+            'files': [],
+            'nextPageToken': None
+        }
+
+    def get_calls(self):
+        return self.calls
+
+    def set_pages_requested(self, pages_requested):
+        self.pages_requested = pages_requested
+
+    def set_response_files(self, response_files):
+        self.response_files = response_files
+
+    def __update_calls(self, function, params):
+        current_call_number = 0
+
+        if function in self.calls:
+            sorted_keys = sorted(self.calls[function].keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+            self.calls[function].update({
+                current_call_number: params
+            })
+        else:
+            self.calls.update({
+                function: {
+                    current_call_number: params
+                }
+            })
+
+
+class MockSheetsService(SheetsService):
+
+    def __init__(self):
+        self.calls = {}
+
+    def create_spreadsheet(self, file_metadata):
+        self.__update_calls(
+            'create_spreadsheet',
+            params={
+                'file_metadata': file_metadata
+            }
+        )
+        return {
+            'spreadsheetId': file_metadata['properties']['title']
+        }
+
+    def get_file_rows_from_folder(self, spreadsheet_id, rows_range):
+        self.__update_calls(
+            'get_file_rows_from_folder',
+            params={
+                'spreadsheet_id': spreadsheet_id,
+                'rows_range': rows_range,   
+            }
+        )
+        return {
+            'values': ['whatever']
+        }
+
+    def get_calls(self):
+        return self.calls
+
+    def __update_calls(self, function, params):
+        current_call_number = 0
+
+        if function in self.calls:
+            sorted_keys = sorted(self.calls[function].keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+            self.calls[function].update({
+                current_call_number: params
+            })
+        else:
+            self.calls.update({
+                function: {
+                    current_call_number: params
+                }
+            })
+
+class MockGmailService(GmailService):
+
+    def __init__(self):
+        self.send_calls = {}
+
+    def send(self, user_id, body):
+        current_call_number = 0
+
+        if len(self.send_calls) > 0:
+            sorted_keys = sorted(self.send_calls.keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+        self.send_calls.update({
+            current_call_number: {
+                'user_id': user_id,
+                'body': body
+            }
+        })
+
+        return body
+
+    def get_send_calls(self):
+        return self.send_calls
+
 class MockGoogleAPI(GoogleAPI):
 
     def __init__(self):
@@ -85,7 +236,7 @@ class MockGoogleAPI(GoogleAPI):
                 return self.fileid_by_name[folder_id][filename]
         return None
 
-    def create_spreadhsheet(self, folder_parent: str, folder, filename: str):
+    def create_sheet(self, folder_parent: str, folder, filename: str):
         spreasheet_id = filename
         self.set_fileid_by_name(folder['id'], spreasheet_id, spreasheet_id)
         return spreasheet_id

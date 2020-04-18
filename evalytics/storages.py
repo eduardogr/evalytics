@@ -27,7 +27,7 @@ class GoogleStorage(GoogleAPI, Config):
                 filename=filename)
 
             if spreadheet_id is None:
-                spreadheet_id = super().create_spreadhsheet(
+                spreadheet_id = super().create_sheet(
                     folder=folder,
                     folder_parent=folder_parent,
                     filename=filename

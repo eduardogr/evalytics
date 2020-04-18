@@ -128,6 +128,33 @@ class SheetsService:
             self.__credentials = GoogleAuth.authenticate()
         return self.__credentials
 
+class GmailService:
+
+    GMAIL_SERVICE_ID = 'gmail'
+    GMAIL_SERVICE_VERSION = 'v1'
+
+    __credentials = None
+    __gmail_service = None
+
+    def send(self, user_id, body):
+        return self.__get_gmail_service().users().messages().send(
+            userId=user_id,
+            body=body).execute()
+
+    def __get_gmail_service(self):
+        if self.__gmail_service is None:
+            self.__gmail_service = build(
+                self.GMAIL_SERVICE_ID,
+                self.GMAIL_SERVICE_VERSION,
+                credentials=self.__get_credentials(),
+                cache_discovery=False)
+        return self.__gmail_service
+
+    def __get_credentials(self):
+        if self.__credentials is None:
+            self.__credentials = GoogleAuth.authenticate()
+        return self.__credentials
+
 class FilesAPI(DriveService, SheetsService):
 
     def create_folder(self, name: str):
@@ -138,19 +165,20 @@ class FilesAPI(DriveService, SheetsService):
         folder = super().create_drive_folder(file_metadata)
         return folder
 
-    def create_spreadhsheet(self, folder_parent, folder, filename: str):
+    def create_sheet(self, folder_parent, folder, filename: str):
         file_metadata = {
             'properties': {
                 'title': filename,
             }
         }
         spreadsheet = super().create_spreadsheet(file_metadata)
+        spreadsheet_id = spreadsheet.get('spreadsheetId')
         super().update_file_parent(
-            file_id=spreadsheet.get('spreadsheetId'),
+            file_id=spreadsheet_id,
             current_parent=folder_parent,
             new_parent=folder.get('id')
         )
-        return spreadsheet.get('spreadsheetId')
+        return spreadsheet_id
 
     def get_folder(self, name):
         query = "mimeType='application/vnd.google-apps.folder'"
@@ -159,11 +187,23 @@ class FilesAPI(DriveService, SheetsService):
     def get_file_id_from_folder(self, folder_id, filename):
         query = "'%s' in parents" % folder_id
         file = self.__get_file(query, filename)
-        
+
         if file is not None:
             return file.get('id')
-        else:
-            return file
+
+        return None
+
+    def get_file_rows(self, foldername: str, filename: str, rows_range: str):
+        folder = self.get_folder(name=foldername)
+        spreadsheet_id = self.get_file_id_from_folder(
+            folder_id=folder.get('id'),
+            filename=filename)
+
+        result = super().get_file_rows_from_folder(
+            spreadsheet_id,
+            rows_range)
+
+        return result.get('values', [])
 
     def __get_file(self, query: str, filename):
         try:
@@ -186,26 +226,9 @@ class FilesAPI(DriveService, SheetsService):
             print(err)
             raise err
 
-    def get_file_rows(self, foldername: str, filename: str, rows_range: str):
-        folder = self.get_folder(name=foldername)
-        spreadsheet_id = self.get_file_id_from_folder(
-            folder_id=folder.get('id'),
-            filename=filename)
+class GmailAPI(GmailService):
 
-        result = super().get_file_rows_from_folder(
-            spreadsheet_id,
-            rows_range)
-
-        return result.get('values', [])
-
-class GmailAPI:
-
-    GMAIL_SERVICE_ID = 'gmail'
-    GMAIL_SERVICE_VERSION = 'v1'
     AUTHENTICATED_USER = 'me'
-
-    __credentials = None
-    __gmail_service = None
 
     def send_message(self, user_id, message):
         """Send an email message.
@@ -218,24 +241,11 @@ class GmailAPI:
         Returns:
         Sent Message.
         """
-        message = self.__get_gmail_service().users().messages().send(
-            userId=user_id, body=message).execute()
+        message = super().send(
+            user_id=user_id,
+            body=message
+        )
         return message
-
-    def __get_gmail_service(self):
-        if self.__gmail_service is None:
-            self.__gmail_service = build(
-                self.GMAIL_SERVICE_ID,
-                self.GMAIL_SERVICE_VERSION,
-                credentials=self.__get_credentials(),
-                cache_discovery=False)
-        return self.__gmail_service
-
-
-    def __get_credentials(self):
-        if self.__credentials is None:
-            self.__credentials = GoogleAuth.authenticate()
-        return self.__credentials
 
 class GoogleAPI(FilesAPI, GmailAPI):
     'Composition of google APIs'
