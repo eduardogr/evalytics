@@ -1,12 +1,12 @@
 [APP]
-NAME=Evalytics
-MAIL_SUBJECT=Evalytics: You can now complete your evaluation assignments!
+NAME = Evalytics
+MAIL_SUBJECT = Evalytics: You can now complete your evaluation assignments!
 
 [GOOGLE]
-FOLDER=2020 Q1 Evals
-ORGCHART=My Employee List
-FORM_MAP=Form mapping
+FOLDER = 2020 Q1 Evals
+ORGCHART = My Employee List
+FORM_MAP = Form mapping
 
 [COMPANY]
-DOMAIN=company.com
-NUMBER_OF_EMPLOYEES=1000
+DOMAIN = company.com
+NUMBER_OF_EMPLOYEES = 1000
