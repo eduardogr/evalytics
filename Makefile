@@ -3,7 +3,6 @@ PROJECT_FOLDER="."
 DOCKERFILE_PATH="Dockerfile"
 
 CONTAINER_NAME=evalytics
-IMAGE_VERSION=0.1.2
 PORT=8080
 
 env ?= dev # get from cl or 'dev' by default
@@ -15,7 +14,7 @@ build:
 	docker build . \
 		--build-arg BUILD_ENV=$(env) \
 		--file $(DOCKERFILE_PATH) \
-		--tag $(CONTAINER_NAME):$(IMAGE_VERSION)
+		--tag $(CONTAINER_NAME)
 
 google-auth:
 	python3 google_auth.py
@@ -25,7 +24,7 @@ run-server:
 		--volume $(CURRENT_PATH)/evalytics:/usr/app/evalytics \
 		--publish $(PORT):$(PORT) \
 		--name $(CONTAINER_NAME) \
-		-ti $(CONTAINER_NAME):$(IMAGE_VERSION)
+		-ti $(CONTAINER_NAME)
 
 test:
 	docker exec $(CONTAINER_NAME) pytest

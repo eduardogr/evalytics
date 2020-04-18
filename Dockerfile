@@ -9,6 +9,6 @@ EXPOSE 8080
 ENV PYTHONPATH /usr/app
 WORKDIR /usr/app
 
-RUN pip install --no-cache-dir -r evalytics/requirements/${BUILD_ENV}.txt
+RUN pip install --no-cache-dir -r requirements/${BUILD_ENV}.txt
 
-ENTRYPOINT ["python3", "evalytics/server.py"]
+ENTRYPOINT ["python3", "server.py"]

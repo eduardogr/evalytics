@@ -1,21 +1,10 @@
-from evalytics.server.google_api import GoogleAPI
-from evalytics.server.config import Config
-from evalytics.server.models import GoogleSetup, GoogleFile
-from evalytics.server.models import Employee, EvalKind
-from evalytics.server.exceptions import MissingDataException, NoFormsException
+from evalytics.google_api import GoogleAPI
+from evalytics.config import Config
+from evalytics.models import GoogleSetup, GoogleFile
+from evalytics.models import Employee, EvalKind
+from evalytics.exceptions import MissingDataException, NoFormsException
 
-class Storage:
-
-    def setup(self):
-        raise NotImplementedError
-
-    def get_employee_map(self):
-        raise NotImplementedError
-
-    def get_forms_map(self):
-        raise NotImplementedError
-
-class GoogleStorage(Storage, GoogleAPI, Config):
+class GoogleStorage(GoogleAPI, Config):
 
     FORM_MAP_RANGE = 'A2:D3'
 
@@ -38,7 +27,7 @@ class GoogleStorage(Storage, GoogleAPI, Config):
                 filename=filename)
 
             if spreadheet_id is None:
-                spreadheet_id = super().create_spreadhsheet(
+                spreadheet_id = super().create_sheet(
                     folder=folder,
                     folder_parent=folder_parent,
                     filename=filename

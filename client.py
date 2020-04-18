@@ -5,15 +5,7 @@ import sys
 import os
 import requests
 
-from evalytics.server.mappers import Mapper
-
-
-class MockFile:
-    def readlines(self):
-        return []
-
-    def close(self):
-        return
+from evalytics.mappers import Mapper
 
 class FileManager:
 
@@ -124,7 +116,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
     def send_eval(self, whitelist=None, dry_run: bool = False):
         response_reviewers = self.get_reviewers()
-        reviewers = super().json_to_reviewer(response_reviewers)
+        reviewers = super().json_to_reviewers(response_reviewers)
 
         if whitelist is not None:
             reviewers = [reviewer
@@ -184,6 +176,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         print("  - %s" % 'send_evals')
         print("  - %s --retry" % 'send_evals')
         print("  - %s --whitelist" % 'send_evals')
+        print("  - %s --dry-run" % 'send_evals')
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):
