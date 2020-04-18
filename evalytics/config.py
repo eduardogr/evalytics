@@ -6,19 +6,19 @@ class Config(ConfigParser):
 
     def read_mail_subject(self):
         super().read(self.CONFIG_FILE)
-        return super().get('APP', 'MAIL_SUBJECT')
+        return super().get('APP', 'mail_subject')
 
     def read_google_folder(self):
         super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'FOLDER')
+        return super().get('GOOGLE', 'folder')
 
     def read_google_orgchart(self):
         super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'ORGCHART')
+        return super().get('GOOGLE', 'org_chart')
 
     def read_google_form_map(self):
         super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'FORM_MAP')
+        return super().get('GOOGLE', 'form_map')
 
     def read_needed_spreadsheets(self):
         orgchart_filename = self.read_google_orgchart()
@@ -30,8 +30,8 @@ class Config(ConfigParser):
 
     def read_company_domain(self):
         super().read(self.CONFIG_FILE)
-        return super().get('COMPANY', 'DOMAIN')
+        return super().get('COMPANY', 'domain')
 
     def read_company_number_of_employees(self):
         super().read(self.CONFIG_FILE)
-        return super().get('COMPANY', 'NUMBER_OF_EMPLOYEES', fallback='0')
+        return super().get('COMPANY', 'number_of_employees',)

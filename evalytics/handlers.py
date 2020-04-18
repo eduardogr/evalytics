@@ -4,12 +4,12 @@ from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
 
-class SetupHandler(tornado.web.RequestHandler, SetupUseCase):
+class SetupHandler(tornado.web.RequestHandler):
     path = r"/setup"
 
     async def post(self):
         try:
-            setup = super().setup()
+            setup = SetupUseCase().setup()
             self.finish({
                 'success': True,
                 'response': {
@@ -28,12 +28,12 @@ class SetupHandler(tornado.web.RequestHandler, SetupUseCase):
                 }
             })
 
-class ReviewersHandler(tornado.web.RequestHandler, GetReviewersUseCase):
+class ReviewersHandler(tornado.web.RequestHandler):
     path = r"/reviewers"
 
     async def get(self):
         try:
-            reviewers = super().get_reviewers()
+            reviewers = GetReviewersUseCase().get_reviewers()
 
             self.finish({
                 'success': True,
@@ -60,7 +60,7 @@ class ReviewersHandler(tornado.web.RequestHandler, GetReviewersUseCase):
                 }
             })
 
-class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
+class SendMailHandler(tornado.web.RequestHandler, Mapper):
     path = r"/sendmail"
 
     async def post(self):
@@ -68,7 +68,7 @@ class SendMailHandler(tornado.web.RequestHandler, SendMailUseCase, Mapper):
             reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
             reviewers = super().json_to_reviewers(reviewers_arg)
 
-            evals_sent, evals_not_sent = super().send_mail(reviewers)
+            evals_sent, evals_not_sent = SendMailUseCase().send_mail(reviewers)
             self.finish({
                 'success': True,
                 'response': {

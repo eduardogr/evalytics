@@ -20,6 +20,6 @@ class NoFormsException(Exception):
 
     def __str__(self):
         if self.message:
-            return 'MissingDataException, {0} '.format(self.message)
+            return 'NoFormsException, {0} '.format(self.message)
         else:
-            return 'MissingDataException has been raised'
+            return 'NoFormsException has been raised'

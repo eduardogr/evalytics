@@ -323,16 +323,16 @@ class MockConfigParser(ConfigParser):
     def read(self, filename: str = ''):
         return {
             'APP': {
-                'MAIL_SUBJECT': 'this is the mail subject'
+                'mail_subject': 'this is the mail subject'
             },
             'GOOGLE': {
-                'FOLDER': 'mock_folder',
-                'ORGCHART': 'mock_orgchart',
-                'FORM_MAP': 'mock_formmap',
+                'folder': 'mock_folder',
+                'org_chart': 'mock_orgchart',
+                'form_map': 'mock_formmap',
             },
             'COMPANY': {
-                'DOMAIN': 'mock_domain.com',
-                'NUMBER_OF_EMPLOYEES': 20,
+                'domain': 'mock_domain.com',
+                'number_of_employees': 20,
             }
         }
 
