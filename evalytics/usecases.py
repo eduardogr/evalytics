@@ -29,3 +29,8 @@ class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
                 evals_not_sent.append(reviewer.uid)
 
         return evals_sent, evals_not_sent
+
+class GetResponseStatus:
+
+    def get_response_status(self):
+        return [], [], []

@@ -1,6 +1,7 @@
 import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
+from .usecases import GetResponseStatus
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
 
@@ -74,6 +75,42 @@ class SendMailHandler(tornado.web.RequestHandler, Mapper):
                 'response': {
                     'evals_sent': evals_sent,
                     'evals_not_sent': evals_not_sent
+                }
+            })
+        except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
+                }
+            })
+
+class ResponseStatusHandler(tornado.web.RequestHandler):
+    path = r"/status"
+
+    async def get(self):
+        try:
+            completed, pending, inconsistent_responses = GetResponseStatus().get_response_status()
+
+            self.finish({
+                'success': True,
+                'response': {
+                    'status': {
+                        'completed': completed,
+                        'pending': pending,
+                        'inconsistent_responses': inconsistent_responses
+                    }
+                }
+            })
+        except (MissingDataException) as exception:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': exception.message,
                 }
             })
         except Exception as e:

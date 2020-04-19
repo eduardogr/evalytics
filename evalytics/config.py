@@ -20,6 +20,10 @@ class Config(ConfigParser):
         super().read(self.CONFIG_FILE)
         return super().get('GOOGLE', 'form_map')
 
+    def read_google_responses_folder(self):
+        super().read(self.CONFIG_FILE)
+        return super().get('GOOGLE', 'form_responses_folder')
+
     def read_needed_spreadsheets(self):
         orgchart_filename = self.read_google_orgchart()
         formmap_filename = self.read_google_form_map()
