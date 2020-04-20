@@ -31,6 +31,13 @@ class EvalyticsRequests:
 
         return self.__get_data_response(response)
 
+    def status(self):
+        response = requests.get(
+            url="%s/status" % self.BASE_URL,
+            params={})
+
+        return self.__get_data_response(response)
+
     def sendmail(self, json_reviewers):
         response = requests.post(
             url="%s/sendmail" % self.BASE_URL,
@@ -85,6 +92,19 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 print("  - Error response: %s" % response.content)
             return []
 
+    def get_status(self):
+        success, response = super().status()
+        if success:
+            return response['status']
+        else:
+            if 'error' in response:
+                print("[Controlled Error] %s" % response['error'])
+            else:
+                print("[ERROR] Something failed in get reviewers")
+                print("  - HTTP code: %s" % response.status_code)
+                print("  - Error response: %s" % response.content)
+            return []
+
     def print_reviewers_stats(self, all_reviewers):
         reviewers_by_evals_numbers = {}
         for reviewer in all_reviewers:
@@ -113,6 +133,47 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
             print('|  STATS  |')
             print('-----------')
             self.print_reviewers_stats(reviewers)
+
+    def print_status(self):
+        status = self.get_status()
+
+        total_evals = 0
+        total_completed_evals = 0
+        total_pending_evals = 0
+        total_inconsistent_evals = 0
+
+        print('Completed evals:')
+        for reviewer, completed_evals in status.get('completed', {}).items():
+            evals = [uid for uid, e in completed_evals.items()]
+            total_completed_evals += len(evals)
+            total_evals += len(evals)
+            print("  - %s: %s" %(reviewer, evals))
+
+        print('Pending evals:')
+        for reviewer, pending_evals in status.get('pending', {}).items():
+            evals = [uid for uid, e in pending_evals.items()]
+            total_pending_evals += len(evals)
+            total_evals += len(evals)
+            print("  - %s: %s" %(reviewer, evals))
+
+        print('Inconsistent evals:')
+        for reviewer, inconsistent_evals in status.get('inconsistent', {}).items():
+            evals = [uid for uid, e in inconsistent_evals.items()]
+            total_inconsistent_evals += len(evals)
+            total_evals += len(evals)
+            print("  - %s: %s\n" %(reviewer, evals))
+
+        pending_percentage = total_pending_evals / total_evals * 100
+        completed_percentage = total_completed_evals / total_evals * 100
+
+        print("Total evals: {}".format(total_evals))
+        print("Completed evals: {0:.2f} % ({1:.0f})".format(
+            completed_percentage,
+            total_completed_evals))
+        print("Pending evals: {0:.2f} % ({1:.0f})".format(
+            pending_percentage,
+            total_pending_evals))
+        print("Inconsitent evals: %s" % total_inconsistent_evals)
 
     def send_eval(self, whitelist=None, dry_run: bool = False):
         response_reviewers = self.get_reviewers()
@@ -177,6 +238,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         print("  - %s --retry" % 'send_evals')
         print("  - %s --whitelist" % 'send_evals')
         print("  - %s --dry-run" % 'send_evals')
+        print("  - %s" % 'status')
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):
@@ -197,6 +259,8 @@ class CommandFactory(EvalyticsClient):
                 super().whitelist_send_eval(dry_run=dry_run)
             else:
                 super().send_eval(dry_run=dry_run)
+        elif 'status' in args:
+            super().print_status()
         else:
             super().help(command)
 
