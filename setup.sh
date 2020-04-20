@@ -13,6 +13,7 @@ fi
 if [[ ! -f "$CREDENTIALS" ]]
 then
     echo "[IMPORTANT] You need a $CREDENTIALS file"
+    exit
 fi
 
 source env/bin/activate
