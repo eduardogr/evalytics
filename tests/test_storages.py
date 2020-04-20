@@ -216,32 +216,74 @@ class TestGoogleStorage(TestCase):
 
 
     def test_get_responses_when_no_data_in_files(self):
-        manager_by_file_id = 'file_id_manager_by'
-        report_by_file_id = 'file_id_report_by'
-        self_by_file_id = 'file_id_self'
+        file_id_manager_by = 'file_id_manager_by'
+        file_id_report_by = 'file_id_report_by'
+        file_id_self = 'file_id_self'
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([{
-                'id': manager_by_file_id,
+                'id': file_id_manager_by,
                 'name': 'Manager Evaluation By Team Member',
             }, {
-                'id': report_by_file_id,
+                'id': file_id_report_by,
                 'name': 'Report Evaluation by Manager',
             }, {
-                'id': self_by_file_id,
+                'id': file_id_self,
                 'name': 'Self Evaluation',
             },
         ])
         self.sut.set_file_rows_by_id(
-            manager_by_file_id,
+            file_id_manager_by,
             []
         )
         self.sut.set_file_rows_by_id(
-            report_by_file_id,
+            file_id_report_by,
             []
         )
         self.sut.set_file_rows_by_id(
-            self_by_file_id,
+            file_id_self,
             []
+        )
+
+        with self.assertRaises(MissingDataException):
+            self.sut.get_responses_map()
+
+    def test_get_responses_map_when_uncompleted_data_in_files(self):
+        file_id_manager_by = 'file_id_manager_by'
+        file_id_report_by = 'file_id_report_by'
+        file_id_self = 'file_id_self'
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([{
+                'id': file_id_manager_by,
+                'name': 'Manager Evaluation By Team Member',
+            }, {
+                'id': file_id_report_by,
+                'name': 'Report Evaluation by Manager',
+            }, {
+                'id': file_id_self,
+                'name': 'Self Evaluation',
+            },
+        ])
+        self.sut.set_file_rows_by_id(
+            file_id_manager_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporternswer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_report_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'managernswer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_self,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporteswer1', 'answer2'],
+                ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
+            ]
         )
 
         with self.assertRaises(MissingDataException):
