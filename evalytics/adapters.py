@@ -120,6 +120,9 @@ class ReviewerAdapter(EmployeeAdapter):
             completed_responses = {}
             inconsistent_responses = {}
             for response in responses:
+                if uid not in reviewers:
+                    continue
+
                 reviewer = reviewers[uid]
                 reason = self.__get_reason_of_inconsistent_response(
                     reviewer,
