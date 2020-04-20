@@ -1,7 +1,7 @@
 import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
-from .usecases import GetResponseStatus
+from .usecases import GetResponseStatusUseCase
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
 
@@ -94,7 +94,7 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
 
     async def get(self):
         try:
-            completed, pending, inconsistent = GetResponseStatus().get_response_status()
+            completed, pending, inconsistent = GetResponseStatusUseCase().get_response_status()
 
             self.finish({
                 'success': True,

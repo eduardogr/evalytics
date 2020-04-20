@@ -37,6 +37,11 @@ class TestJsonToReviewer(TestCase):
             evals=evals
         )
 
+    def test_jsondict_to_reviewer_with_evals(self):
+        reviewer = self.sut.json_to_reviewers([self.jsondict_reviewer_with_evals])
+
+        self.assertEqual(self.reviewer_with_no_evals, reviewer['mail'])
+
     def test_json_to_reviewer_with_no_evals(self):
         json_reviewers = "[%s]" % self.json_reviewer_with_no_evals
         reviewer = self.sut.json_to_reviewers(json_reviewers)

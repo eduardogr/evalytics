@@ -30,7 +30,8 @@ class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
 
         return evals_sent, evals_not_sent
 
-class GetResponseStatus(GetReviewersUseCase, DataRepository, ReviewerAdapter):
+class GetResponseStatusUseCase(
+        GetReviewersUseCase, DataRepository, ReviewerAdapter):
 
     def get_response_status(self):
         reviewers = super().get_reviewers()

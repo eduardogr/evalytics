@@ -11,7 +11,7 @@ from evalytics.google_api import GmailService, DriveService, SheetsService
 from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendMailUseCase
-from evalytics.adapters import EmployeeAdapter
+from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
 
 from client import EvalyticsRequests
@@ -38,6 +38,9 @@ class MockDataRepository(DataRepository):
     def get_forms(self):
         return {}
 
+    def get_responses(self):
+        return {}
+
 class MockCommunicationsProvider(CommunicationsProvider):
 
     def __init__(self):
@@ -58,6 +61,11 @@ class MockEmployeeAdapter(EmployeeAdapter):
 
     def build_eval_message(self, reviewer: Reviewer):
         return ""
+
+class MockReviewerAdapter(ReviewerAdapter):
+
+    def get_status_from_responses(self, reviewers, responses):
+        return [], [], []
 
 class MockDriveService(DriveService):
 
@@ -284,6 +292,9 @@ class MockGoogleStorage(GoogleStorage):
     def get_forms_map(self):
         return
 
+    def get_responses_map(self):
+        return
+
 class MockGmailChannel(GmailChannel):
 
     def send(self, reviewer: Reviewer, data):
@@ -330,6 +341,7 @@ class MockConfigParser(ConfigParser):
                 'folder': 'mock_folder',
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
+                'form_responses_folder': 'mock_tests_folder',
             },
             'COMPANY': {
                 'domain': 'mock_domain.com',
