@@ -106,11 +106,81 @@ class EmployeeAdapter(Config):
                     {1}
             </td></tr></tbody></tr></table></div>'''.format(reviewer.uid, list_of_evals)
 
-class ReviewerAdapter:
+class ReviewerAdapter(EmployeeAdapter):
 
     def get_status_from_responses(self, reviewers, responses):
-        completed = []
-        pending = []
-        inconsistent_responses = []
+        completed = {}
+        pending = {}
+        inconsistent = {}
 
-        return completed, pending, inconsistent_responses
+        employees = {r.uid:r.employee for uid, r in reviewers.items()}
+        employees_by_manager = super().get_employees_by_manager(employees)
+
+        for uid, responses in responses.items():
+            completed_responses = {}
+            inconsistent_responses = {}
+            for response in responses:
+                reviewer = reviewers[uid]
+                reason = self.__get_reason_of_inconsistent_response(
+                    reviewer,
+                    response,
+                    employees_by_manager
+                )
+
+                if reason is None:
+                    completed_responses.update({
+                        response['reviewee']: {
+                            'kind': response['kind'],
+                        }
+                    })
+                else:
+                    inconsistent_responses.update({
+                        response['reviewee']: {
+                            'kind': response['kind'],
+                            'reason': reason
+                        }
+                    })
+            if len(completed_responses) > 0:
+                completed.update({
+                    uid: completed_responses
+                })
+            if len(inconsistent_responses) > 0:
+                inconsistent.update({
+                    uid: inconsistent_responses
+                })
+
+        for uid, reviewer in reviewers.items():
+            evals = reviewer.evals
+            pending_responses = {}
+            for e in evals:
+                if e.reviewee not in completed.get(uid, {}):
+                    pending_responses.update({
+                        e.reviewee: {
+                            'kind': e.kind.name,
+                            'form': e.form
+                        }
+                    })
+            if len(pending_responses) > 0:
+                pending.update({
+                    uid: pending_responses
+                })
+
+        return completed, pending, inconsistent
+
+    def __get_reason_of_inconsistent_response(self,
+                                              reviewer,
+                                              response,
+                                              employees_by_manager):
+        reason = None
+        if response['kind'] == EvalKind.PEER_MANAGER.name:
+            if reviewer.employee.manager != response['reviewee']:
+                reason = 'WRONG_MANAGER: %s, it should be %s' % (
+                    response['reviewee'], reviewer.employee.manager)
+
+        elif response['kind'] == EvalKind.MANAGER_PEER.name:
+            reporters = employees_by_manager.get(reviewer.uid, [])
+            if response['reviewee'] not in reporters:
+                reason = 'WRONG_REPORTER: %s is not one of expected reporters. Reporters: %s' % (
+                    response['reviewee'], reporters)
+
+        return reason

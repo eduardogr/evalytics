@@ -94,7 +94,7 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
 
     async def get(self):
         try:
-            completed, pending, inconsistent_responses = GetResponseStatus().get_response_status()
+            completed, pending, inconsistent = GetResponseStatus().get_response_status()
 
             self.finish({
                 'success': True,
@@ -102,7 +102,7 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
                     'status': {
                         'completed': completed,
                         'pending': pending,
-                        'inconsistent_responses': inconsistent_responses
+                        'inconsistent': inconsistent
                     }
                 }
             })

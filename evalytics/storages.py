@@ -137,7 +137,6 @@ class GoogleStorage(GoogleAPI, Config):
                 }
                 if reviewer in responses:
                     acc_responses = responses[reviewer]
-                    acc_responses.append(eval_response)
                 else:
                     acc_responses = []
 
