@@ -15,7 +15,7 @@ class FileManager:
 
 class EvalyticsRequests:
 
-    BASE_URL = "http://localhost:8080"
+    BASE_URL = "http://evalytics:8080"
 
     def setup(self):
         response = requests.post(

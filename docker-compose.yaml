@@ -1,12 +1,21 @@
 version: '3'
 services:
-  evalytics:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - "BUILD_ENV"
-    ports:
-      - "8080:8080"
-    volumes:
-      - "./:/usr/app"
+    evalytics:
+      build:
+        context: .
+        dockerfile: Dockerfile
+        args:
+          - "BUILD_ENV"
+      ports:
+        - "8080:8080"
+      volumes:
+        - "./:/usr/app"
+
+    evalytics-client:
+      build:
+        context: .
+        dockerfile: Dockerfile-client
+        args:
+          - "BUILD_ENV"
+      volumes:
+        - "./:/usr/app"
