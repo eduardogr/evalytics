@@ -56,11 +56,20 @@ class MockCommunicationsProvider(CommunicationsProvider):
 
 class MockEmployeeAdapter(EmployeeAdapter):
 
+    def __init__(self):
+        self.employees_by_manager = {}
+
     def build_reviewers(self, employees, forms):
         return employees
 
     def build_eval_message(self, reviewer: Reviewer):
         return ""
+
+    def get_employees_by_manager(self, employees):
+        return self.employees_by_manager
+
+    def set_employees_by_manager(self, employees_by_manager):
+        self.employees_by_manager = employees_by_manager
 
 class MockReviewerAdapter(ReviewerAdapter):
 
