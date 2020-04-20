@@ -21,7 +21,7 @@ google-auth:
 
 run-server:
 	docker run -d \
-		--volume $(CURRENT_PATH)/evalytics:/usr/app/evalytics \
+		--volume $(CURRENT_PATH):/usr/app \
 		--publish $(PORT):$(PORT) \
 		--name $(CONTAINER_NAME) \
 		-ti $(CONTAINER_NAME)
