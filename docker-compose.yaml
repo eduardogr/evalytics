@@ -1,7 +1,11 @@
-version: "2"
+version: '3'
 services:
   evalytics:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - "BUILD_ENV"
     ports:
       - "8080:8080"
     volumes:

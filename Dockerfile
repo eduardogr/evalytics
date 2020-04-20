@@ -9,6 +9,6 @@ EXPOSE 8080
 ENV PYTHONPATH /usr/app
 WORKDIR /usr/app
 
-RUN pip install --no-cache-dir -r requirements/${BUILD_ENV}.txt
+RUN pip3 install --no-cache-dir -r requirements/${BUILD_ENV}.txt
 
 ENTRYPOINT ["python3", "server.py"]
