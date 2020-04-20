@@ -439,6 +439,8 @@ class TestReviewerAdapter(TestCase):
                     'kind': 'MANAGER_PEER',
                     'reviewee': 'sw3',
                     'eval_response': [],
+                    'filename': 'whatever',
+                    'line_number': 10,
                 }
             ],
             self.reviewers['tl2'].uid: [],
@@ -498,6 +500,8 @@ class TestReviewerAdapter(TestCase):
                     'kind': 'PEER_MANAGER',
                     'reviewee': 'tl2',
                     'eval_response': [],
+                    'filename': 'whatever',
+                    'line_number': 10,
             }],
             self.reviewers['sw2'].uid: [],
             self.reviewers['sw3'].uid: [],

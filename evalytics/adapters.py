@@ -124,13 +124,13 @@ class ReviewerAdapter(EmployeeAdapter):
                     continue
 
                 reviewer = reviewers[uid]
-                reason = self.__get_reason_of_inconsistent_response(
+                inconsistent_reason = self.__get_reason_of_inconsistent_response(
                     reviewer,
                     response,
                     employees_by_manager
                 )
 
-                if reason is None:
+                if inconsistent_reason is None:
                     completed_responses.update({
                         response['reviewee']: {
                             'kind': response['kind'],
@@ -140,7 +140,9 @@ class ReviewerAdapter(EmployeeAdapter):
                     inconsistent_responses.update({
                         response['reviewee']: {
                             'kind': response['kind'],
-                            'reason': reason
+                            'reason': inconsistent_reason,
+                            'filename': response['filename'],
+                            'line_number': response['line_number'],
                         }
                     })
             if len(completed_responses) > 0:
@@ -177,13 +179,13 @@ class ReviewerAdapter(EmployeeAdapter):
         reason = None
         if response['kind'] == EvalKind.PEER_MANAGER.name:
             if reviewer.employee.manager != response['reviewee']:
-                reason = 'WRONG_MANAGER: %s, it should be %s' % (
+                reason = "WRONG_MANAGER: '%s', it should be '%s'." % (
                     response['reviewee'], reviewer.employee.manager)
 
         elif response['kind'] == EvalKind.MANAGER_PEER.name:
             reporters = employees_by_manager.get(reviewer.uid, [])
             if response['reviewee'] not in reporters:
-                reason = 'WRONG_REPORTER: %s is not one of expected reporters. Reporters: %s' % (
+                reason = "WRONG_REPORTER: '%s' is not one of expected reporters. Reporters: %s." % (
                     response['reviewee'], reporters)
 
         return reason

@@ -126,6 +126,7 @@ class GoogleStorage(GoogleAPI, Config):
                 raise MissingDataException("Missing data in response file: %s" % (filename))
 
             questions = rows[0][3:]
+            line_number = 2
             for line in rows[1:]:
 
                 if len(line) < 4:
@@ -145,7 +146,9 @@ class GoogleStorage(GoogleAPI, Config):
                 eval_response = {
                     'kind': eval_kind.name,
                     'reviewee': reviewee,
-                    'eval_response': eval_responses
+                    'eval_response': eval_responses,
+                    'filename': filename,
+                    'line_number': line_number,
                 }
 
                 acc_responses = responses.get(reviewer, [])
@@ -153,6 +156,8 @@ class GoogleStorage(GoogleAPI, Config):
                 responses.update({
                     reviewer: acc_responses
                 })
+                line_number += 1
+            line_number = 2
 
         return responses
 

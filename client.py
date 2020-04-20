@@ -142,7 +142,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         total_pending_evals = 0
         total_inconsistent_evals = 0
 
-        print('Completed evals:')
+        print('\nCompleted evals:')
         for reviewer, completed_evals in status.get('completed', {}).items():
             evals = [uid for uid, e in completed_evals.items()]
             total_completed_evals += len(evals)
@@ -173,6 +173,35 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 pending_percentage,
                 total_pending_evals))
             print("Inconsitent evals: %s" % total_inconsistent_evals)
+
+    def print_inconsistent_files_status(self):
+        status = self.get_status()
+
+        inconsistent_files = {}
+
+        print('\nInconsistent evals:')
+        for reviewer, inconsistent_evals in status.get('inconsistent', {}).items():
+            evals = []
+            for uid, evaluation in inconsistent_evals.items():
+                evals.append(uid)
+                filename = evaluation['filename']
+                reasons = inconsistent_files.get(filename, [])
+                reasons.append({
+                    'reason': evaluation['reason'],
+                    'line': evaluation['line_number']
+                })
+                inconsistent_files.update({
+                    filename: reasons
+                })
+
+            print("  - %s: %s\n" %(reviewer, evals))
+
+        print('Inconsistent files:')
+        for filename, reasons in inconsistent_files.items():
+            print("  - File: '%s'" % filename)
+            for reason in reasons:
+                print('    - (Line %s) %s' % (reason['line'], reason['reason']))
+            print()
 
     def send_eval(self, whitelist=None, dry_run: bool = False):
         response_reviewers = self.get_reviewers()
@@ -238,6 +267,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         print("  - %s --whitelist" % 'send_evals')
         print("  - %s --dry-run" % 'send_evals')
         print("  - %s" % 'status')
+        print("  - %s --inconsistent-files" % 'status')
 
 class CommandFactory(EvalyticsClient):
     def execute(self, command):
@@ -259,7 +289,10 @@ class CommandFactory(EvalyticsClient):
             else:
                 super().send_eval(dry_run=dry_run)
         elif 'status' in args:
-            super().print_status()
+            if '--inconsistent-files' in args:
+                super().print_inconsistent_files_status()
+            else:
+                super().print_status()
         else:
             super().help(command)
 
