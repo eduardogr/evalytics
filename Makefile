@@ -30,7 +30,7 @@ down:
 	docker-compose down
 
 test:
-	docker-compose exec $(CONTAINER_NAME) pytest
+	docker-compose exec $(CONTAINER_NAME) pytest $(ARGS)
 
 google-auth:
 	python3 google_auth.py
