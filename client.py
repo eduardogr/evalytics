@@ -162,17 +162,17 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
             total_inconsistent_evals += len(evals)
             print("  - %s: %s\n" %(reviewer, evals))
 
-        pending_percentage = total_pending_evals / total_evals * 100
-        completed_percentage = total_completed_evals / total_evals * 100
-
         print("Total evals: {}".format(total_evals))
-        print("Completed evals: {0:.2f} % ({1:.0f})".format(
-            completed_percentage,
-            total_completed_evals))
-        print("Pending evals: {0:.2f} % ({1:.0f})".format(
-            pending_percentage,
-            total_pending_evals))
-        print("Inconsitent evals: %s" % total_inconsistent_evals)
+        if total_evals > 0:
+            pending_percentage = total_pending_evals / total_evals * 100
+            completed_percentage = total_completed_evals / total_evals * 100
+            print("Completed evals: {0:.2f} % ({1:.0f})".format(
+                completed_percentage,
+                total_completed_evals))
+            print("Pending evals: {0:.2f} % ({1:.0f})".format(
+                pending_percentage,
+                total_pending_evals))
+            print("Inconsitent evals: %s" % total_inconsistent_evals)
 
     def send_eval(self, whitelist=None, dry_run: bool = False):
         response_reviewers = self.get_reviewers()

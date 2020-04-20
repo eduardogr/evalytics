@@ -484,6 +484,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.calls = {}
         self.setup_response = {}
         self.reviewers_response = {}
+        self.status_response = {}
         self.sendmail_response = {}
 
     def set_setup_response(self, response):
@@ -499,6 +500,13 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def reviewers(self):
         self.update_calls('reviewers')
         return True, self.reviewers_response
+
+    def set_status_response(self, response):
+        self.status_response = response
+
+    def status(self):
+        self.update_calls('status')
+        return True, self.status_response
 
     def set_sendmail_response(self, response):
         self.sendmail_response = response
@@ -531,6 +539,9 @@ class MockEvalyticsClient(EvalyticsClient):
     def print_reviewers(self, show_stats=False):
         self.update_calls('print_reviewers')
         self.show_stats = show_stats
+
+    def print_status(self):
+        self.update_calls('print_status')
 
     def post_setup(self):
         self.update_calls('post_setup')
