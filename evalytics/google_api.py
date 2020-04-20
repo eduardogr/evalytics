@@ -194,6 +194,14 @@ class FilesAPI(DriveService, SheetsService):
 
         return None
 
+    def get_folder_from_folder(self, foldername, parent_foldername):
+        folder = self.get_folder(parent_foldername)
+        if folder is not None:
+            is_folder = "mimeType='application/vnd.google-apps.folder'"
+            query = "%s and '%s' in parents" % (is_folder, folder.get('id'))
+            folder = self.__get_file(query, foldername)
+        return folder
+
     def get_files_from_folder(self, folder_id):
         query = "'%s' in parents" % folder_id
         files = self.__get_files(query)

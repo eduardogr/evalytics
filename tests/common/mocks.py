@@ -221,15 +221,27 @@ class MockGoogleAPI(GoogleAPI):
 
     def __init__(self):
         self.response = []
+        self.files_from_folder_response = []
+        self.file_rows_by_id_response = {}
         self.folder = None
+        self.folder_from_folder = None
         self.fileid_by_name = {}
         self.send_message_calls = {}
 
     def get_file_rows_from_folder(self, foldername: str, filename: str, rows_range: str):
         return self.response
 
+    def get_file_rows(self, file_id: str, rows_range: str):
+        return self.file_rows_by_id_response.get(file_id, [])
+
+    def get_files_from_folder(self, folder_id):
+        return self.files_from_folder_response
+
     def get_folder(self, name: str):
         return self.folder
+
+    def get_folder_from_folder(self, foldername, parent_foldername):
+        return self.folder_from_folder
 
     def create_folder(self, name: str):
         folder = {
@@ -270,6 +282,17 @@ class MockGoogleAPI(GoogleAPI):
 
     def set_file_rows_response(self, response):
         self.response = response
+
+    def set_file_rows_by_id(self, file_id, response):
+        self.file_rows_by_id_response.update({
+            file_id: response
+        })
+
+    def set_files_from_folder_response(self, response):
+        self.files_from_folder_response = response
+
+    def set_folder_from_folder(self, folder):
+        self.folder_from_folder = folder
 
     def set_folder(self, folder):
         self.folder = folder
@@ -320,6 +343,9 @@ class MockConfig(Config):
 
     def read_needed_spreadsheets(self):
         return self.needed_spreadsheets
+
+    def read_google_responses_folder(self):
+        return "form_responses_folder"
 
     def read_company_domain(self):
         return "company.com"
