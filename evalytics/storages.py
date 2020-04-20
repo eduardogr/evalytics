@@ -47,7 +47,7 @@ class GoogleStorage(GoogleAPI, Config):
             return employees
 
         org_chart_range = 'A2:C' + str(number_of_employees + 1)
-        values = super().get_file_rows(
+        values = super().get_file_rows_from_folder(
             foldername=super().read_google_folder(),
             filename=super().read_google_orgchart(),
             rows_range=org_chart_range)
@@ -72,7 +72,7 @@ class GoogleStorage(GoogleAPI, Config):
         return employees
 
     def get_forms_map(self):
-        values = super().get_file_rows(
+        values = super().get_file_rows_from_folder(
             foldername=super().read_google_folder(),
             filename=super().read_google_form_map(),
             rows_range=self.FORM_MAP_RANGE)
@@ -100,3 +100,60 @@ class GoogleStorage(GoogleAPI, Config):
             })            
 
         return forms
+
+    def get_responses_map(self):
+        responses_folder = super().read_google_responses_folder()
+        folder = super().get_folder(responses_folder)
+        files = super().get_files_from_folder(folder.get('id'))
+
+        number_of_employees = int(super().read_company_number_of_employees())
+        responses_range = 'A1:S' + str(number_of_employees + 2)
+
+        responses = {}
+        for file in files:
+            rows = super().get_file_rows(
+                file.get('id'),
+                responses_range)
+
+            filename = file.get('name')
+            eval_kind = self.__get_eval_kind(filename)
+
+            questions = rows[0][3:]
+            for line in rows[1:]:
+                reviewer = line[1]
+                eval_responses = line[3:]
+
+                eval_responses = list(zip(questions, eval_responses))
+
+                if eval_kind == EvalKind.SELF:
+                    reviewee = reviewer
+                else:
+                    reviewee = line[2]
+
+                eval_response = {
+                    'kind': eval_kind.name,
+                    'reviewee': reviewee,
+                    'eval_response': eval_responses
+                }
+                if reviewer in responses:
+                    acc_responses = responses[reviewer]
+                    acc_responses.append(eval_response)
+                else:
+                    acc_responses = []
+
+                acc_responses.append(eval_response)
+                responses.update({
+                    reviewer: acc_responses
+                })
+
+        return responses
+
+    def __get_eval_kind(self, filename):
+        if filename.startswith('Manager Evaluation By Team Member'):
+            return EvalKind.PEER_MANAGER
+        elif filename.startswith('Report Evaluation by Manager'):
+            return EvalKind.MANAGER_PEER
+        elif filename.startswith('Self Evaluation'):
+            return EvalKind.SELF
+        else:
+            return None

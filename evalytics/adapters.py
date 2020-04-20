@@ -105,3 +105,12 @@ class EmployeeAdapter(Config):
             <tr><td style="padding:10px 0">
                     {1}
             </td></tr></tbody></tr></table></div>'''.format(reviewer.uid, list_of_evals)
+
+class ReviewerAdapter:
+
+    def get_status_from_responses(self, reviewers, responses):
+        completed = []
+        pending = []
+        inconsistent_responses = []
+
+        return completed, pending, inconsistent_responses

@@ -177,7 +177,7 @@ class TestFilesAPI(TestCase):
             file_id
         )
 
-    def test_get_file_rows(self):
+    def test_get_file_rows_from_folder(self):
         folder_name = 'my_folder'
         filename = 'filename'
         file_id = 'file_id'
@@ -195,7 +195,7 @@ class TestFilesAPI(TestCase):
         ])
         rows_range = 'A2::F4'
 
-        self.sut.get_file_rows(folder_name, filename, rows_range)
+        self.sut.get_file_rows_from_folder(folder_name, filename, rows_range)
 
         calls = self.sut.get_calls()
         print(calls)

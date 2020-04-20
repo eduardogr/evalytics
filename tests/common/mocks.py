@@ -6,7 +6,8 @@ from evalytics.config import Config
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage
-from evalytics.google_api import GoogleAPI, GmailService, DriveService, SheetsService
+from evalytics.google_api import GoogleAPI
+from evalytics.google_api import GmailService, DriveService, SheetsService
 from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendMailUseCase
@@ -150,7 +151,7 @@ class MockSheetsService(SheetsService):
             'spreadsheetId': file_metadata['properties']['title']
         }
 
-    def get_file_rows_from_folder(self, spreadsheet_id, rows_range):
+    def get_file_values(self, spreadsheet_id, rows_range):
         self.__update_calls(
             'get_file_rows_from_folder',
             params={
@@ -216,7 +217,7 @@ class MockGoogleAPI(GoogleAPI):
         self.fileid_by_name = {}
         self.send_message_calls = {}
 
-    def get_file_rows(self, foldername: str, filename: str, rows_range: str):
+    def get_file_rows_from_folder(self, foldername: str, filename: str, rows_range: str):
         return self.response
 
     def get_folder(self, name: str):
