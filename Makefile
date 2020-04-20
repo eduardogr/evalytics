@@ -1,9 +1,5 @@
-CURRENT_PATH=$(shell pwd)
-PROJECT_FOLDER="."
-DOCKERFILE_PATH="Dockerfile"
 
 CONTAINER_NAME=evalytics
-PORT=8080
 
 env ?= dev # get from cl or 'dev' by default
 
