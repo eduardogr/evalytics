@@ -160,7 +160,6 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         for reviewer, inconsistent_evals in status.get('inconsistent', {}).items():
             evals = [uid for uid, e in inconsistent_evals.items()]
             total_inconsistent_evals += len(evals)
-            total_evals += len(evals)
             print("  - %s: %s\n" %(reviewer, evals))
 
         pending_percentage = total_pending_evals / total_evals * 100
