@@ -161,6 +161,10 @@ class GoogleStorage(GoogleAPI, Config):
 
         return responses
 
+    def get_evaluations_map(self):
+        evaluations = {}
+        return evaluations
+
     def __get_eval_kind(self, filename):
         # TODO: config this
         if filename.startswith('Manager Evaluation By Team Member'):

@@ -41,6 +41,9 @@ class MockDataRepository(DataRepository):
     def get_responses(self):
         return {}
 
+    def get_evaluations(self):
+        return {}
+
 class MockCommunicationsProvider(CommunicationsProvider):
 
     def __init__(self):
@@ -325,6 +328,9 @@ class MockGoogleStorage(GoogleStorage):
         return
 
     def get_responses_map(self):
+        return
+
+    def get_evaluations_map(self):
         return
 
 class MockGmailChannel(GmailChannel):
