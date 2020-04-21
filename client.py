@@ -216,7 +216,8 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         else:
             reviewers = [reviewer for r_uid, reviewer in reviewers.items()]
 
-        self.__eval_delivery(reviewers, dry_run)
+        is_reminder = False
+        self.__eval_delivery(reviewers, is_reminder, dry_run)
 
     def retry_send_eval(self, dry_run: bool = False):
         evals_not_sent = []
@@ -246,7 +247,8 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         else:
             reviewers = [reviewer for r_uid, reviewer in reviewers.items()]
 
-        self.__eval_delivery(reviewers, True, dry_run)
+        is_reminder = True
+        self.__eval_delivery(reviewers, is_reminder, dry_run)
 
     def retry_send_reminder(self, dry_run: bool = False):
         evals_not_sent = []
@@ -264,7 +266,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         whitelisted_evals_file.close()
         self.send_reminder(whitelist=whitelisted_evals, dry_run=dry_run)
 
-    def __eval_delivery(self, reviewers, is_reminder: bool = False, dry_run: bool = False):
+    def __eval_delivery(self, reviewers, is_reminder: bool, dry_run: bool):
         json_reviewers = super().reviewer_to_json(reviewers)
 
         if dry_run:

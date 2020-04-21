@@ -288,7 +288,7 @@ class TestEvalyticsClient(TestCase):
 
     def test_correct_send_eval(self):
         self.sut.set_reviewers_response(self.correct_reviewers_response)
-        self.sut.set_sendmail_response({
+        self.sut.set_evaldelivery_response({
             'evals_sent': ['uid1', 'uid2', 'uid3'],
             'evals_not_sent': []
         })
@@ -297,12 +297,12 @@ class TestEvalyticsClient(TestCase):
 
         self.sut.send_eval(whitelist=whitelist, dry_run=dry_run)
 
-        self.assertIn('sendmail', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['sendmail'])
+        self.assertIn('evaldelivery', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
 
     def test_correct_send_eval_with_whitelist(self):
         self.sut.set_reviewers_response(self.correct_reviewers_response)
-        self.sut.set_sendmail_response({
+        self.sut.set_evaldelivery_response({
             'evals_sent': ['uid1', 'uid2', 'uid3'],
             'evals_not_sent': []
         })
@@ -311,45 +311,33 @@ class TestEvalyticsClient(TestCase):
 
         self.sut.send_eval(whitelist=whitelist, dry_run=dry_run)
 
-        self.assertIn('sendmail', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['sendmail'])
+        self.assertIn('evaldelivery', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
 
     def test_correct_send_eval_with_dry_run(self):
         self.sut.set_reviewers_response(self.correct_reviewers_response)
-        self.sut.set_sendmail_response({
-            'evals_sent': ['uid1', 'uid2', 'uid3'],
-            'evals_not_sent': []
-        })
         whitelist = ['uid1', 'uid2', 'uid3']
         dry_run = True
 
         self.sut.send_eval(whitelist=whitelist, dry_run=dry_run)
 
-        self.assertNotIn('sendmail', self.sut.get_calls())
+        self.assertNotIn('evaldelivery', self.sut.get_calls())
 
     def test_correct_retry_send_eval_with_dry_run(self):
         self.sut.set_reviewers_response(self.correct_reviewers_response)
-        self.sut.set_sendmail_response({
-            'evals_sent': ['uid1', 'uid2', 'uid3'],
-            'evals_not_sent': []
-        })
         dry_run = True
 
         self.sut.retry_send_eval(dry_run=dry_run)
 
-        self.assertNotIn('sendmail', self.sut.get_calls())
+        self.assertNotIn('evaldelivery', self.sut.get_calls())
 
     def test_correct_whitelist_send_eval_with_dry_run(self):
         self.sut.set_reviewers_response(self.correct_reviewers_response)
-        self.sut.set_sendmail_response({
-            'evals_sent': ['uid1', 'uid2', 'uid3'],
-            'evals_not_sent': []
-        })
         dry_run = True
 
         self.sut.whitelist_send_eval(dry_run=dry_run)
 
-        self.assertNotIn('sendmail', self.sut.get_calls())
+        self.assertNotIn('evaldelivery', self.sut.get_calls())
 
     def test_correct_help(self):
         self.sut.help("some command")

@@ -489,7 +489,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.setup_response = {}
         self.reviewers_response = {}
         self.status_response = {}
-        self.sendmail_response = {}
+        self.evaldelivery_response = {}
 
     def set_setup_response(self, response):
         self.setup_response = response
@@ -512,12 +512,12 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.update_calls('status')
         return True, self.status_response
 
-    def set_sendmail_response(self, response):
-        self.sendmail_response = response
+    def set_evaldelivery_response(self, response):
+        self.evaldelivery_response = response
 
-    def sendmail(self, json_reviewers):
-        self.update_calls('sendmail')
-        return True, self.sendmail_response
+    def evaldelivery(self, json_reviewers, is_reminder: bool = False):
+        self.update_calls('evaldelivery')
+        return True, self.evaldelivery_response
 
     def get_data_response(self, response):
         self.update_calls('get_data_response')
