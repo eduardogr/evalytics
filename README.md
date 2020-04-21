@@ -79,7 +79,7 @@ From the root path of this project:
 ```
 python3 -m venv env
 source env/bin/activate
-pip install -r evalytics/requirements/dev.txt
+pip install -r requirements/dev.txt
 export PYTHONPATH=`pwd`
 make google-auth
 ```

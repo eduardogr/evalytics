@@ -2,10 +2,13 @@ from unittest import TestCase
 
 from evalytics.usecases import SetupUseCase
 from evalytics.usecases import GetReviewersUseCase, SendMailUseCase
+from evalytics.usecases import GetResponseStatusUseCase
 
 from tests.common.employees import employees_collection
-from tests.common.mocks import MockDataRepository, MockEmployeeAdapter
+from tests.common.mocks import MockDataRepository
+from tests.common.mocks import MockEmployeeAdapter, MockReviewerAdapter
 from tests.common.mocks import MockCommunicationsProvider
+from tests.common.mocks import GetReviewersUseCaseMock
 
 class SetupUseCaseSut(SetupUseCase, MockDataRepository):
     'Inject a mock into the SetupUseCase dependency'
@@ -14,13 +17,21 @@ class GetReviewersUseCaseSut(
         GetReviewersUseCase,
         MockDataRepository,
         MockEmployeeAdapter):
-    'Inject a mock into the GetReviewersUseCase dependency'
+    'Inject mocks into GetReviewersUseCase dependencies'
 
 class SendMailUseCaseSut(
         SendMailUseCase,
         MockCommunicationsProvider,
         MockEmployeeAdapter):
-    'Inject a mock into the SendEmailUseCase dependency'
+    'Inject mocks into SendEmailUseCase dependencies'
+
+class GetResponseStatusSut(
+        GetResponseStatusUseCase,
+        GetReviewersUseCaseMock,
+        MockDataRepository,
+        MockReviewerAdapter):
+    'Inject mocks into GetResponseStatusUseCase dependencies'
+
 
 class TestSetupUseCase(TestCase):
 
@@ -78,3 +89,12 @@ class TestSendMailUseCase(TestCase):
 
         self.assertIn('manager_em', evals_not_sent)
         self.assertEqual(1, len(evals_not_sent))
+
+class TestGetResponseStatus(TestCase):
+
+    def setUp(self):
+        self.sut = GetResponseStatusSut()
+
+
+    def test_get_response_status(self):
+        status = self.sut.get_response_status()

@@ -7,7 +7,8 @@ from tornado.options import define, options
 
 from evalytics.handlers import \
     SetupHandler, \
-    ReviewersHandler, SendMailHandler
+    ReviewersHandler, SendMailHandler, \
+    ResponseStatusHandler
 
 define(
     "port", default=8080,
@@ -20,6 +21,7 @@ class GetPathAndHandler:
             SetupHandler,
             ReviewersHandler,
             SendMailHandler,
+            ResponseStatusHandler
         ]
 
         return [(h.path, h) for h in handlers]

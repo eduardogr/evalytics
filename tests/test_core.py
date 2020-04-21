@@ -27,6 +27,9 @@ class TestDataRepository(TestCase):
     def test_get_forms_simple_call(self):
         self.sut.get_forms()
 
+    def test_get_responses_simple_call(self):
+        self.sut.get_responses_map()
+
 class TestCommunicationsProvider(TestCase):
 
     def setUp(self):

@@ -155,3 +155,136 @@ class TestGoogleStorage(TestCase):
         with self.assertRaises(MissingDataException):
             self.sut.get_forms_map()
 
+    def test_get_responses_map_when_no_files(self):
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([])
+
+        responses_map = self.sut.get_responses_map()
+
+        self.assertEqual(0, len(responses_map))
+
+    def test_get_responses_map_when_files(self):
+        file_id_manager_by = 'file_id_manager_by'
+        file_id_report_by = 'file_id_report_by'
+        file_id_self = 'file_id_self'
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([{
+                'id': file_id_manager_by,
+                'name': 'Manager Evaluation By Team Member',
+            }, {
+                'id': file_id_report_by,
+                'name': 'Report Evaluation by Manager',
+            }, {
+                'id': file_id_self,
+                'name': 'Self Evaluation',
+            },
+        ])
+        self.sut.set_file_rows_by_id(
+            file_id_manager_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporter1', 'manager1', 'answer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_report_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'manager1', 'reporter1', 'answer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_self,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporter1', 'reporter1', 'answer1', 'answer2'],
+                ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
+            ]
+        )
+
+        responses_map = self.sut.get_responses_map()
+
+        self.assertEqual(3, len(responses_map))
+
+        self.assertIn('reporter1', responses_map)
+        self.assertIn('reporter3', responses_map)
+        self.assertIn('manager1', responses_map)
+
+        self.assertEqual(2, len(responses_map['reporter1']))
+        self.assertEqual(1, len(responses_map['manager1']))
+        self.assertEqual(1, len(responses_map['reporter3']))
+
+
+    def test_get_responses_when_no_data_in_files(self):
+        file_id_manager_by = 'file_id_manager_by'
+        file_id_report_by = 'file_id_report_by'
+        file_id_self = 'file_id_self'
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([{
+                'id': file_id_manager_by,
+                'name': 'Manager Evaluation By Team Member',
+            }, {
+                'id': file_id_report_by,
+                'name': 'Report Evaluation by Manager',
+            }, {
+                'id': file_id_self,
+                'name': 'Self Evaluation',
+            },
+        ])
+        self.sut.set_file_rows_by_id(
+            file_id_manager_by,
+            []
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_report_by,
+            []
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_self,
+            []
+        )
+
+        with self.assertRaises(MissingDataException):
+            self.sut.get_responses_map()
+
+    def test_get_responses_map_when_uncompleted_data_in_files(self):
+        file_id_manager_by = 'file_id_manager_by'
+        file_id_report_by = 'file_id_report_by'
+        file_id_self = 'file_id_self'
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([{
+                'id': file_id_manager_by,
+                'name': 'Manager Evaluation By Team Member',
+            }, {
+                'id': file_id_report_by,
+                'name': 'Report Evaluation by Manager',
+            }, {
+                'id': file_id_self,
+                'name': 'Self Evaluation',
+            },
+        ])
+        self.sut.set_file_rows_by_id(
+            file_id_manager_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporternswer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_report_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'managernswer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_self,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporteswer1', 'answer2'],
+                ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
+            ]
+        )
+
+        with self.assertRaises(MissingDataException):
+            self.sut.get_responses_map()

@@ -39,6 +39,11 @@ class TestConfig(TestCase):
             'mock_orgchart',
             'mock_formmap'], needed_spreachseets)
 
+    def test_read_google_responses_folder(self):
+        tests_folder = self.sut.read_google_responses_folder()
+
+        self.assertEqual('mock_tests_folder', tests_folder)
+
     def test_read_company_domain(self):
         domain = self.sut.read_company_domain()
 

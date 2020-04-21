@@ -47,7 +47,7 @@ class GoogleStorage(GoogleAPI, Config):
             return employees
 
         org_chart_range = 'A2:C' + str(number_of_employees + 1)
-        values = super().get_file_rows(
+        values = super().get_file_rows_from_folder(
             foldername=super().read_google_folder(),
             filename=super().read_google_orgchart(),
             rows_range=org_chart_range)
@@ -72,7 +72,7 @@ class GoogleStorage(GoogleAPI, Config):
         return employees
 
     def get_forms_map(self):
-        values = super().get_file_rows(
+        values = super().get_file_rows_from_folder(
             foldername=super().read_google_folder(),
             filename=super().read_google_form_map(),
             rows_range=self.FORM_MAP_RANGE)
@@ -100,3 +100,74 @@ class GoogleStorage(GoogleAPI, Config):
             })            
 
         return forms
+
+    def get_responses_map(self):
+        google_folder = super().read_google_folder()
+        responses_folder = super().read_google_responses_folder()
+
+        folder = super().get_folder_from_folder(
+            responses_folder,
+            google_folder)
+        files = super().get_files_from_folder(folder.get('id'))
+
+        number_of_employees = int(super().read_company_number_of_employees())
+        responses_range = 'A1:S' + str(number_of_employees + 2)
+
+        responses = {}
+        for file in files:
+            rows = super().get_file_rows(
+                file.get('id'),
+                responses_range)
+
+            filename = file.get('name')
+            eval_kind = self.__get_eval_kind(filename)
+
+            if len(rows) < 1:
+                raise MissingDataException("Missing data in response file: %s" % (filename))
+
+            questions = rows[0][3:]
+            line_number = 2
+            for line in rows[1:]:
+
+                if len(line) < 4:
+                    raise MissingDataException("Missing data in response file: '%s' in line %s" % (
+                        filename, line))
+
+                reviewer = line[1]
+
+                if eval_kind == EvalKind.SELF:
+                    reviewee = reviewer
+                else:
+                    reviewee = line[2]
+
+                eval_responses = line[3:]
+                eval_responses = list(zip(questions, eval_responses))
+
+                eval_response = {
+                    'kind': eval_kind.name,
+                    'reviewee': reviewee,
+                    'eval_response': eval_responses,
+                    'filename': filename,
+                    'line_number': line_number,
+                }
+
+                acc_responses = responses.get(reviewer, [])
+                acc_responses.append(eval_response)
+                responses.update({
+                    reviewer: acc_responses
+                })
+                line_number += 1
+            line_number = 2
+
+        return responses
+
+    def __get_eval_kind(self, filename):
+        # TODO: config this
+        if filename.startswith('Manager Evaluation By Team Member'):
+            return EvalKind.PEER_MANAGER
+        elif filename.startswith('Report Evaluation by Manager'):
+            return EvalKind.MANAGER_PEER
+        elif filename.startswith('Self Evaluation'):
+            return EvalKind.SELF
+        else:
+            return None

@@ -107,12 +107,13 @@ class SheetsService:
             fields='spreadsheetId').execute()
         return spreadsheet
 
-    def get_file_rows_from_folder(self, spreadsheet_id, rows_range):
+    def get_file_values(self, spreadsheet_id, rows_range):
         sheet = self.__get_sheets_service().spreadsheets()
-        return sheet.values().get(
+        result = sheet.values().get(
             spreadsheetId=spreadsheet_id,
             range=rows_range
         ).execute()
+        return result.get('values', [])
 
     def __get_sheets_service(self):
         if self.__sheets_service is None:
@@ -193,17 +194,39 @@ class FilesAPI(DriveService, SheetsService):
 
         return None
 
-    def get_file_rows(self, foldername: str, filename: str, rows_range: str):
+    def get_folder_from_folder(self, foldername, parent_foldername):
+        folder = self.get_folder(parent_foldername)
+        if folder is not None:
+            is_folder = "mimeType='application/vnd.google-apps.folder'"
+            query = "%s and '%s' in parents" % (is_folder, folder.get('id'))
+            folder = self.__get_file(query, foldername)
+        return folder
+
+    def get_files_from_folder(self, folder_id):
+        query = "'%s' in parents" % folder_id
+        files = self.__get_files(query)
+        return files
+
+    def get_file_rows_from_folder(self,
+                                  foldername: str,
+                                  filename: str,
+                                  rows_range: str):
         folder = self.get_folder(name=foldername)
         spreadsheet_id = self.get_file_id_from_folder(
             folder_id=folder.get('id'),
             filename=filename)
 
-        result = super().get_file_rows_from_folder(
+        values = super().get_file_values(
             spreadsheet_id,
             rows_range)
 
-        return result.get('values', [])
+        return values
+
+    def get_file_rows(self, file_id: str, rows_range: str):
+        return super().get_file_values(
+            file_id,
+            rows_range
+        )
 
     def __get_file(self, query: str, filename):
         try:
@@ -220,6 +243,27 @@ class FilesAPI(DriveService, SheetsService):
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
                     break
+            return None
+        except HttpError as err:
+            # TODO: manage this
+            print(err)
+            raise err
+
+    def __get_files(self, query: str):
+        try:
+            page_token = None
+            files = []
+            while True:
+                response = super().list_files(
+                    page_token=page_token,
+                    query=query
+                )
+                for file in response.get('files', []):
+                    files.append(file)
+
+                page_token = response.get('nextPageToken', None)
+                if page_token is None:
+                    return files
             return None
         except HttpError as err:
             # TODO: manage this

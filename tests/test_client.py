@@ -94,6 +94,20 @@ class TestCommandFactory(TestCase):
         self.assertIn('help', factory.get_calls())
         self.assertEqual(1, factory.get_calls()['help'])
 
+    def test_command_factory_status(self):
+        factory = CommandFactorySut()
+        factory.execute('status')
+
+        self.assertIn('print_status', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['print_status'])
+
+    def test_command_factory_status_inconsistent_files(self):
+        factory = CommandFactorySut()
+        factory.execute('status --inconsistent-files')
+
+        self.assertIn('print_inconsistent_files_status', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['print_inconsistent_files_status'])
+
 class TestEvalyticsClient(TestCase):
 
     def setUp(self):
@@ -195,6 +209,82 @@ class TestEvalyticsClient(TestCase):
 
         self.assertIn('reviewers', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['reviewers'])
+
+    def test_correct_print_status(self):
+        status_response = {
+            'status': {
+                "completed": {
+                    "uid1": {
+                        "reviewee": {
+                            "kind": 'MANAGER_PEER',
+                            "form": 'some form'
+                        }
+                    }
+                },
+                "pending": {
+                    "uid2": {
+                        "reviewee": {
+                            "kind": 'MANAGER_PEER',
+                            "form": 'some form'
+                        }
+                    }
+                },
+                "inconsistent": {
+                    "uid3":  {
+                        "reviewee": {
+                            "kind": 'MANAGER_PEER',
+                            "form": 'some form'
+                        }
+                    }
+                },
+            }
+        }
+        self.sut.set_status_response(status_response)
+
+        self.sut.print_status()
+
+        self.assertIn('status', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['status'])
+
+    def test_correct_print_status_when_no_responses(self):
+        status_response = {
+            'status': {
+                "completed": {},
+                "pending": {},
+                "inconsistent": {},
+            }
+        }
+        self.sut.set_status_response(status_response)
+
+        self.sut.print_status()
+
+        self.assertIn('status', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['status'])
+
+    def test_correct_print_inconsistent_files_status(self):
+        status_response = {
+            'status': {
+                "completed": {},
+                "pending": {},
+                "inconsistent": {
+                    "uid3":  {
+                        "reviewee": {
+                            "kind": 'MANAGER_PEER',
+                            "form": 'some form',
+                            "reason": "WRONG_REPORTER: tá tudo mal",
+                            "filename": 'somefile',
+                            "line_number": 2,
+                        }
+                    }
+                },
+            }
+        }
+        self.sut.set_status_response(status_response)
+
+        self.sut.print_inconsistent_files_status()
+
+        self.assertIn('status', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['status'])
 
     def test_correct_send_eval(self):
         self.sut.set_reviewers_response(self.correct_reviewers_response)

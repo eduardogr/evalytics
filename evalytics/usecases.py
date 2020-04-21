@@ -1,4 +1,4 @@
-from .adapters import EmployeeAdapter
+from .adapters import EmployeeAdapter, ReviewerAdapter
 from .core import DataRepository, CommunicationsProvider
 
 class SetupUseCase(DataRepository):
@@ -29,3 +29,11 @@ class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
                 evals_not_sent.append(reviewer.uid)
 
         return evals_sent, evals_not_sent
+
+class GetResponseStatusUseCase(
+        GetReviewersUseCase, DataRepository, ReviewerAdapter):
+
+    def get_response_status(self):
+        reviewers = super().get_reviewers()
+        responses = super().get_responses()
+        return super().get_status_from_responses(reviewers, responses)

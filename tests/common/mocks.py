@@ -6,11 +6,12 @@ from evalytics.config import Config
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage
-from evalytics.google_api import GoogleAPI, GmailService, DriveService, SheetsService
+from evalytics.google_api import GoogleAPI
+from evalytics.google_api import GmailService, DriveService, SheetsService
 from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendMailUseCase
-from evalytics.adapters import EmployeeAdapter
+from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
 
 from client import EvalyticsRequests
@@ -37,6 +38,9 @@ class MockDataRepository(DataRepository):
     def get_forms(self):
         return {}
 
+    def get_responses(self):
+        return {}
+
 class MockCommunicationsProvider(CommunicationsProvider):
 
     def __init__(self):
@@ -52,11 +56,25 @@ class MockCommunicationsProvider(CommunicationsProvider):
 
 class MockEmployeeAdapter(EmployeeAdapter):
 
+    def __init__(self):
+        self.employees_by_manager = {}
+
     def build_reviewers(self, employees, forms):
         return employees
 
     def build_eval_message(self, reviewer: Reviewer):
         return ""
+
+    def get_employees_by_manager(self, employees):
+        return self.employees_by_manager
+
+    def set_employees_by_manager(self, employees_by_manager):
+        self.employees_by_manager = employees_by_manager
+
+class MockReviewerAdapter(ReviewerAdapter):
+
+    def get_status_from_responses(self, reviewers, responses):
+        return [], [], []
 
 class MockDriveService(DriveService):
 
@@ -150,7 +168,7 @@ class MockSheetsService(SheetsService):
             'spreadsheetId': file_metadata['properties']['title']
         }
 
-    def get_file_rows_from_folder(self, spreadsheet_id, rows_range):
+    def get_file_values(self, spreadsheet_id, rows_range):
         self.__update_calls(
             'get_file_rows_from_folder',
             params={
@@ -212,15 +230,27 @@ class MockGoogleAPI(GoogleAPI):
 
     def __init__(self):
         self.response = []
+        self.files_from_folder_response = []
+        self.file_rows_by_id_response = {}
         self.folder = None
+        self.folder_from_folder = None
         self.fileid_by_name = {}
         self.send_message_calls = {}
 
-    def get_file_rows(self, foldername: str, filename: str, rows_range: str):
+    def get_file_rows_from_folder(self, foldername: str, filename: str, rows_range: str):
         return self.response
+
+    def get_file_rows(self, file_id: str, rows_range: str):
+        return self.file_rows_by_id_response.get(file_id, [])
+
+    def get_files_from_folder(self, folder_id):
+        return self.files_from_folder_response
 
     def get_folder(self, name: str):
         return self.folder
+
+    def get_folder_from_folder(self, foldername, parent_foldername):
+        return self.folder_from_folder
 
     def create_folder(self, name: str):
         folder = {
@@ -262,6 +292,17 @@ class MockGoogleAPI(GoogleAPI):
     def set_file_rows_response(self, response):
         self.response = response
 
+    def set_file_rows_by_id(self, file_id, response):
+        self.file_rows_by_id_response.update({
+            file_id: response
+        })
+
+    def set_files_from_folder_response(self, response):
+        self.files_from_folder_response = response
+
+    def set_folder_from_folder(self, folder):
+        self.folder_from_folder = folder
+
     def set_folder(self, folder):
         self.folder = folder
 
@@ -281,6 +322,9 @@ class MockGoogleStorage(GoogleStorage):
         return
 
     def get_forms_map(self):
+        return
+
+    def get_responses_map(self):
         return
 
 class MockGmailChannel(GmailChannel):
@@ -309,6 +353,9 @@ class MockConfig(Config):
     def read_needed_spreadsheets(self):
         return self.needed_spreadsheets
 
+    def read_google_responses_folder(self):
+        return "form_responses_folder"
+
     def read_company_domain(self):
         return "company.com"
 
@@ -329,6 +376,7 @@ class MockConfigParser(ConfigParser):
                 'folder': 'mock_folder',
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
+                'form_responses_folder': 'mock_tests_folder',
             },
             'COMPANY': {
                 'domain': 'mock_domain.com',
@@ -436,6 +484,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.calls = {}
         self.setup_response = {}
         self.reviewers_response = {}
+        self.status_response = {}
         self.sendmail_response = {}
 
     def set_setup_response(self, response):
@@ -451,6 +500,13 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def reviewers(self):
         self.update_calls('reviewers')
         return True, self.reviewers_response
+
+    def set_status_response(self, response):
+        self.status_response = response
+
+    def status(self):
+        self.update_calls('status')
+        return True, self.status_response
 
     def set_sendmail_response(self, response):
         self.sendmail_response = response
@@ -483,6 +539,12 @@ class MockEvalyticsClient(EvalyticsClient):
     def print_reviewers(self, show_stats=False):
         self.update_calls('print_reviewers')
         self.show_stats = show_stats
+
+    def print_status(self):
+        self.update_calls('print_status')
+
+    def print_inconsistent_files_status(self):
+        self.update_calls('print_inconsistent_files_status')
 
     def post_setup(self):
         self.update_calls('post_setup')

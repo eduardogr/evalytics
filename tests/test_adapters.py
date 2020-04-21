@@ -1,13 +1,16 @@
 from unittest import TestCase
 
-from evalytics.adapters import EmployeeAdapter
+from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.models import Employee, EvalKind, Eval, Reviewer
 from evalytics.exceptions import MissingDataException
 
-from tests.common.mocks import MockConfig
+from tests.common.mocks import MockConfig, MockEmployeeAdapter
 
 class EmployeeAdapterSut(EmployeeAdapter, MockConfig):
     'Inject mocks into EmployeeAdapter dependencies'
+
+class ReviewerAdapterSut(ReviewerAdapter, MockEmployeeAdapter):
+    'Inject mocks into ReviewerAdapter dependencies'
 
 class TestEmployeeAdapter(TestCase):
 
@@ -196,3 +199,333 @@ class TestEmployeeAdapter(TestCase):
         eval_message = self.sut.build_eval_message(reviewer)
 
         self.assertIn(employee.uid, eval_message)
+
+class TestReviewerAdapter(TestCase):
+
+    def setUp(self):
+        self.sut = ReviewerAdapterSut()
+
+        self.area = 'Eng'
+        self.any_form = 'https://i am a form and you trust me'
+        self.employees = {
+            'cto': Employee(
+                mail='cto@company.com', manager='ceo', area=self.area),
+            'tl1': Employee(
+                mail='tl1@company.com', manager='cto', area=self.area),
+            'tl2': Employee(
+                mail='tl2@company.com', manager='cto', area=self.area),
+            'sw1': Employee(
+                mail='sw1@company.com', manager='tl1', area=self.area),
+            'sw2': Employee(
+                mail='sw2@company.com', manager='tl1', area=self.area),
+            'sw3': Employee(
+                mail='sw3@company.com', manager='tl2', area=self.area),
+        }
+        self.employees_by_manager = {
+            'cto': ['tl1', 'tl2'],
+            'tl1': ['sw1', 'sw2'],
+            'tl2': ['sw3']
+        }
+        self.reviewers = {
+            self.employees['cto'].uid: Reviewer(
+                employee=self.employees['cto'],
+                evals=[
+                    Eval(reviewee='tl1', kind=EvalKind.MANAGER_PEER, form=self.any_form),
+                    Eval(reviewee='tl2', kind=EvalKind.MANAGER_PEER, form=self.any_form),
+                ]
+            ),
+            self.employees['tl1'].uid: Reviewer(
+                employee=self.employees['tl1'],
+                evals=[
+                    Eval(reviewee='cto', kind=EvalKind.PEER_MANAGER, form=self.any_form),
+                    Eval(reviewee='tl1', kind=EvalKind.SELF, form=self.any_form),
+                    Eval(reviewee='sw1', kind=EvalKind.MANAGER_PEER, form=self.any_form),
+                    Eval(reviewee='sw2', kind=EvalKind.MANAGER_PEER, form=self.any_form),
+                ]
+            ),
+            self.employees['tl2'].uid: Reviewer(
+                employee=self.employees['tl2'],
+                evals=[
+                    Eval(reviewee='cto', kind=EvalKind.PEER_MANAGER, form=self.any_form),
+                    Eval(reviewee='tl2', kind=EvalKind.SELF, form=self.any_form),
+                    Eval(reviewee='sw3', kind=EvalKind.MANAGER_PEER, form=self.any_form),
+                ]
+            ),
+            self.employees['sw1'].uid: Reviewer(
+                employee=self.employees['sw1'],
+                evals=[
+                    Eval(reviewee='sw1', kind=EvalKind.SELF, form=self.any_form),
+                    Eval(reviewee='tl1', kind=EvalKind.PEER_MANAGER, form=self.any_form),
+                ]
+            ),
+            self.employees['sw2'].uid: Reviewer(
+                employee=self.employees['sw2'],
+                evals=[
+                    Eval(reviewee='sw2', kind=EvalKind.SELF, form=self.any_form),
+                    Eval(reviewee='tl1', kind=EvalKind.PEER_MANAGER, form=self.any_form),
+                ]
+            ),
+            self.employees['sw3'].uid: Reviewer(
+                employee=self.employees['sw3'],
+                evals=[
+                    Eval(reviewee='sw3', kind=EvalKind.SELF, form=self.any_form),
+                    Eval(reviewee='tl2', kind=EvalKind.PEER_MANAGER, form=self.any_form),
+                ]
+            ),
+        }
+
+    def test_get_status_from_responses_when_no_responses(self):
+        reviewers = {}
+        responses = {}
+        self.sut.set_employees_by_manager({})
+
+        completed, pending, inconsistent = self.sut.get_status_from_responses(
+            reviewers,
+            responses)
+
+        self.assertEqual(0, len(completed))
+        self.assertEqual(0, len(pending))
+        self.assertEqual(0, len(inconsistent))
+
+    def test_get_status_from_responses_when_pending_responses(self):
+        self.sut.set_employees_by_manager(self.employees_by_manager)
+        responses = {
+            self.reviewers['cto'].uid: [],
+            self.reviewers['tl1'].uid: [],
+            self.reviewers['tl2'].uid: [],
+            self.reviewers['sw3'].uid: [],
+            self.reviewers['sw2'].uid: [],
+            self.reviewers['sw3'].uid: [],
+        }
+
+        completed, pending, inconsistent = self.sut.get_status_from_responses(
+            self.reviewers,
+            responses)
+
+        self.assertEqual(0, len(completed))
+        self.assertEqual(6, len(pending))
+        self.assertEqual(0, len(inconsistent))
+
+        self.assertIn('cto', pending)
+        self.assertIn('tl1', pending)
+        self.assertIn('tl2', pending)
+        self.assertIn('sw1', pending)
+        self.assertIn('sw2', pending)
+        self.assertIn('sw3', pending)
+
+        self.assertIn('tl1', pending['cto'])
+        self.assertIn('tl2', pending['cto'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['cto']['tl1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['cto']['tl2']['kind'])
+
+        self.assertIn('sw1', pending['tl1'])
+        self.assertIn('sw2', pending['tl1'])
+        self.assertIn('tl1', pending['tl1'])
+        self.assertEqual(EvalKind.SELF.name, pending['tl1']['tl1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl1']['sw1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl1']['sw2']['kind'])
+
+        self.assertIn('sw3', pending['tl2'])
+        self.assertIn('tl2', pending['tl2'])
+        self.assertEqual(EvalKind.SELF.name, pending['tl2']['tl2']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl2']['sw3']['kind'])
+
+    def test_get_status_from_responses_when_some_completed_responses(self):
+        self.sut.set_employees_by_manager(self.employees_by_manager)
+        responses = {
+            self.reviewers['cto'].uid: [{
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl1',
+                    'eval_response': [],
+                }, {
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl2',
+                    'eval_response': [],
+                }
+            ],
+            self.reviewers['tl1'].uid: [],
+            self.reviewers['tl2'].uid: [],
+            self.reviewers['sw1'].uid: [],
+            self.reviewers['sw2'].uid: [],
+            self.reviewers['sw3'].uid: [],
+        }
+
+        completed, pending, inconsistent = self.sut.get_status_from_responses(
+            self.reviewers,
+            responses)
+
+        self.assertEqual(0, len(inconsistent))
+        self.assertEqual(5, len(pending))
+        self.assertEqual(1, len(completed))
+
+        self.assertIn('cto', completed)
+        self.assertIn('tl1', completed['cto'])
+        self.assertIn('tl2', completed['cto'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl2']['kind'])
+
+        self.assertIn('tl1', pending)
+        self.assertIn('tl2', pending)
+        self.assertIn('sw1', pending)
+        self.assertIn('sw2', pending)
+        self.assertIn('sw3', pending)
+
+    def test_get_status_from_responses_when_completed_responses(self):
+        self.sut.set_employees_by_manager(self.employees_by_manager)
+        responses = {
+            self.reviewers['cto'].uid: [{
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl1',
+                    'eval_response': [],
+                }, {
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl2',
+                    'eval_response': [],
+                }
+            ],
+            self.reviewers['tl1'].uid: [{
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'sw1',
+                    'eval_response': [],
+                }
+            ],
+            self.reviewers['tl2'].uid: [],
+            self.reviewers['sw1'].uid: [],
+            self.reviewers['sw2'].uid: [],
+            self.reviewers['sw3'].uid: [],
+        }
+
+        completed, pending, inconsistent = self.sut.get_status_from_responses(
+            self.reviewers,
+            responses)
+
+        self.assertEqual(0, len(inconsistent))
+        self.assertEqual(5, len(pending))
+        self.assertEqual(2, len(completed))
+
+        self.assertIn('cto', completed)
+        self.assertIn('tl1', completed)
+        self.assertIn('tl1', completed['cto'])
+        self.assertIn('tl2', completed['cto'])
+        self.assertIn('sw1', completed['tl1'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl2']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['tl1']['sw1']['kind'])
+
+        self.assertIn('sw2', pending['tl1'])
+        self.assertIn('tl1', pending['tl1'])
+        self.assertEqual(EvalKind.SELF.name, pending['tl1']['tl1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl1']['sw2']['kind'])
+
+
+    def test_get_status_from_responses_when_inconsistent_reporter_responses(self):
+        self.sut.set_employees_by_manager(self.employees_by_manager)
+        responses = {
+            self.reviewers['cto'].uid: [{
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl1',
+                    'eval_response': [],
+                }, {
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl2',
+                    'eval_response': [],
+                }
+            ],
+            self.reviewers['tl1'].uid: [{
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'sw1',
+                    'eval_response': [],
+                }, {
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'sw3',
+                    'eval_response': [],
+                    'filename': 'whatever',
+                    'line_number': 10,
+                }
+            ],
+            self.reviewers['tl2'].uid: [],
+            self.reviewers['sw1'].uid: [],
+            self.reviewers['sw2'].uid: [],
+            self.reviewers['sw3'].uid: [],
+        }
+
+        completed, pending, inconsistent = self.sut.get_status_from_responses(
+            self.reviewers,
+            responses)
+
+        self.assertEqual(1, len(inconsistent))
+        self.assertEqual(5, len(pending))
+        self.assertEqual(2, len(completed))
+
+        self.assertIn('cto', completed)
+        self.assertIn('tl1', completed)
+        self.assertIn('tl1', completed['cto'])
+        self.assertIn('tl2', completed['cto'])
+        self.assertIn('sw1', completed['tl1'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl2']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['tl1']['sw1']['kind'])
+
+        self.assertIn('tl1', inconsistent)
+        self.assertIn('sw3', inconsistent['tl1'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, inconsistent['tl1']['sw3']['kind'])
+
+        self.assertTrue(inconsistent['tl1']['sw3']['reason'].startswith('WRONG_REPORTER'))
+
+    def test_get_status_from_responses_when_inconsistent_manager_responses(self):
+        self.sut.set_employees_by_manager(self.employees_by_manager)
+        responses = {
+            self.reviewers['cto'].uid: [{
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl1',
+                    'eval_response': [],
+                }, {
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'tl2',
+                    'eval_response': [],
+                }
+            ],
+            self.reviewers['tl1'].uid: [{
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'sw1',
+                    'eval_response': [],
+                }, {
+                    'kind': 'MANAGER_PEER',
+                    'reviewee': 'sw2',
+                    'eval_response': [],
+                }
+            ],
+            self.reviewers['tl2'].uid: [],
+            self.reviewers['sw1'].uid: [{
+                    'kind': 'PEER_MANAGER',
+                    'reviewee': 'tl2',
+                    'eval_response': [],
+                    'filename': 'whatever',
+                    'line_number': 10,
+            }],
+            self.reviewers['sw2'].uid: [],
+            self.reviewers['sw3'].uid: [],
+        }
+
+        completed, pending, inconsistent = self.sut.get_status_from_responses(
+            self.reviewers,
+            responses)
+
+        self.assertEqual(1, len(inconsistent))
+        self.assertEqual(5, len(pending))
+        self.assertEqual(2, len(completed))
+
+        self.assertIn('cto', completed)
+        self.assertIn('tl1', completed)
+        self.assertIn('tl1', completed['cto'])
+        self.assertIn('tl2', completed['cto'])
+        self.assertIn('sw1', completed['tl1'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl1']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl2']['kind'])
+        self.assertEqual(EvalKind.MANAGER_PEER.name, completed['tl1']['sw1']['kind'])
+
+        self.assertIn('sw1', inconsistent)
+        self.assertIn('tl2', inconsistent['sw1'])
+        self.assertEqual(EvalKind.PEER_MANAGER.name, inconsistent['sw1']['tl2']['kind'])
+
+        self.assertTrue(inconsistent['sw1']['tl2']['reason'].startswith('WRONG_MANAGER'))

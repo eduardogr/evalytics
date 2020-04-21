@@ -13,6 +13,9 @@ class DataRepository(GoogleStorage):
     def get_forms(self):
         return super().get_forms_map()
 
+    def get_responses(self):
+        return super().get_responses_map()
+
 class CommunicationsProvider(GmailChannel):
 
     def send_communication(self, reviewer: Reviewer, data):

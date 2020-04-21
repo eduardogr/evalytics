@@ -1,9 +1,6 @@
-CURRENT_PATH=$(shell pwd)
-PROJECT_FOLDER="."
-DOCKERFILE_PATH="Dockerfile"
 
 CONTAINER_NAME=evalytics
-PORT=8080
+CONTAINER_CLIENT_NAME=evalytics-client
 
 env ?= dev # get from cl or 'dev' by default
 
@@ -11,29 +8,32 @@ env ?= dev # get from cl or 'dev' by default
 # make build
 # make build env=prod
 build:
-	docker build . \
+	docker-compose build \
+	    --build-arg BUILD_ENV=$(env) \
+		$(CONTAINER_NAME)  && \
+	docker-compose build \
 		--build-arg BUILD_ENV=$(env) \
-		--file $(DOCKERFILE_PATH) \
-		--tag $(CONTAINER_NAME)
+		$(CONTAINER_CLIENT_NAME)
+
+build-force:
+	docker-compose build --force \
+	    --build-arg BUILD_ENV=$(env) \
+		$(CONTAINER_NAME) && \
+	docker-compose build --force \
+		--build-arg BUILD_ENV=$(env) \
+		$(CONTAINER_CLIENT_NAME)
+
+up:
+	docker-compose up -d $(CONTAINER_NAME)
+
+down:
+	docker-compose down
+
+test:
+	docker-compose exec $(CONTAINER_NAME) pytest $(ARGS)
 
 google-auth:
 	python3 google_auth.py
 
-run-server:
-	docker run -d \
-		--volume $(CURRENT_PATH)/evalytics:/usr/app/evalytics \
-		--publish $(PORT):$(PORT) \
-		--name $(CONTAINER_NAME) \
-		-ti $(CONTAINER_NAME)
-
-test:
-	docker exec $(CONTAINER_NAME) pytest
-
-start-server:
-	docker start $(CONTAINER_NAME)
-
-stop-server:
-	docker stop $(CONTAINER_NAME)
-
-remove-server-container:
-	docker rm $(CONTAINER_NAME)
+request:
+	docker-compose run $(CONTAINER_CLIENT_NAME) python3 client.py $(ARGS)
