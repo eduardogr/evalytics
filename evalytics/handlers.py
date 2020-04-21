@@ -61,7 +61,7 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 }
             })
 
-class SendMailHandler(tornado.web.RequestHandler, Mapper):
+class EvalDeliveryHandler(tornado.web.RequestHandler, Mapper):
     path = r"/evaldelivery"
 
     async def post(self):
@@ -115,6 +115,37 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
                 'success': False,
                 'response': {
                     'error': exception.message,
+                }
+            })
+        except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
+                }
+            })
+
+class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
+    path = r"/evalreports"
+
+    async def post(self):
+        try:
+            area = self.get_argument('area', None, strip=False)
+            manager = self.get_argument('manager', None, strip=False)
+            employee_uids_arg = self.get_argument('uids', '[]', strip=False)
+            employee_uids = super().json_to_list(employee_uids_arg)
+            
+            self.finish({
+                'success': True,
+                'response': {
+                    'evals_reports': {
+                        'created': [],
+                        'not_created': [],
+                    }
                 }
             })
         except Exception as e:
