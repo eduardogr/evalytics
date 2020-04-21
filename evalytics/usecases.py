@@ -46,3 +46,8 @@ class GetResponseStatusUseCase(
         reviewers = super().get_reviewers()
         responses = super().get_responses()
         return super().get_status_from_responses(reviewers, responses)
+
+class GenerateEvalReportsUseCase:
+
+    def generate_eval_reports(self, area, managers, employee_uids):
+        return [], []

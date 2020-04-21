@@ -1,7 +1,7 @@
 import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
-from .usecases import GetResponseStatusUseCase
+from .usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
 
@@ -135,16 +135,24 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
     async def post(self):
         try:
             area = self.get_argument('area', None, strip=False)
-            manager = self.get_argument('manager', None, strip=False)
+            managers_arg = self.get_argument('managers', '[]', strip=False)
             employee_uids_arg = self.get_argument('uids', '[]', strip=False)
+
+            managers = super().json_to_list(managers_arg)
             employee_uids = super().json_to_list(employee_uids_arg)
-            
+
+            created, not_created = GenerateEvalReportsUseCase().generate_eval_reports(
+                area,
+                managers,
+                employee_uids
+            )
+
             self.finish({
                 'success': True,
                 'response': {
                     'evals_reports': {
-                        'created': [],
-                        'not_created': [],
+                        'created': created,
+                        'not_created': not_created,
                     }
                 }
             })
