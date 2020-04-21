@@ -46,7 +46,6 @@ To generate this we have the make target google-auth, so, you just have to tun
   - `make google-auth`
 
 
-
 :warning: Credentials files to authenticate yourself are included in our [.gitignore](.gitignore) 
 
 :angel: So, you don't have to worry about that :smiley:
@@ -107,7 +106,7 @@ API Endpoints:
 
   - /setup
   - /reviewers
-  - /sendmail
+  - /evaldelivery
 
 #### Using make + docker-compose
 
@@ -139,7 +138,8 @@ python3 evalytics/client.py send_reminders --retry
 python3 evalytics/client.py send_reminders --whitelist
 ```
 
-or using cURL directly:
+#### Using cURL directly:
+
 ```
 curl -X POST localhost:8080/setup | json_pp
 curl localhost:8080/reviewers | json_pp
