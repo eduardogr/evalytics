@@ -87,6 +87,51 @@ class TestCommandFactory(TestCase):
         self.assertEqual(1, factory.get_calls()['whitelist_send_eval'])
         self.assertTrue(factory.get_dry_run())
 
+    def test_command_factory_send_reminder(self):
+        factory = CommandFactorySut()
+        factory.execute('send_reminders')
+
+        self.assertIn('send_reminder', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['send_reminder'])
+
+    def test_command_factory_send_reminder_with_dry_run(self):
+        factory = CommandFactorySut()
+        factory.execute('send_reminders --dry-run')
+
+        self.assertIn('send_reminder', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['send_reminder'])
+        self.assertTrue(factory.get_dry_run())
+
+    def test_command_factory_retry_send_reminder(self):
+        factory = CommandFactorySut()
+        factory.execute('send_reminders --retry')
+
+        self.assertIn('retry_send_reminder', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['retry_send_reminder'])
+
+    def test_command_factory_retry_send_reminder_with_dry_run(self):
+        factory = CommandFactorySut()
+        factory.execute('send_reminders --retry --dry-run')
+
+        self.assertIn('retry_send_reminder', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['retry_send_reminder'])
+        self.assertTrue(factory.get_dry_run())
+
+    def test_command_factory_whitelisted_send_reminder(self):
+        factory = CommandFactorySut()
+        factory.execute('send_reminders --whitelist')
+
+        self.assertIn('whitelist_send_reminder', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['whitelist_send_reminder'])
+
+    def test_command_factory_whitelisted_send_reminder_with_dry_run(self):
+        factory = CommandFactorySut()
+        factory.execute('send_reminders --whitelist --dry-run')
+
+        self.assertIn('whitelist_send_reminder', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['whitelist_send_reminder'])
+        self.assertTrue(factory.get_dry_run())
+
     def test_command_factory_help(self):
         factory = CommandFactorySut()
         factory.execute('invented command that is not expected')
@@ -142,6 +187,41 @@ class TestEvalyticsClient(TestCase):
                     "evals": []
                 },
             ]
+        }
+        self.correct_status_response = {
+            'status': {
+                'completed': {},
+                'inconsistent': {},
+                'pending': [
+                    {
+                        "employee": {
+                            "uid": "uid1",
+                            "mail": "uid1@company.com",
+                            "manager": "",
+                            "area": "Eng"
+                        },
+                        "evals": []
+                    },
+                    {
+                        "employee": {
+                            "uid": "uid2",
+                            "mail": "uid2@company.com",
+                            "manager": "",
+                            "area": "Eng"
+                        },
+                        "evals": []
+                    },
+                    {
+                        "employee": {
+                            "uid": "uid3",
+                            "mail": "uid3@company.com",
+                            "manager": "",
+                            "area": "Eng"
+                        },
+                        "evals": []
+                    },
+                ]
+            }
         }
         mapped_reviewers = {
             'uid1': Reviewer(
@@ -336,6 +416,59 @@ class TestEvalyticsClient(TestCase):
         dry_run = True
 
         self.sut.whitelist_send_eval(dry_run=dry_run)
+
+        self.assertNotIn('evaldelivery', self.sut.get_calls())
+
+    def test_correct_send_reminder(self):
+        self.sut.set_status_response(self.correct_status_response)
+        self.sut.set_evaldelivery_response({
+            'evals_sent': ['uid1', 'uid2', 'uid3'],
+            'evals_not_sent': []
+        })
+        whitelist = ['uid1', 'uid2', 'uid3']
+        dry_run = False
+
+        self.sut.send_reminder(whitelist=whitelist, dry_run=dry_run)
+
+        self.assertIn('evaldelivery', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
+
+    def test_correct_send_reminder_with_whitelist(self):
+        self.sut.set_status_response(self.correct_status_response)
+        self.sut.set_evaldelivery_response({
+            'evals_sent': ['uid1', 'uid2', 'uid3'],
+            'evals_not_sent': []
+        })
+        whitelist = ['uid1']
+        dry_run = False
+
+        self.sut.send_reminder(whitelist=whitelist, dry_run=dry_run)
+
+        self.assertIn('evaldelivery', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
+
+    def test_correct_send_reminder_with_dry_run(self):
+        self.sut.set_status_response(self.correct_status_response)
+        whitelist = ['uid1', 'uid2', 'uid3']
+        dry_run = True
+
+        self.sut.send_reminder(whitelist=whitelist, dry_run=dry_run)
+
+        self.assertNotIn('evaldelivery', self.sut.get_calls())
+
+    def test_correct_retry_send_reminder_with_dry_run(self):
+        self.sut.set_status_response(self.correct_status_response)
+        dry_run = True
+
+        self.sut.retry_send_reminder(dry_run=dry_run)
+
+        self.assertNotIn('evaldelivery', self.sut.get_calls())
+
+    def test_correct_whitelist_send_reminder_with_dry_run(self):
+        self.sut.set_status_response(self.correct_status_response)
+        dry_run = True
+
+        self.sut.whitelist_send_reminder(dry_run=dry_run)
 
         self.assertNotIn('evaldelivery', self.sut.get_calls())
 

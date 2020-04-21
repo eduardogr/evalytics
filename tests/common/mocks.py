@@ -565,6 +565,18 @@ class MockEvalyticsClient(EvalyticsClient):
         self.update_calls('whitelist_send_eval')
         self.dry_run = dry_run
 
+    def send_reminder(self, whitelist=None, dry_run: bool = False):
+        self.update_calls('send_reminder')
+        self.dry_run = dry_run
+
+    def retry_send_reminder(self, dry_run: bool = False):
+        self.update_calls('retry_send_reminder')
+        self.dry_run = dry_run
+
+    def whitelist_send_reminder(self, dry_run: bool = False):
+        self.update_calls('whitelist_send_reminder')
+        self.dry_run = dry_run
+
     def help(self, command):
         self.update_calls('help')
 
