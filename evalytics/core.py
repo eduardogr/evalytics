@@ -18,5 +18,5 @@ class DataRepository(GoogleStorage):
 
 class CommunicationsProvider(GmailChannel):
 
-    def send_communication(self, reviewer: Reviewer, data):
-        return super().send(reviewer, data)
+    def send_communication(self, reviewer: Reviewer, mail_subject: str, data):
+        return super().send(reviewer, mail_subject, data)

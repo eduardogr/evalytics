@@ -10,7 +10,7 @@ from evalytics.google_api import GoogleAPI
 from evalytics.google_api import GmailService, DriveService, SheetsService
 from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
-from evalytics.usecases import SendMailUseCase
+from evalytics.usecases import SendEvalUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
 
@@ -49,7 +49,7 @@ class MockCommunicationsProvider(CommunicationsProvider):
     def add_raise_exception_for_reviewer(self, reviewer_uid: str):
         self.raise_exception_for_reviewers.append(reviewer_uid)
 
-    def send_communication(self, reviewer: Reviewer, data):
+    def send_communication(self, reviewer: Reviewer, mail_subject: str, data):
         if reviewer.uid in self.raise_exception_for_reviewers:
             raise Exception("MockCommunicationsProvider was asked to throw this exception")
         return
@@ -62,7 +62,7 @@ class MockEmployeeAdapter(EmployeeAdapter):
     def build_reviewers(self, employees, forms):
         return employees
 
-    def build_eval_message(self, reviewer: Reviewer):
+    def build_message(self, message, reviewer: Reviewer):
         return ""
 
     def get_employees_by_manager(self, employees):
@@ -329,7 +329,7 @@ class MockGoogleStorage(GoogleStorage):
 
 class MockGmailChannel(GmailChannel):
 
-    def send(self, reviewer: Reviewer, data):
+    def send(self, reviewer: Reviewer, mail_subject, data):
         return
 
 class MockConfig(Config):
@@ -340,6 +340,9 @@ class MockConfig(Config):
 
     def read_mail_subject(self):
         return "important subject"
+
+    def reminder_mail_subject(self):
+        return "reminder subject"
 
     def read_google_folder(self):
         return "google_folder"
@@ -370,7 +373,8 @@ class MockConfigParser(ConfigParser):
     def read(self, filename: str = ''):
         return {
             'APP': {
-                'mail_subject': 'this is the mail subject'
+                'mail_subject': 'this is the mail subject',
+                'reminder_mail_subject': 'reminder subject'
             },
             'GOOGLE': {
                 'folder': 'mock_folder',
@@ -398,7 +402,7 @@ class MockMapper(Mapper):
     def json_to_reviewers(self, json_reviewers):
         return self.reviewers
 
-class SendMailUseCaseMock(SendMailUseCase):
+class SendEvalUseCaseMock(SendEvalUseCase):
 
     def __init__(self):
         self.evals_sent = []
@@ -408,7 +412,7 @@ class SendMailUseCaseMock(SendMailUseCase):
         self.evals_sent = evals_sent
         self.evals_not_sent = evals_not_sent
 
-    def send_mail(self, reviewers):
+    def send_eval(self, reviewers, is_reminder=False):
         return self.evals_sent, self.evals_not_sent
 
     def get_response(self):
@@ -485,7 +489,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.setup_response = {}
         self.reviewers_response = {}
         self.status_response = {}
-        self.sendmail_response = {}
+        self.evaldelivery_response = {}
 
     def set_setup_response(self, response):
         self.setup_response = response
@@ -508,12 +512,12 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.update_calls('status')
         return True, self.status_response
 
-    def set_sendmail_response(self, response):
-        self.sendmail_response = response
+    def set_evaldelivery_response(self, response):
+        self.evaldelivery_response = response
 
-    def sendmail(self, json_reviewers):
-        self.update_calls('sendmail')
-        return True, self.sendmail_response
+    def evaldelivery(self, json_reviewers, is_reminder: bool = False):
+        self.update_calls('evaldelivery')
+        return True, self.evaldelivery_response
 
     def get_data_response(self, response):
         self.update_calls('get_data_response')
@@ -559,6 +563,18 @@ class MockEvalyticsClient(EvalyticsClient):
 
     def whitelist_send_eval(self, dry_run: bool = False):
         self.update_calls('whitelist_send_eval')
+        self.dry_run = dry_run
+
+    def send_reminder(self, whitelist=None, dry_run: bool = False):
+        self.update_calls('send_reminder')
+        self.dry_run = dry_run
+
+    def retry_send_reminder(self, dry_run: bool = False):
+        self.update_calls('retry_send_reminder')
+        self.dry_run = dry_run
+
+    def whitelist_send_reminder(self, dry_run: bool = False):
+        self.update_calls('whitelist_send_reminder')
         self.dry_run = dry_run
 
     def help(self, command):

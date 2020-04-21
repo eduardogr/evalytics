@@ -4,9 +4,9 @@ from evalytics.google_api import GoogleAPI
 from evalytics.communications_channels import GmailChannel
 from evalytics.models import Reviewer, Employee
 
-from tests.common.mocks import MockGoogleAPI, MockConfig
+from tests.common.mocks import MockGoogleAPI
 
-class GmailChannelSut(GmailChannel, MockGoogleAPI, MockConfig):
+class GmailChannelSut(GmailChannel, MockGoogleAPI):
     'Inject mocks into GmailChannel dependencies'
 
 class TestGoogleStorage(TestCase):
@@ -23,12 +23,14 @@ class TestGoogleStorage(TestCase):
             employee=self.employee,
             evals=[]
         )
+        self.any_mail_subject = 'any mail subject'
 
     def test_send_empty_message(self):
         expected_user_id = GoogleAPI.AUTHENTICATED_USER
 
         self.sut.send(
             reviewer=self.reviewer,
+            mail_subject=self.any_mail_subject,
             data='')
 
         calls = self.sut.get_send_message_calls()

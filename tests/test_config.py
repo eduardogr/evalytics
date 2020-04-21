@@ -17,6 +17,11 @@ class TestConfig(TestCase):
 
         self.assertEqual('this is the mail subject', mail_subject)
 
+    def test_read_reminder_mail_subject(self):
+        reminder_mail_subject = self.sut.read_reminder_mail_subject()
+
+        self.assertEqual('reminder subject', reminder_mail_subject)
+
     def test_read_google_folder(self):
         google_folder = self.sut.read_google_folder()
 

@@ -1,5 +1,6 @@
 from .adapters import EmployeeAdapter, ReviewerAdapter
 from .core import DataRepository, CommunicationsProvider
+from .config import Config
 
 class SetupUseCase(DataRepository):
 
@@ -14,16 +15,24 @@ class GetReviewersUseCase(DataRepository, EmployeeAdapter):
             super().get_employees(),
             super().get_forms())
 
-class SendMailUseCase(CommunicationsProvider, EmployeeAdapter):
+class SendEvalUseCase(CommunicationsProvider, EmployeeAdapter, Config):
 
-    def send_mail(self, revieweers):
+    def send_eval(self, revieweers, is_reminder: bool = False):
+        if is_reminder:
+            mail_subject = super().read_reminder_mail_subject()
+            message = 'You have pending evals:'
+        else:
+            mail_subject = super().read_mail_subject()
+            message = 'You have new assignments !'
+
         evals_sent = []
         evals_not_sent = []
         for _, reviewer in revieweers.items():
             try:
                 super().send_communication(
                     reviewer=reviewer,
-                    data=super().build_eval_message(reviewer))
+                    mail_subject=mail_subject,
+                    data=super().build_message(message, reviewer))
                 evals_sent.append(reviewer.uid)
             except:
                 evals_not_sent.append(reviewer.uid)

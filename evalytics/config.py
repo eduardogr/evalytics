@@ -8,6 +8,10 @@ class Config(ConfigParser):
         super().read(self.CONFIG_FILE)
         return super().get('APP', 'mail_subject')
 
+    def read_reminder_mail_subject(self):
+        super().read(self.CONFIG_FILE)
+        return super().get('APP', 'reminder_mail_subject')
+
     def read_google_folder(self):
         super().read(self.CONFIG_FILE)
         return super().get('GOOGLE', 'folder')
