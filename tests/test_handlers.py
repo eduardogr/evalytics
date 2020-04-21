@@ -36,4 +36,4 @@ class TestSendMailHandler(TestCase):
         self.sut = SendMailHandlerSut()
 
     def test_endpoint(self):
-        self.assertEqual('/sendmail', self.sut.path)
+        self.assertEqual('/evaldelivery', self.sut.path)

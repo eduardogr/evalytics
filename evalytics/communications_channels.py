@@ -3,14 +3,12 @@ from email.mime.multipart import MIMEMultipart
 import base64
 
 from .google_api import GoogleAPI
-from .config import Config
 from .models import Reviewer
 
-class GmailChannel(GoogleAPI, Config):
+class GmailChannel(GoogleAPI):
 
-    def send(self, reviewer: Reviewer, data):
+    def send(self, reviewer: Reviewer, mail_subject: str, data):
         destiny = reviewer.mail
-        mail_subject = super().read_mail_subject()
         super().send_message(
             user_id=GoogleAPI.AUTHENTICATED_USER,
             message=self.__create_message(

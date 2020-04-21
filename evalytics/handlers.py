@@ -1,6 +1,6 @@
 import tornado.web
 
-from .usecases import SetupUseCase, GetReviewersUseCase, SendMailUseCase
+from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
 from .usecases import GetResponseStatusUseCase
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
@@ -62,17 +62,20 @@ class ReviewersHandler(tornado.web.RequestHandler):
             })
 
 class SendMailHandler(tornado.web.RequestHandler, Mapper):
-    path = r"/sendmail"
+    path = r"/evaldelivery"
 
     async def post(self):
         try:
             reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
+            is_reminder_arg = self.get_argument('is_reminder', False, strip=False)
+
             reviewers = super().json_to_reviewers(reviewers_arg)
 
-            evals_sent, evals_not_sent = SendMailUseCase().send_mail(reviewers)
+            evals_sent, evals_not_sent = SendEvalUseCase().send_eval(reviewers, is_reminder=is_reminder_arg)
             self.finish({
                 'success': True,
                 'response': {
+                    'is_reminder': is_reminder_arg,
                     'evals_sent': evals_sent,
                     'evals_not_sent': evals_not_sent
                 }
@@ -101,7 +104,7 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
                 'response': {
                     'status': {
                         'completed': completed,
-                        'pending': pending,
+                        'pending': [r.to_json() for uid, r in pending.items()],
                         'inconsistent': inconsistent
                     }
                 }

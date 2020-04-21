@@ -44,6 +44,7 @@ class TestCommunicationsProvider(TestCase):
             employee=employee,
             evals=[]
         )
-        data = "this is ypur email"
+        mail_subject = 'any_subject'
+        data = "this is your email"
 
-        self.sut.send_communication(reviewer, data)
+        self.sut.send_communication(reviewer, mail_subject, data)

@@ -61,8 +61,8 @@ class EmployeeAdapter(Config):
                             ]
                         )
                     reviewers.update({
-                            manager.uid: reviewer_manager
-                        })
+                        manager.uid: reviewer_manager
+                    })
 
             # Employee is a manager
             if uid in employees_by_manager:
@@ -80,7 +80,7 @@ class EmployeeAdapter(Config):
 
         return reviewers
 
-    def build_eval_message(self, reviewer: Reviewer):
+    def build_message(self, message, reviewer: Reviewer):
         list_of_evals = ''
         for e_eval in reviewer.evals:
             if e_eval.kind is EvalKind.SELF:
@@ -99,12 +99,12 @@ class EmployeeAdapter(Config):
 			<tbody><tr><td><h1 style="font-size:25px;font-weight:normal;letter-spacing:-1px;color:#757575;padding:0 0 10px">
             Hi {0},</h1>
             <b></b><p style="color:#757575;line-height:23px;padding:30px auto">
-                You have new assignments !	
+                {1}	
             </b></p></td>
             </tr>
             <tr><td style="padding:10px 0">
-                    {1}
-            </td></tr></tbody></tr></table></div>'''.format(reviewer.uid, list_of_evals)
+                    {2}
+            </td></tr></tbody></tr></table></div>'''.format(reviewer.uid, message, list_of_evals)
 
 class ReviewerAdapter(EmployeeAdapter):
 
@@ -156,18 +156,17 @@ class ReviewerAdapter(EmployeeAdapter):
 
         for uid, reviewer in reviewers.items():
             evals = reviewer.evals
-            pending_responses = {}
+            pending_evals = []
             for e in evals:
                 if e.reviewee not in completed.get(uid, {}):
-                    pending_responses.update({
-                        e.reviewee: {
-                            'kind': e.kind.name,
-                            'form': e.form
-                        }
-                    })
-            if len(pending_responses) > 0:
+                    pending_evals.append(e)
+
+            if len(pending_evals) > 0:
                 pending.update({
-                    uid: pending_responses
+                    reviewer.uid: Reviewer(
+                        employee=reviewer.employee,
+                        evals=pending_evals
+                    )
                 })
 
         return completed, pending, inconsistent

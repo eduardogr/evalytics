@@ -40,7 +40,7 @@ class EvalyticsRequests:
 
     def sendmail(self, json_reviewers):
         response = requests.post(
-            url="%s/sendmail" % self.BASE_URL,
+            url="%s/evaldelivery" % self.BASE_URL,
             data={
                 "reviewers": json_reviewers
             }
@@ -149,20 +149,21 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
             total_evals += len(evals)
             print("  - %s: %s" %(reviewer, evals))
 
-        print('Pending evals:')
-        for reviewer, pending_evals in status.get('pending', {}).items():
-            evals = [uid for uid, e in pending_evals.items()]
-            total_pending_evals += len(evals)
-            total_evals += len(evals)
-            print("  - %s: %s" %(reviewer, evals))
-
         print('Inconsistent evals:')
         for reviewer, inconsistent_evals in status.get('inconsistent', {}).items():
             evals = [uid for uid, e in inconsistent_evals.items()]
             total_inconsistent_evals += len(evals)
             print("  - %s: %s\n" %(reviewer, evals))
 
-        print("Total evals: {}".format(total_evals))
+        print('Pending evals:')
+        reviewers_with_pending_evals = status.get('pending', '[]')
+        reviewers = super().json_to_reviewers(reviewers_with_pending_evals)
+        for uid, reviewer in reviewers.items():
+            total_pending_evals += len(reviewer.evals)
+            total_evals += len(reviewer.evals)
+            print("  - %s: %s" %(uid, [e.reviewee for e in reviewer.evals]))
+
+        print("\nTotal evals: {}".format(total_evals))
         if total_evals > 0:
             pending_percentage = total_pending_evals / total_evals * 100
             completed_percentage = total_completed_evals / total_evals * 100

@@ -186,7 +186,8 @@ class TestEmployeeAdapter(TestCase):
         with self.assertRaises(MissingDataException):
             self.sut.build_reviewers(self.employees, form_with_other_area)
 
-    def test_build_eval_message_correct(self):
+    def test_build_message_correct(self):
+        message = 'some message'
         employee = self.employees['cto']
         reviewer = Reviewer(
             employee=employee,
@@ -196,7 +197,7 @@ class TestEmployeeAdapter(TestCase):
             ]
         )
 
-        eval_message = self.sut.build_eval_message(reviewer)
+        eval_message = self.sut.build_message(message, reviewer)
 
         self.assertIn(employee.uid, eval_message)
 
@@ -313,22 +314,12 @@ class TestReviewerAdapter(TestCase):
         self.assertIn('sw2', pending)
         self.assertIn('sw3', pending)
 
-        self.assertIn('tl1', pending['cto'])
-        self.assertIn('tl2', pending['cto'])
-        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['cto']['tl1']['kind'])
-        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['cto']['tl2']['kind'])
-
-        self.assertIn('sw1', pending['tl1'])
-        self.assertIn('sw2', pending['tl1'])
-        self.assertIn('tl1', pending['tl1'])
-        self.assertEqual(EvalKind.SELF.name, pending['tl1']['tl1']['kind'])
-        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl1']['sw1']['kind'])
-        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl1']['sw2']['kind'])
-
-        self.assertIn('sw3', pending['tl2'])
-        self.assertIn('tl2', pending['tl2'])
-        self.assertEqual(EvalKind.SELF.name, pending['tl2']['tl2']['kind'])
-        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl2']['sw3']['kind'])
+        self.assertEqual(2, len(pending['cto'].evals))
+        self.assertEqual(4, len(pending['tl1'].evals))
+        self.assertEqual(3, len(pending['tl2'].evals))
+        self.assertEqual(2, len(pending['sw1'].evals))
+        self.assertEqual(2, len(pending['sw2'].evals))
+        self.assertEqual(2, len(pending['sw3'].evals))
 
     def test_get_status_from_responses_when_some_completed_responses(self):
         self.sut.set_employees_by_manager(self.employees_by_manager)
@@ -412,10 +403,7 @@ class TestReviewerAdapter(TestCase):
         self.assertEqual(EvalKind.MANAGER_PEER.name, completed['cto']['tl2']['kind'])
         self.assertEqual(EvalKind.MANAGER_PEER.name, completed['tl1']['sw1']['kind'])
 
-        self.assertIn('sw2', pending['tl1'])
-        self.assertIn('tl1', pending['tl1'])
-        self.assertEqual(EvalKind.SELF.name, pending['tl1']['tl1']['kind'])
-        self.assertEqual(EvalKind.MANAGER_PEER.name, pending['tl1']['sw2']['kind'])
+        self.assertEqual(3, len(pending['tl1'].evals))
 
 
     def test_get_status_from_responses_when_inconsistent_reporter_responses(self):

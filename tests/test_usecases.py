@@ -1,11 +1,11 @@
 from unittest import TestCase
 
 from evalytics.usecases import SetupUseCase
-from evalytics.usecases import GetReviewersUseCase, SendMailUseCase
+from evalytics.usecases import GetReviewersUseCase, SendEvalUseCase
 from evalytics.usecases import GetResponseStatusUseCase
 
 from tests.common.employees import employees_collection
-from tests.common.mocks import MockDataRepository
+from tests.common.mocks import MockDataRepository, MockConfig
 from tests.common.mocks import MockEmployeeAdapter, MockReviewerAdapter
 from tests.common.mocks import MockCommunicationsProvider
 from tests.common.mocks import GetReviewersUseCaseMock
@@ -19,10 +19,11 @@ class GetReviewersUseCaseSut(
         MockEmployeeAdapter):
     'Inject mocks into GetReviewersUseCase dependencies'
 
-class SendMailUseCaseSut(
-        SendMailUseCase,
+class SendEvalUseCaseSut(
+        SendEvalUseCase,
         MockCommunicationsProvider,
-        MockEmployeeAdapter):
+        MockEmployeeAdapter,
+        MockConfig):
     'Inject mocks into SendEmailUseCase dependencies'
 
 class GetResponseStatusSut(
@@ -58,10 +59,10 @@ class TestGetReviewersUseCase(TestCase):
             employees_collection().get('em_email'),
             reviewers['em_email'])
 
-class TestSendMailUseCase(TestCase):
+class TestSendEvalUseCase(TestCase):
 
     def setUp(self):
-        self.sut = SendMailUseCaseSut()
+        self.sut = SendEvalUseCaseSut()
 
     def test_send_email_usecase(self):
         reviewers = {
@@ -69,7 +70,7 @@ class TestSendMailUseCase(TestCase):
             'manager_em': employees_collection().get('manager_em'),
         }
 
-        evals_sent, evals_not_sent = self.sut.send_mail(reviewers)
+        evals_sent, evals_not_sent = self.sut.send_eval(reviewers)
 
         self.assertIn('em_email', evals_sent)
         self.assertIn('manager_em', evals_sent)
@@ -82,7 +83,7 @@ class TestSendMailUseCase(TestCase):
         }
         self.sut.add_raise_exception_for_reviewer(reviewers['manager_em'].uid)
 
-        evals_sent, evals_not_sent = self.sut.send_mail(reviewers)
+        evals_sent, evals_not_sent = self.sut.send_eval(reviewers)
 
         self.assertIn('em_email', evals_sent)
         self.assertEqual(1, len(evals_sent))
