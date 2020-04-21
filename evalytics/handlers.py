@@ -69,13 +69,14 @@ class SendMailHandler(tornado.web.RequestHandler, Mapper):
             reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
             is_reminder_arg = self.get_argument('is_reminder', False, strip=False)
 
+            is_reminder = super().json_to_bool(is_reminder_arg)
             reviewers = super().json_to_reviewers(reviewers_arg)
 
-            evals_sent, evals_not_sent = SendEvalUseCase().send_eval(reviewers, is_reminder=is_reminder_arg)
+            evals_sent, evals_not_sent = SendEvalUseCase().send_eval(reviewers, is_reminder=is_reminder)
             self.finish({
                 'success': True,
                 'response': {
-                    'is_reminder': is_reminder_arg,
+                    'is_reminder': is_reminder,
                     'evals_sent': evals_sent,
                     'evals_not_sent': evals_not_sent
                 }

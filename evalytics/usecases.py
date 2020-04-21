@@ -19,7 +19,7 @@ class SendEvalUseCase(CommunicationsProvider, EmployeeAdapter, Config):
 
     def send_eval(self, revieweers, is_reminder: bool = False):
         if is_reminder:
-            mail_subject = super().reminder_mail_subject()
+            mail_subject = super().read_reminder_mail_subject()
             message = 'You have pending evals:'
         else:
             mail_subject = super().read_mail_subject()

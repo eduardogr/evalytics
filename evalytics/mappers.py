@@ -30,6 +30,10 @@ class JsonToReviewer:
             })
         return reviewers
 
+    def json_to_bool(self, json_bool):
+        true_strings = ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']
+        return json_bool.lower() in true_strings
+
 class ReviewerToJson:
 
     def reviewer_to_json(self, reviewers):

@@ -38,11 +38,12 @@ class EvalyticsRequests:
 
         return self.__get_data_response(response)
 
-    def sendmail(self, json_reviewers):
+    def evaldelivery(self, json_reviewers, is_reminder: bool = False):
         response = requests.post(
             url="%s/evaldelivery" % self.BASE_URL,
             data={
-                "reviewers": json_reviewers
+                "reviewers": json_reviewers,
+                "is_reminder": is_reminder
             }
         )
 
@@ -62,7 +63,7 @@ class EvalyticsRequests:
 class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
     EVALS_NOT_SENT_CSV = 'evals_not_sent.csv'
-    EVALS_WHITELISTED = 'evals_whitelisted.csv'
+    EVALS_WHITELIST = 'evals_whitelist.csv'
 
     def post_setup(self):
         success, response = super().setup()
@@ -215,13 +216,62 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         else:
             reviewers = [reviewer for r_uid, reviewer in reviewers.items()]
 
+        self.__eval_delivery(reviewers, dry_run)
+
+    def retry_send_eval(self, dry_run: bool = False):
+        evals_not_sent = []
+        evals_not_sent_file = super().open(self.EVALS_NOT_SENT_CSV, "r")
+        for reviewer in evals_not_sent_file.readlines():
+            evals_not_sent.append(reviewer.strip())
+        evals_not_sent_file.close()
+        self.send_eval(whitelist=evals_not_sent, dry_run=dry_run)
+
+    def whitelist_send_eval(self, dry_run: bool = False):
+        whitelisted_evals = []
+        whitelisted_evals_file = super().open(self.EVALS_WHITELIST, "r")
+        for reviewer in whitelisted_evals_file.readlines():
+            whitelisted_evals.append(reviewer.strip())
+        whitelisted_evals_file.close()
+        self.send_eval(whitelist=whitelisted_evals, dry_run=dry_run)
+
+    def send_reminder(self, whitelist=None, dry_run: bool = False):
+        status = self.get_status()
+        reviewers_with_pending_evals = status.get('pending', '[]')
+        reviewers = super().json_to_reviewers(reviewers_with_pending_evals)
+
+        if whitelist is not None:
+            reviewers = [reviewer
+                         for r_uid, reviewer in reviewers.items()
+                         if r_uid in whitelist]
+        else:
+            reviewers = [reviewer for r_uid, reviewer in reviewers.items()]
+
+        self.__eval_delivery(reviewers, True, dry_run)
+
+    def retry_send_reminder(self, dry_run: bool = False):
+        evals_not_sent = []
+        evals_not_sent_file = super().open(self.EVALS_NOT_SENT_CSV, "r")
+        for reviewer in evals_not_sent_file.readlines():
+            evals_not_sent.append(reviewer.strip())
+        evals_not_sent_file.close()
+        self.send_reminder(whitelist=evals_not_sent, dry_run=dry_run)
+
+    def whitelist_send_reminder(self, dry_run: bool = False):
+        whitelisted_evals = []
+        whitelisted_evals_file = super().open(self.EVALS_WHITELIST, "r")
+        for reviewer in whitelisted_evals_file.readlines():
+            whitelisted_evals.append(reviewer.strip())
+        whitelisted_evals_file.close()
+        self.send_reminder(whitelist=whitelisted_evals, dry_run=dry_run)
+
+    def __eval_delivery(self, reviewers, is_reminder: bool = False, dry_run: bool = False):
         json_reviewers = super().reviewer_to_json(reviewers)
 
         if dry_run:
             for reviewer in reviewers:
                 print('[DRY-RUN] Reviewer %s has %d evals' % (reviewer.uid, len(reviewer.evals)))
         else:
-            success, response = super().sendmail(json_reviewers)
+            success, response = super().evaldelivery(json_reviewers, is_reminder)
             if success:
                 print("Evals sent: %s" % response['evals_sent'])
                 print("Evals NOT sent: %s" % response['evals_not_sent'])
@@ -241,32 +291,24 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 print("  - HTTP code: %s" % response.status_code)
                 print("  - Error response: %s" % response.content)
 
-    def retry_send_eval(self, dry_run: bool = False):
-        evals_not_sent = []
-        evals_not_sent_file = super().open(self.EVALS_NOT_SENT_CSV, "r")
-        for reviewer in evals_not_sent_file.readlines():
-            evals_not_sent.append(reviewer.strip())
-        evals_not_sent_file.close()
-        self.send_eval(whitelist=evals_not_sent, dry_run=dry_run)
-
-    def whitelist_send_eval(self, dry_run: bool = False):
-        whitelisted_evals = []
-        whitelisted_evals_file = super().open(self.EVALS_WHITELISTED, "r")
-        for reviewer in whitelisted_evals_file.readlines():
-            whitelisted_evals.append(reviewer.strip())
-        whitelisted_evals_file.close()
-        self.send_eval(whitelist=whitelisted_evals, dry_run=dry_run)
-
     def help(self, command):
         print("Command '%s' not expected" % command)
         print("Available commands: ")
         print("  - %s" % 'setup')
+
         print("  - %s" % 'reviewers')
         print("  - %s --stats" % 'reviewers')
+
         print("  - %s" % 'send_evals')
         print("  - %s --retry" % 'send_evals')
         print("  - %s --whitelist" % 'send_evals')
         print("  - %s --dry-run" % 'send_evals')
+
+        print("  - %s" % 'send_reminders')
+        print("  - %s --retry" % 'send_reminders')
+        print("  - %s --whitelist" % 'send_reminders')
+        print("  - %s --dry-run" % 'send_reminders')
+
         print("  - %s" % 'status')
         print("  - %s --inconsistent-files" % 'status')
 
@@ -289,6 +331,17 @@ class CommandFactory(EvalyticsClient):
                 super().whitelist_send_eval(dry_run=dry_run)
             else:
                 super().send_eval(dry_run=dry_run)
+
+        elif 'send_reminders' in args:
+            dry_run = '--dry-run' in args
+
+            if '--retry' in args:
+                super().retry_send_reminder(dry_run=dry_run)
+            elif '--whitelist' in args:
+                super().whitelist_send_reminder(dry_run=dry_run)
+            else:
+                super().send_reminder(dry_run=dry_run)
+
         elif 'status' in args:
             if '--inconsistent-files' in args:
                 super().print_inconsistent_files_status()
