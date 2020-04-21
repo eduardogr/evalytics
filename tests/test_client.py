@@ -101,6 +101,13 @@ class TestCommandFactory(TestCase):
         self.assertIn('print_status', factory.get_calls())
         self.assertEqual(1, factory.get_calls()['print_status'])
 
+    def test_command_factory_status_inconsistent_files(self):
+        factory = CommandFactorySut()
+        factory.execute('status --inconsistent-files')
+
+        self.assertIn('print_inconsistent_files_status', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['print_inconsistent_files_status'])
+
 class TestEvalyticsClient(TestCase):
 
     def setUp(self):
@@ -250,6 +257,31 @@ class TestEvalyticsClient(TestCase):
         self.sut.set_status_response(status_response)
 
         self.sut.print_status()
+
+        self.assertIn('status', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['status'])
+
+    def test_correct_print_inconsistent_files_status(self):
+        status_response = {
+            'status': {
+                "completed": {},
+                "pending": {},
+                "inconsistent": {
+                    "uid3":  {
+                        "reviewee": {
+                            "kind": 'MANAGER_PEER',
+                            "form": 'some form',
+                            "reason": "WRONG_REPORTER: tá tudo mal",
+                            "filename": 'somefile',
+                            "line_number": 2,
+                        }
+                    }
+                },
+            }
+        }
+        self.sut.set_status_response(status_response)
+
+        self.sut.print_inconsistent_files_status()
 
         self.assertIn('status', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['status'])

@@ -543,6 +543,9 @@ class MockEvalyticsClient(EvalyticsClient):
     def print_status(self):
         self.update_calls('print_status')
 
+    def print_inconsistent_files_status(self):
+        self.update_calls('print_inconsistent_files_status')
+
     def post_setup(self):
         self.update_calls('post_setup')
 
