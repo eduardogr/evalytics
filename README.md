@@ -88,11 +88,11 @@ Check values of [evalytics config](./config.ini)
 
 ### Running Evalytics server
 
-Using docker:
+Using make + docker-compose:
 
 ```
 make build
-make run-server
+make up
 ```
 
 Using Python virtual envs:
@@ -109,6 +109,22 @@ API Endpoints:
   - /reviewers
   - /sendmail
 
+#### Using make + docker-compose
+
+```
+make request ARGS='setup'
+make request ARGS='reviewers'
+make request ARGS='reviewers --stats'
+make request ARGS='send_evals'
+make request ARGS='send_evals --retry'
+make request ARGS='send_evals --whitelist'
+make request ARGS='send_reminders'
+make request ARGS='send_reminders --retry'
+make request ARGS='send_reminders --whitelist'
+```
+
+#### Using Python virtual envs
+
 Using provided Python client:
 
 ```
@@ -118,13 +134,16 @@ python3 evalytics/client.py reviewers --stats
 python3 evalytics/client.py send_evals
 python3 evalytics/client.py send_evals --retry
 python3 evalytics/client.py send_evals --whitelist
+python3 evalytics/client.py send_reminders
+python3 evalytics/client.py send_reminders --retry
+python3 evalytics/client.py send_reminders --whitelist
 ```
 
 or using cURL directly:
 ```
 curl -X POST localhost:8080/setup | json_pp
 curl localhost:8080/reviewers | json_pp
-curl -X POST localhost:8080/sendmail -d '.....' | json_pp (better use the Python client for this endpoint to avoid write all of the data that has to be sent :) )
+curl -X POST localhost:8080/evaldelivery -d '.....' | json_pp (better use the Python client for this endpoint to avoid write all of the data that has to be sent :) )
 
 ```
 
