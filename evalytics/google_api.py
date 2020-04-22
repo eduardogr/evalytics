@@ -203,7 +203,8 @@ class FilesAPI(DriveService, SheetsService):
         return folder
 
     def get_files_from_folder(self, folder_id):
-        query = "'%s' in parents" % folder_id
+        is_spreadsheet = "mimeType='application/vnd.google-apps.spreadsheet'"
+        query = "%s and '%s' in parents" % (is_spreadsheet, folder_id)
         files = self.__get_files(query)
         return files
 

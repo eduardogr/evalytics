@@ -284,12 +284,29 @@ def main():
 
     docs.documents().batchUpdate(documentId=document_id, body={'requests': delete_tokens_requests}).execute()
 
-    '''
+    results = drive.permissions().create(
+        fileId=document_id,
+        body={
+            'type': 'user',
+            'emailAddress': 'mail1@company.com',
+            'role': 'commenter',
+        }
+    ).execute()
+    print(results)
+    results = drive.permissions().create(
+        fileId=document_id,
+        body={
+            'type': 'user',
+            'emailAddress': 'mailcompany.com',
+            'role': 'commenter',
+        }
+    ).execute()
+    print(results)
+    print()
     results = drive.permissions().list(
         fileId=document_id
     ).execute()
     print(results)
-    '''
 
 
 if __name__ == '__main__':

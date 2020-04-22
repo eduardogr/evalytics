@@ -115,12 +115,15 @@ class GoogleStorage(GoogleAPI, Config):
 
         responses = {}
         for file in files:
+            filename = file.get('name')
+            eval_kind = self.__get_eval_kind(filename)
+
+            if eval_kind is None:
+                continue
+
             rows = super().get_file_rows(
                 file.get('id'),
                 responses_range)
-
-            filename = file.get('name')
-            eval_kind = self.__get_eval_kind(filename)
 
             if len(rows) < 1:
                 raise MissingDataException("Missing data in response file: %s" % (filename))
@@ -133,12 +136,12 @@ class GoogleStorage(GoogleAPI, Config):
                     raise MissingDataException("Missing data in response file: '%s' in line %s" % (
                         filename, line))
 
-                reviewer = line[1]
+                reviewer = line[1].split('@')[0]
 
                 if eval_kind == EvalKind.SELF:
                     reviewee = reviewer
                 else:
-                    reviewee = line[2]
+                    reviewee = line[2].strip().lower()
 
                 eval_responses = line[3:]
                 eval_responses = list(zip(questions, eval_responses))
