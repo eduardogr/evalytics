@@ -49,13 +49,30 @@ class GoogleAuth:
 
         return creds
 
-class DriveService:
+class GoogleService:
+
+    __service = None
+    __credentials = None
+
+    def get_service(self, service_id, service_version):
+        if self.__service is None:
+            self.__service = build(
+                service_id,
+                service_version,
+                credentials=self.__get_credentials(),
+                cache_discovery=False)
+        return self.__service
+
+    def __get_credentials(self):
+        if self.__credentials is None:
+            self.__credentials = GoogleAuth.authenticate()
+        return self.__credentials
+
+
+class DriveService(GoogleService):
 
     DRIVE_SERVICE_ID = 'drive'
     DRIVE_SERVICE_VERSION = 'v3'
-
-    __credentials = None
-    __drive_service = None
 
     def create_drive_folder(self, file_metadata):
         return self.__get_drive_service().files().create(
@@ -63,7 +80,11 @@ class DriveService:
             fields='id, parents').execute()
 
     def update_file_parent(self, file_id, current_parent, new_parent):
-        file_update = self.__get_drive_service().files().update(
+        drive_service = super().get_service(
+            self.DRIVE_SERVICE_ID,
+            self.DRIVE_SERVICE_VERSION
+        )
+        file_update = drive_service.files().update(
             fileId=file_id,
             addParents=new_parent,
             removeParents=current_parent)
@@ -79,82 +100,52 @@ class DriveService:
             fields='nextPageToken, files(id, name, parents)',
             pageToken=page_token).execute()
 
-    def __get_drive_service(self):
-        if self.__drive_service is None:
-            self.__drive_service = build(
-                self.DRIVE_SERVICE_ID,
-                self.DRIVE_SERVICE_VERSION,
-                credentials=self.__get_credentials(),
-                cache_discovery=False)
-        return self.__drive_service
-
-    def __get_credentials(self):
-        if self.__credentials is None:
-            self.__credentials = GoogleAuth.authenticate()
-        return self.__credentials
-
-class SheetsService:
+class SheetsService(GoogleService):
 
     SHEETS_SERVICE_ID = 'sheets'
     SHEETS_SERVICE_VERISON = 'v4'
 
-    __credentials = None
-    __sheets_service = None
-
     def create_spreadsheet(self, file_metadata):
-        spreadsheet = self.__get_sheets_service().spreadsheets().create(
+        sheets_service = super().get_service(
+            self.SHEETS_SERVICE_ID,
+            self.SHEETS_SERVICE_VERISON
+        )
+        spreadsheet = sheets_service.spreadsheets().create(
             body=file_metadata,
             fields='spreadsheetId').execute()
         return spreadsheet
 
     def get_file_values(self, spreadsheet_id, rows_range):
-        sheet = self.__get_sheets_service().spreadsheets()
+        sheets_service = super().get_service(
+            self.SHEETS_SERVICE_ID,
+            self.SHEETS_SERVICE_VERISON
+        )
+        sheet = sheets_service.spreadsheets()
         result = sheet.values().get(
             spreadsheetId=spreadsheet_id,
             range=rows_range
         ).execute()
         return result.get('values', [])
 
-    def __get_sheets_service(self):
-        if self.__sheets_service is None:
-            self.__sheets_service = build(
-                self.SHEETS_SERVICE_ID,
-                self.SHEETS_SERVICE_VERISON,
-                credentials=self.__get_credentials(),
-                cache_discovery=False)
-        return self.__sheets_service
+class GmailService(GoogleService):
 
-    def __get_credentials(self):
-        if self.__credentials is None:
-            self.__credentials = GoogleAuth.authenticate()
-        return self.__credentials
-
-class GmailService:
-
-    GMAIL_SERVICE_ID = 'gmail'
-    GMAIL_SERVICE_VERSION = 'v1'
-
-    __credentials = None
-    __gmail_service = None
+    SERVICE_ID = 'gmail'
+    SERVICE_VERSION = 'v1'
 
     def send(self, user_id, body):
-        return self.__get_gmail_service().users().messages().send(
+        gmail_service = super().get_service(
+            self.SERVICE_ID,
+            self.SERVICE_VERSION
+        )
+        return gmail_service.users().messages().send(
             userId=user_id,
             body=body).execute()
 
-    def __get_gmail_service(self):
-        if self.__gmail_service is None:
-            self.__gmail_service = build(
-                self.GMAIL_SERVICE_ID,
-                self.GMAIL_SERVICE_VERSION,
-                credentials=self.__get_credentials(),
-                cache_discovery=False)
-        return self.__gmail_service
+class DocsService(GoogleService):
 
-    def __get_credentials(self):
-        if self.__credentials is None:
-            self.__credentials = GoogleAuth.authenticate()
-        return self.__credentials
+    SERVICE_ID = 'docs'
+    SERVICE_VERSION = 'v1'
+
 
 class FilesAPI(DriveService, SheetsService):
 
