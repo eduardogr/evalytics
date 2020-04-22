@@ -102,35 +102,16 @@ class GoogleStorage(GoogleAPI, Config):
         return forms
 
     def get_responses_map(self):
-        google_folder = super().read_google_folder()
-        responses_folder = super().read_google_responses_folder()
+        responses_by_filename = self.__get_responses_by_filename()
+        reviewer_responses = {}
+        for filename, file_content in responses_by_filename.items():
 
-        folder = super().get_folder_from_folder(
-            responses_folder,
-            google_folder)
-        files = super().get_files_from_folder(folder.get('id'))
+            questions = file_content['questions']
+            responses = file_content['responses']
+            eval_kind = file_content['eval_kind']
 
-        number_of_employees = int(super().read_company_number_of_employees())
-        responses_range = 'A1:S' + str(number_of_employees + 2)
-
-        responses = {}
-        for file in files:
-            filename = file.get('name')
-            eval_kind = self.__get_eval_kind(filename)
-
-            if eval_kind is None:
-                continue
-
-            rows = super().get_file_rows(
-                file.get('id'),
-                responses_range)
-
-            if len(rows) < 1:
-                raise MissingDataException("Missing data in response file: %s" % (filename))
-
-            questions = rows[0][3:]
             line_number = 2
-            for line in rows[1:]:
+            for line in responses:
 
                 if len(line) < 4:
                     raise MissingDataException("Missing data in response file: '%s' in line %s" % (
@@ -154,19 +135,60 @@ class GoogleStorage(GoogleAPI, Config):
                     'line_number': line_number,
                 }
 
-                acc_responses = responses.get(reviewer, [])
+                acc_responses = reviewer_responses.get(reviewer, [])
                 acc_responses.append(eval_response)
-                responses.update({
+                reviewer_responses.update({
                     reviewer: acc_responses
                 })
                 line_number += 1
             line_number = 2
 
-        return responses
+        return reviewer_responses
 
     def get_evaluations_map(self):
         evaluations = {}
+
         return evaluations
+
+    def __get_responses_by_filename(self):
+        google_folder = super().read_google_folder()
+        responses_folder = super().read_google_responses_folder()
+
+        folder = super().get_folder_from_folder(
+            responses_folder,
+            google_folder)
+        files = super().get_files_from_folder(folder.get('id'))
+
+        number_of_employees = int(super().read_company_number_of_employees())
+        responses_range = 'A1:S' + str(number_of_employees + 2)
+
+        responses_by_file = {}
+        for file in files:
+            filename = file.get('name')
+            eval_kind = self.__get_eval_kind(filename)
+
+            if eval_kind is None:
+                continue
+
+            rows = super().get_file_rows(
+                file.get('id'),
+                responses_range)
+
+            if len(rows) < 1:
+                raise MissingDataException("Missing data in response file: %s" % (filename))
+
+            questions = rows[0][3:]
+            file_responses = rows[1:]
+
+            responses_by_file.update({
+                filename: {
+                    'questions': questions,
+                    'responses': file_responses,
+                    'eval_kind': eval_kind,
+                }
+            })
+
+        return responses_by_file
 
     def __get_eval_kind(self, filename):
         # TODO: config this
