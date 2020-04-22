@@ -2,7 +2,56 @@ from evalytics.google_api import GoogleAPI
 from evalytics.config import Config
 from evalytics.models import GoogleSetup, GoogleFile
 from evalytics.models import Employee, EvalKind
+from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
+
+class ReviewerResponseBuilder:
+
+    def build(self, questions, filename, eval_kind, line, line_number):
+        reviewer = self.__get_reviewer_from_response_line(line)
+        reviewee = self.__get_reviewee_from_response_line(
+            line, eval_kind)
+        eval_response = self.__get_eval_response_from_response_line(
+            line, questions)
+
+        return ReviewerResponse(
+            reviewee=reviewee,
+            reviewer=reviewer,
+            eval_kind=eval_kind,
+            eval_response=eval_response,
+            filename=filename,
+            line_number=line_number
+        )
+
+    def __get_reviewer_from_response_line(self, line):
+        return line[1].split('@')[0]
+
+    def __get_reviewee_from_response_line(self, line, eval_kind):
+        if eval_kind == EvalKind.SELF:
+            reviewee = self.__get_reviewer_from_response_line(line)
+        else:
+            reviewee = line[2].strip().lower()
+
+        return reviewee
+
+    def __get_eval_response_from_response_line(self, line, questions):
+        eval_responses = line[3:]
+        return list(zip(questions, eval_responses))
+
+class ReviewerResponseKeyDictStrategy:
+
+    REVIEWEE_EVALUATION = 'reviewee_evaluation'
+    REVIEWER_RESPONSE = 'reviewer_response'
+
+    def get_key(self, data_kind, reviewer_response: ReviewerResponse):
+
+        if self.REVIEWEE_EVALUATION == data_kind:
+            return reviewer_response.reviewee
+
+        elif self.REVIEWER_RESPONSE == data_kind:
+            return reviewer_response.reviewer
+        else:
+            raise NotImplementedError('ExtractResponseDataStrategy does not implement %s strategy' % data_kind)
 
 class GoogleStorage(GoogleAPI, Config):
 
@@ -102,53 +151,55 @@ class GoogleStorage(GoogleAPI, Config):
         return forms
 
     def get_responses_map(self):
+        response_kind = ReviewerResponseKeyDictStrategy.REVIEWER_RESPONSE
+        return self.__get_reviewer_responses(response_kind)
+
+    def get_evaluations_map(self):
+        response_kind = ReviewerResponseKeyDictStrategy.REVIEWEE_EVALUATION
+        return self.__get_reviewer_responses(response_kind)
+
+    def __get_reviewer_responses(self, response_kind):
+        key_strategy = response_kind
+        responses = {}
         responses_by_filename = self.__get_responses_by_filename()
-        reviewer_responses = {}
         for filename, file_content in responses_by_filename.items():
 
             questions = file_content['questions']
-            responses = file_content['responses']
+            file_responses = file_content['responses']
             eval_kind = file_content['eval_kind']
 
             line_number = 2
-            for line in responses:
+            for line in file_responses:
 
-                if len(line) < 4:
-                    raise MissingDataException("Missing data in response file: '%s' in line %s" % (
-                        filename, line))
+                self.__check_response_line(filename, line)
+                reviewer_response = ReviewerResponseBuilder().build(
+                    questions,
+                    filename,
+                    eval_kind,
+                    line,
+                    line_number,
+                )
 
-                reviewer = line[1].split('@')[0]
+                key = ReviewerResponseKeyDictStrategy().get_key(
+                    key_strategy,
+                    reviewer_response
+                )
 
-                if eval_kind == EvalKind.SELF:
-                    reviewee = reviewer
-                else:
-                    reviewee = line[2].strip().lower()
-
-                eval_responses = line[3:]
-                eval_responses = list(zip(questions, eval_responses))
-
-                eval_response = {
-                    'kind': eval_kind.name,
-                    'reviewee': reviewee,
-                    'eval_response': eval_responses,
-                    'filename': filename,
-                    'line_number': line_number,
-                }
-
-                acc_responses = reviewer_responses.get(reviewer, [])
-                acc_responses.append(eval_response)
-                reviewer_responses.update({
-                    reviewer: acc_responses
+                acc_responses = responses.get(key, [])
+                acc_responses.append(reviewer_response)
+                responses.update({
+                    key: acc_responses
                 })
+
                 line_number += 1
             line_number = 2
 
-        return reviewer_responses
+        return responses
 
-    def get_evaluations_map(self):
-        evaluations = {}
-
-        return evaluations
+    def __check_response_line(self, filename, line):
+        if len(line) < 4:
+            raise MissingDataException("Missing data in response file: '%s' in line %s" % (
+                filename, line))
 
     def __get_responses_by_filename(self):
         google_folder = super().read_google_folder()
