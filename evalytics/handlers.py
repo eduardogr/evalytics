@@ -134,14 +134,23 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
 
     async def post(self):
         try:
+            eval_process_id = self.get_argument('eval_process_id', 'EVAL_ID', strip=False)
             area = self.get_argument('area', None, strip=False)
-            managers_arg = self.get_argument('managers', '[]', strip=False)
-            employee_uids_arg = self.get_argument('uids', '[]', strip=False)
+            managers_arg = self.get_argument('managers', None, strip=False)
+            employee_uids_arg = self.get_argument('uids', None, strip=False)
+            dry_run_arg = self.get_argument('dry_run', False, strip=False)
+            
+            print(employee_uids_arg)
 
             managers = super().json_to_list(managers_arg)
             employee_uids = super().json_to_list(employee_uids_arg)
+            dry_run = super().json_to_bool(dry_run_arg)
 
-            created, not_created = GenerateEvalReportsUseCase().generate_eval_reports(
+            print(employee_uids)
+            
+            created, not_created = GenerateEvalReportsUseCase().generate(
+                dry_run,
+                eval_process_id,
                 area,
                 managers,
                 employee_uids
@@ -156,7 +165,7 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
                     }
                 }
             })
-        except Exception as e:
+        except MissingDataException as e:
             if hasattr(e, 'message'):
                 message = e.message
             else:

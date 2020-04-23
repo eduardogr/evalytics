@@ -1,6 +1,7 @@
-from .adapters import EmployeeAdapter, ReviewerAdapter
-from .core import DataRepository, CommunicationsProvider
-from .config import Config
+from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
+from evalytics.filters import ReviewerResponseFilter
+from evalytics.core import DataRepository, CommunicationsProvider
+from evalytics.config import Config
 
 class SetupUseCase(DataRepository):
 
@@ -47,13 +48,44 @@ class GetResponseStatusUseCase(
         responses = super().get_responses()
         return super().get_status_from_responses(reviewers, responses)
 
-class GenerateEvalReportsUseCase(DataRepository):
+class GenerateEvalReportsUseCase(
+        DataRepository, EmployeeAdapter, ReviewerResponseFilter):
 
-    def generate_eval_reports(self, area, managers, employee_uids):
-        # Create eval reports
+    def generate(self, dry_run, eval_process_id, area, managers, employee_uids):
+        reviewee_evaluations = super().get_evaluations()
+        employees = super().get_employees()
 
-        # Fill eval reports
-        super().get_evaluations()
+        reviewee_evaluations = super().filter_reviewees(
+            reviewee_evaluations,
+            employees,
+            area,
+            managers,
+            employee_uids)
 
-        # Share eval reports
-        return [], []
+        created = {}
+        not_created = {}
+        for uid, reviewee_evaluations in reviewee_evaluations.items():
+            employee_managers = super().get_employee_managers(employees, uid)
+            
+            try:
+                super().generate_eval_reports(
+                    dry_run,
+                    eval_process_id,
+                    uid,
+                    reviewee_evaluations,
+                    employee_managers)
+                created.update({
+                    uid: {
+                        'employee': uid,
+                        'managers': employee_managers
+                    }
+                })
+            except:
+                created.update({
+                    uid: {
+                        'employee': uid,
+                        'managers': employee_managers
+                    }
+                })
+
+        return created, not_created

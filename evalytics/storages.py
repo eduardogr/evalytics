@@ -158,6 +158,36 @@ class GoogleStorage(GoogleAPI, Config):
         response_kind = ReviewerResponseKeyDictStrategy.REVIEWEE_EVALUATION
         return self.__get_reviewer_responses(response_kind)
 
+    def generate_eval_reports_in_storage(self,
+                                         dry_run,
+                                         eval_process_id,
+                                         reviewee,
+                                         reviewee_evaluations: ReviewerResponse,
+                                         employee_managers):
+        template_id = super().read_google_eval_report_template_id()
+        filename_prefix = super().read_google_eval_report_prefix_name()
+        filename = '{} {}'.format(filename_prefix, reviewee)
+
+        company_domain = super().read_company_domain()
+        employee_managers = ['{}@{}'.format(m, company_domain) for m in employee_managers]
+
+        document_id = super().copy_file(template_id, filename)
+
+        super().insert_eval_report_in_document(
+            eval_process_id,
+            document_id,
+            reviewee_evaluations)
+
+        if dry_run:
+            return employee_managers
+
+        else:
+            super().add_comenter_permission(
+                document_id,
+                employee_managers
+            )
+            return employee_managers
+
     def __get_reviewer_responses(self, response_kind):
         key_strategy = response_kind
         responses = {}

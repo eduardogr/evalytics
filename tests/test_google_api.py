@@ -198,7 +198,6 @@ class TestFilesAPI(TestCase):
         self.sut.get_file_rows_from_folder(folder_name, filename, rows_range)
 
         calls = self.sut.get_calls()
-        print(calls)
         self.assertEqual(2, len(calls))
         self.assertIn('list_files', calls)
 

@@ -49,6 +49,19 @@ class EvalyticsRequests:
 
         return self.__get_data_response(response)
 
+    def evalreports(self, uids = None, managers = None, area = None, dry_run: bool = False):
+        response = requests.post(
+            url="%s/evalreports" % self.BASE_URL,
+            data={
+                "uids": uids,
+                "managers": managers,
+                "area": area,
+                "dry_run": dry_run
+            }
+        )
+
+        return self.__get_data_response(response)
+
     def __get_data_response(self, response):
         if response.ok:
             data = response.json()
@@ -266,6 +279,22 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         whitelisted_evals_file.close()
         self.send_reminder(whitelist=whitelisted_evals, dry_run=dry_run)
 
+    def generate_reports(self, dry_run):
+        success, response = super().evalreports(dry_run=dry_run)
+       
+        if success:
+            evals_reports = response['evals_reports']
+            created = evals_reports['created']
+            not_created = evals_reports['not_created']
+
+            print("Reports created:")
+            for uid, reports_created in created.items():
+                print(' - {} report will be shared with {}'.format(uid, reports_created['managers']))
+
+            print("Reports NOT created: %s" % not_created)
+            for uid, reports_not_created in not_created.items():
+                print(' - {} report will be shared with {}'.format(uid, reports_not_created['managers']))
+
     def __eval_delivery(self, reviewers, is_reminder: bool, dry_run: bool):
         json_reviewers = super().reviewer_to_json(reviewers)
 
@@ -349,6 +378,11 @@ class CommandFactory(EvalyticsClient):
                 super().print_inconsistent_files_status()
             else:
                 super().print_status()
+
+        elif 'reports' in args:
+            dry_run = '--dry-run' in args
+
+            super().generate_reports(dry_run)
         else:
             super().help(command)
 

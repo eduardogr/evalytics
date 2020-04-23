@@ -1,4 +1,4 @@
-from .models import Reviewer
+from .models import Reviewer, ReviewerResponse
 from .storages import GoogleStorage
 from .communications_channels import GmailChannel
 
@@ -18,6 +18,19 @@ class DataRepository(GoogleStorage):
 
     def get_evaluations(self):
         return super().get_evaluations_map()
+
+    def generate_eval_reports(self,
+                              dry_run,
+                              eval_process_id,
+                              reviewee,
+                              reviewee_evaluations: ReviewerResponse,
+                              employee_managers):
+        return super().generate_eval_reports_in_storage(
+            dry_run,
+            eval_process_id,
+            reviewee,
+            reviewee_evaluations,
+            employee_managers)
 
 class CommunicationsProvider(GmailChannel):
 

@@ -51,17 +51,17 @@ class GoogleAuth:
 
 class GoogleService:
 
-    __service = None
+    __services_by_id = {}
     __credentials = None
 
     def get_service(self, service_id, service_version):
-        if self.__service is None:
-            self.__service = build(
+        if service_id not in self.__services_by_id:
+            self.__services_by_id[service_id] = build(
                 service_id,
                 service_version,
                 credentials=self.__get_credentials(),
                 cache_discovery=False)
-        return self.__service
+        return self.__services_by_id[service_id]
 
     def __get_credentials(self):
         if self.__credentials is None:
@@ -74,8 +74,14 @@ class DriveService(GoogleService):
     DRIVE_SERVICE_ID = 'drive'
     DRIVE_SERVICE_VERSION = 'v3'
 
+    PERMISSION_ROLE_COMMENTER = 'commenter'
+
     def create_drive_folder(self, file_metadata):
-        return self.__get_drive_service().files().create(
+        drive_service = super().get_service(
+            self.DRIVE_SERVICE_ID,
+            self.DRIVE_SERVICE_VERSION
+        )
+        return drive_service.files().create(
             body=file_metadata,
             fields='id, parents').execute()
 
@@ -91,7 +97,10 @@ class DriveService(GoogleService):
         file_update.execute()
 
     def list_files(self, page_token: str, query: str):
-        drive_service = self.__get_drive_service()
+        drive_service = super().get_service(
+            self.DRIVE_SERVICE_ID,
+            self.DRIVE_SERVICE_VERSION
+        )
         return drive_service.files().list(
             q=query,
             pageSize=100,
@@ -99,6 +108,34 @@ class DriveService(GoogleService):
             corpora='user',
             fields='nextPageToken, files(id, name, parents)',
             pageToken=page_token).execute()
+
+    def copy_file(self, file_id, new_filename):
+        drive_service = super().get_service(
+            self.DRIVE_SERVICE_ID,
+            self.DRIVE_SERVICE_VERSION
+        )
+        results = drive_service.files().copy(
+            fileId=file_id,
+            body={
+                'name': new_filename,
+                'mimeType': 'application/vnd.google-apps.document'
+            }
+        ).execute()
+        return results.get('id')
+
+    def create_permission(self, document_id: str, role: str, email_address):
+        drive_service = super().get_service(
+            self.DRIVE_SERVICE_ID,
+            self.DRIVE_SERVICE_VERSION
+        )
+        drive_service.permissions().create(
+            fileId=document_id,
+            body={
+                'type': 'user',
+                'emailAddress': email_address,
+                'role': role,
+            }
+        ).execute()
 
 class SheetsService(GoogleService):
 
@@ -129,13 +166,13 @@ class SheetsService(GoogleService):
 
 class GmailService(GoogleService):
 
-    SERVICE_ID = 'gmail'
-    SERVICE_VERSION = 'v1'
+    GMAIL_SERVICE_ID = 'gmail'
+    GMAIL_SERVICE_VERSION = 'v1'
 
     def send(self, user_id, body):
         gmail_service = super().get_service(
-            self.SERVICE_ID,
-            self.SERVICE_VERSION
+            self.GMAIL_SERVICE_ID,
+            self.GMAIL_SERVICE_VERSION
         )
         return gmail_service.users().messages().send(
             userId=user_id,
@@ -143,11 +180,126 @@ class GmailService(GoogleService):
 
 class DocsService(GoogleService):
 
-    SERVICE_ID = 'docs'
-    SERVICE_VERSION = 'v1'
+    DOCS_SERVICE_ID = 'docs'
+    DOCS_SERVICE_VERSION = 'v1'
 
+    def get_document(self, document_id):
+        docs_service = super().get_service(
+            self.DOCS_SERVICE_ID,
+            self.DOCS_SERVICE_VERSION
+        )
+        return docs_service.documents().get(documentId=document_id).execute()
 
-class FilesAPI(DriveService, SheetsService):
+    def batch_update(self, document_id, requests):
+        docs_service = super().get_service(
+            self.DOCS_SERVICE_ID,
+            self.DOCS_SERVICE_VERSION
+        )
+        docs_service.documents().batchUpdate(
+            documentId=document_id,
+            body={'requests': requests}).execute()
+
+    def get_eval_report_style_tokens(self):
+        return {
+            'eval_title': {
+                'start': 'start-eval-title',
+                'end': 'end-eval-title'
+            },
+            'reviewer': {
+                'start': 'start-reviewer',
+                'end': 'end-reviewer',
+            },
+            'question': {
+                'start': 'start-question',
+                'end': 'end-question',
+            },
+            'answer': {
+                'start': 'start-answer',
+                'end': 'end-answer',
+            },
+        }
+
+    def get_delete_tokens_requests(self):
+        delete_tokens_requests = []
+        for _, tokens in self.get_eval_report_style_tokens().items():
+            delete_tokens_requests.append({
+                    'replaceAllText': {
+                    'containsText': {
+                        'text': '%{}%'.format(tokens['start']),
+                        'matchCase':  'true'
+                    },
+                    'replaceText': '',
+                }
+            })
+            delete_tokens_requests.append({
+                    'replaceAllText': {
+                    'containsText': {
+                        'text': '%{}%'.format(tokens['end']),
+                        'matchCase':  'true'
+                    },
+                    'replaceText': '',
+                }
+            })
+        return delete_tokens_requests
+
+    def get_eval_report_style(self, kind, start_index, end_index):
+        if kind == 'question':
+            return {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': start_index,
+                        'endIndex': end_index
+                    },
+                    'textStyle': {
+                        'fontSize': {
+                            'magnitude': 14,
+                            'unit': 'PT'
+                        },
+                        'bold': False,
+                    },
+                    'fields': '*'
+                }
+            }
+        elif kind == 'reviewer':
+            return {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': start_index,
+                        'endIndex': end_index
+                    },
+                    'textStyle': {
+                        'fontSize': {
+                            'magnitude': 16,
+                            'unit': 'PT'
+                        },
+                        'bold': False,
+                    },
+                    'fields': '*'
+                }
+            }
+        elif kind == 'eval_title':
+            return {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': start_index,
+                        'endIndex': end_index
+                    },
+                    'textStyle': {
+                        'fontSize': {
+                            'magnitude': 20,
+                            'unit': 'PT'
+                        },
+                        'bold': True,
+                    },
+                    'fields': '*'
+                }
+            }
+        elif kind == 'answer':
+            return None
+        else:
+            raise NotImplementedError("eval report style not implemented")
+
+class FilesAPI(DriveService, SheetsService, DocsService):
 
     def create_folder(self, name: str):
         file_metadata = {
@@ -214,6 +366,120 @@ class FilesAPI(DriveService, SheetsService):
 
         return values
 
+    def insert_eval_report_in_document(self, eval_process_id, document_id, reviewee_evaluations):
+        # TODO: insertar tokens en preguntas/respuestas
+        eval_report_with_tokens = self.__build_eval_report_with_tokens(
+            eval_process_id,
+            reviewee_evaluations)
+        self.__insert_eval_report_with_tokens(
+            document_id,
+            eval_report_with_tokens)
+        self.__apply_eval_report_style(document_id)
+        self.__delete_tokens_from_document(document_id)
+
+    def add_comenter_permission(self, document_id, emails):
+        for email in emails:
+            super().create_permission(
+                document_id=document_id,
+                role=DriveService.PERMISSION_ROLE_COMMENTER,
+                email_address=email
+            )
+
+    def ___build_styled_eval_report_element(self, element, content):
+        style_tokens = super().get_eval_report_style_tokens()
+        element_style = style_tokens.get(element, {'start':'', 'end':''})
+        return '%{}%{}%{}%'.format(element_style['start'], content, element_style['end'])
+
+    def __build_eval_report_with_tokens(self, eval_process_id, reviewee_evaluations):
+        styled_title = self.___build_styled_eval_report_element('eval_title', eval_process_id)
+        styled_eval_report = ''
+
+        for reviewer_response in reviewee_evaluations:
+            styled_reviewer = self.___build_styled_eval_report_element(
+                'reviewer', 
+                'Reviewer: %s, kind: %s' % (reviewer_response.reviewer, reviewer_response.eval_kind.name.lower()))
+
+            styled_responses = ''
+            for question, answer in reviewer_response.eval_response:
+                styled_question = self.___build_styled_eval_report_element('question', question)
+                styled_answer = self.___build_styled_eval_report_element('answer', answer)
+                styled_responses = '{}\n{}\n{}\n'.format(styled_responses, styled_question, styled_answer)
+
+            styled_eval_report = '{}\n\n{}\n{}'.format(styled_eval_report, styled_reviewer, styled_responses)
+
+        return '{}\n{}'.format(styled_title, styled_eval_report)
+
+    def __insert_eval_report_with_tokens(self, document_id, eval_report_with_tokens):
+        document = super().get_document(document_id)
+        content = document.get('body').get('content')
+        insert_index = self.__get_indext_after_firt_horizontal_rule(content)
+
+        requests = [
+            {
+                'insertText': {
+                    "text": '\n{{EVAL}}\n',
+                    "location": {
+                        # object (Location)
+                        "index": insert_index,
+                    }
+                }
+            },
+            {
+                'replaceAllText': {
+                    'containsText': {
+                        'text': '{{EVAL}}',
+                        'matchCase':  'true'
+                    },
+                    'replaceText': eval_report_with_tokens,
+                }
+            },
+            {
+                'replaceAllText': {
+                    'containsText': {
+                        'text': '{{employee-name}}',
+                        'matchCase':  'true'
+                    },
+                    'replaceText': 'egarcia',
+                },
+            }
+        ]
+        super().batch_update(document_id=document_id, requests=requests)
+
+    def __apply_eval_report_style(self, document_id):
+        document = super().get_document(document_id)
+        content = document.get('body').get('content')
+
+        START_INDEX = 'startIndex'
+        END_INDEX = 'endIndex'
+
+        ELEMENTS = 'elements'
+        TEXT_RUN = 'textRun'
+        PARAGRAPH = 'paragraph'
+
+        CONTENT = 'content'
+
+        style_requests = []
+        for item in content:
+            if PARAGRAPH in item:
+                for element in item.get(PARAGRAPH).get(ELEMENTS):
+                    if TEXT_RUN in element and CONTENT in element.get(TEXT_RUN):
+                        content = element.get(TEXT_RUN).get(CONTENT)
+                        possible_tokens = content.split('%')
+
+                        for token_uid, tokens in super().get_eval_report_style_tokens().items():
+                            if tokens['start'] in possible_tokens and tokens['end']:
+                                start_index = element.get(START_INDEX)
+                                end_index = element.get(END_INDEX)
+                                style_request = super().get_eval_report_style(token_uid, start_index, end_index)
+                                if style_request is not None:
+                                    style_requests.append(style_request)
+
+        super().batch_update(document_id=document_id, requests=style_requests)
+
+    def __delete_tokens_from_document(self, document_id):
+        delete_token_requests = super().get_delete_tokens_requests()
+        super().batch_update(document_id=document_id, requests=delete_token_requests)
+
     def get_file_rows(self, file_id: str, rows_range: str):
         return super().get_file_values(
             file_id,
@@ -261,6 +527,24 @@ class FilesAPI(DriveService, SheetsService):
             # TODO: manage this
             print(err)
             raise err
+
+    def __get_indext_after_firt_horizontal_rule(self, content):
+        ELEMENTS = 'elements'
+        END_INDEX = 'endIndex'
+        PARAGRAPH = 'paragraph'
+        HORIZONTAL_RULE = 'horizontalRule'
+
+        horizontal_rule_was_seen = False
+        for item in content:
+            if PARAGRAPH in item:
+                for element in item.get(PARAGRAPH).get(ELEMENTS):
+                    if HORIZONTAL_RULE in element:
+                        horizontal_rule_was_seen = True
+                        next_index_hr = element.get(END_INDEX) + 1
+
+                if horizontal_rule_was_seen:
+                    break
+        return next_index_hr
 
 class GmailAPI(GmailService):
 

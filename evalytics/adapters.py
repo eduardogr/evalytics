@@ -5,6 +5,20 @@ from .exceptions import MissingDataException
 
 class EmployeeAdapter(Config):
 
+    def get_employee_managers(self, employees, employee_uid):
+        managers = []
+        employee = employees.get(employee_uid, None)
+
+        if employee is None:
+            return managers
+
+        employee_pointer = employee
+        while employee_pointer is not None and employee_pointer.has_manager:
+            managers.append(employee_pointer.manager)
+            employee_pointer = employees.get(employee_pointer.manager, None)
+
+        return managers
+
     def get_employees_by_manager(self, employees):
         managers = {
             employees[e.manager].uid:[]

@@ -1,6 +1,6 @@
 import json
 
-from .models import Reviewer, Employee, EvalKind, Eval
+from evalytics.models import Reviewer, Employee, EvalKind, Eval
 
 class JsonToReviewer:
 
@@ -35,6 +35,8 @@ class JsonToReviewer:
         return json_bool.lower() in true_strings
 
     def json_to_list(self, json_list):
+        if json_list is None:
+            return None
         return json.loads(json_list)
 
 class ReviewerToJson:
