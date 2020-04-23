@@ -6,6 +6,8 @@ from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+from evalytics.models import EvalKind
+
 class GoogleAuth:
     # If modifying these scopes, delete the file token.pickle.
     SCOPES = [
@@ -366,14 +368,14 @@ class FilesAPI(DriveService, SheetsService, DocsService):
 
         return values
 
-    def insert_eval_report_in_document(self, eval_process_id, document_id, reviewee_evaluations):
-        # TODO: insertar tokens en preguntas/respuestas
+    def insert_eval_report_in_document(self, eval_process_id, document_id, reviewee, reviewee_evaluations):
         eval_report_with_tokens = self.__build_eval_report_with_tokens(
             eval_process_id,
             reviewee_evaluations)
         self.__insert_eval_report_with_tokens(
             document_id,
-            eval_report_with_tokens)
+            eval_report_with_tokens,
+            reviewee)
         self.__apply_eval_report_style(document_id)
         self.__delete_tokens_from_document(document_id)
 
@@ -395,9 +397,10 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         styled_eval_report = ''
 
         for reviewer_response in reviewee_evaluations:
+            eval_kind = self.__get_human_readable_eval_kind(reviewer_response.eval_kind)
             styled_reviewer = self.___build_styled_eval_report_element(
-                'reviewer', 
-                'Reviewer: %s, kind: %s' % (reviewer_response.reviewer, reviewer_response.eval_kind.name.lower()))
+                'reviewer',
+                'Reviewer: %s, kind: %s' % (reviewer_response.reviewer, eval_kind))
 
             styled_responses = ''
             for question, answer in reviewer_response.eval_response:
@@ -409,7 +412,17 @@ class FilesAPI(DriveService, SheetsService, DocsService):
 
         return '{}\n{}'.format(styled_title, styled_eval_report)
 
-    def __insert_eval_report_with_tokens(self, document_id, eval_report_with_tokens):
+    def __get_human_readable_eval_kind(self, eval_kind):
+        if eval_kind == EvalKind.SELF:
+            return 'Self evaluation'
+        elif eval_kind == EvalKind.PEER_MANAGER:
+            return 'Report by direct report'
+        elif eval_kind == EvalKind.MANAGER_PEER:
+            return 'Report by direct manager'
+        else:
+            return ''
+
+    def __insert_eval_report_with_tokens(self, document_id, eval_report_with_tokens, reviewee):
         document = super().get_document(document_id)
         content = document.get('body').get('content')
         insert_index = self.__get_indext_after_firt_horizontal_rule(content)
@@ -439,7 +452,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                         'text': '{{employee-name}}',
                         'matchCase':  'true'
                     },
-                    'replaceText': 'egarcia',
+                    'replaceText': reviewee,
                 },
             }
         ]

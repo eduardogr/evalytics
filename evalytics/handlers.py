@@ -135,9 +135,11 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
     async def post(self):
         try:
             eval_process_id = self.get_argument('eval_process_id', 'EVAL_ID', strip=False)
+
             area = self.get_argument('area', None, strip=False)
             managers_arg = self.get_argument('managers', None, strip=False)
-            employee_uids_arg = self.get_argument('uids', None, strip=False)
+            employee_uids_arg = self.get_argument('uids', "[]", strip=False)
+
             dry_run_arg = self.get_argument('dry_run', False, strip=False)
             
             print(employee_uids_arg)

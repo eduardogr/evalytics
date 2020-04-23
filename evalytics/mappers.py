@@ -37,7 +37,17 @@ class JsonToReviewer:
     def json_to_list(self, json_list):
         if json_list is None:
             return None
-        return json.loads(json_list)
+
+        if isinstance(json_list, str):
+            json_list = json.loads(json_list)
+
+        return json_list
+    
+    def list_to_json(self, some_list):
+        return json.dumps(
+            some_list,
+            default=lambda o:
+            o.__dict__ if type(o) is not EvalKind else str(o.name))
 
 class ReviewerToJson:
 

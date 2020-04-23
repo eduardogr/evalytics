@@ -176,6 +176,7 @@ class GoogleStorage(GoogleAPI, Config):
         super().insert_eval_report_in_document(
             eval_process_id,
             document_id,
+            reviewee,
             reviewee_evaluations)
 
         if dry_run:
