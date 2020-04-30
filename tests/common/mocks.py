@@ -387,6 +387,8 @@ class MockConfigParser(ConfigParser):
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
                 'form_responses_folder': 'mock_tests_folder',
+                'eval_report_template_id': 'ID',
+                'eval_report_prefix_name': 'Prefix'
             },
             'COMPANY': {
                 'domain': 'mock_domain.com',
