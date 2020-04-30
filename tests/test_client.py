@@ -153,6 +153,36 @@ class TestCommandFactory(TestCase):
         self.assertIn('print_inconsistent_files_status', factory.get_calls())
         self.assertEqual(1, factory.get_calls()['print_inconsistent_files_status'])
 
+    def test_command_factory_reports(self):
+        factory = CommandFactorySut()
+        factory.execute('reports')
+
+        self.assertIn('generate_reports', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['generate_reports'])
+
+    def test_command_factory_reports_with_dry_run(self):
+        factory = CommandFactorySut()
+        factory.execute('reports --dry-run')
+
+        self.assertIn('generate_reports', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['generate_reports'])
+        self.assertTrue(factory.get_dry_run())
+
+    def test_command_factory_whitelisted_reports(self):
+        factory = CommandFactorySut()
+        factory.execute('reports --whitelist')
+
+        self.assertIn('whitelist_generate_reports', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['whitelist_generate_reports'])
+
+    def test_command_factory_whitelisted_reports_with_dry_run(self):
+        factory = CommandFactorySut()
+        factory.execute('reports --whitelist --dry-run')
+
+        self.assertIn('whitelist_generate_reports', factory.get_calls())
+        self.assertEqual(1, factory.get_calls()['whitelist_generate_reports'])
+        self.assertTrue(factory.get_dry_run())
+
 class TestEvalyticsClient(TestCase):
 
     def setUp(self):
@@ -471,6 +501,93 @@ class TestEvalyticsClient(TestCase):
         self.sut.whitelist_send_reminder(dry_run=dry_run)
 
         self.assertNotIn('evaldelivery', self.sut.get_calls())
+
+    def test_correct_generate_reports(self):
+        self.sut.set_evalreports_response({
+            'evals_reports': {
+                'created': {
+                    'uid1': {
+                        'employee': 'uid1',
+                        'managers': [
+                            'uid2',
+                            'uid3'
+                        ]
+                    },
+                    'uid2': {
+                        'employee': 'uid2',
+                        'managers': [
+                            'uid2', 
+                            'uid3'
+                        ]
+                    },
+                },
+                'not_created': {}
+            }
+        })
+        whitelist = ['uid1', 'uid2', 'uid3']
+        dry_run = False
+
+        self.sut.generate_reports(dry_run=dry_run, employee_uids=whitelist)
+
+        self.assertIn('evalreports', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['evalreports'])
+
+    def test_correct_generate_reports_with_dry_run(self):
+        self.sut.set_evalreports_response({
+            'evals_reports': {
+                'created': {
+                    'uid1': {
+                        'employee': 'uid1',
+                        'managers': [
+                            'uid2',
+                            'uid3'
+                        ]
+                    },
+                    'uid2': {
+                        'employee': 'uid2',
+                        'managers': [
+                            'uid2', 
+                            'uid3'
+                        ]
+                    },
+                },
+                'not_created': {}
+            }
+        })
+        dry_run = True
+
+        self.sut.generate_reports(dry_run=dry_run)
+
+        self.assertIn('evalreports', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['evalreports'])
+
+    def test_correct_whitelist_generate_reports_with_dry_run(self):
+        self.sut.set_evalreports_response({
+            'evals_reports': {
+                'created': {
+                    'uid1': {
+                        'employee': 'uid1',
+                        'managers': [
+                            'uid2',
+                            'uid3'
+                        ]
+                    },
+                    'uid2': {
+                        'employee': 'uid2',
+                        'managers': [
+                            'uid2', 
+                            'uid3'
+                        ]
+                    },
+                },
+                'not_created': {}
+            }
+        })
+        dry_run = True
+
+        self.sut.whitelist_generate_reports(dry_run=dry_run)
+
+        self.assertIn('evalreports', self.sut.get_calls())
 
     def test_correct_help(self):
         self.sut.help("some command")

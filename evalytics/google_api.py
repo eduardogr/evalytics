@@ -70,7 +70,6 @@ class GoogleService:
             self.__credentials = GoogleAuth.authenticate()
         return self.__credentials
 
-
 class DriveService(GoogleService):
 
     DRIVE_SERVICE_ID = 'drive'

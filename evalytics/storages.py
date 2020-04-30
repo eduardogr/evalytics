@@ -236,6 +236,7 @@ class GoogleStorage(GoogleAPI, Config):
         google_folder = super().read_google_folder()
         responses_folder = super().read_google_responses_folder()
 
+        # TODO: check if folder does not exist
         folder = super().get_folder_from_folder(
             responses_folder,
             google_folder)

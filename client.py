@@ -58,7 +58,7 @@ class EvalyticsRequests:
         response = requests.post(
             url="%s/evalreports" % self.BASE_URL,
             data={
-                "eval_process_id": '2020 Q1',
+                "eval_process_id": '2020 Q1', # TODO: place this in other piece of code
                 "uids": uids,
                 "managers": managers,
                 "area": area,

@@ -496,6 +496,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.reviewers_response = {}
         self.status_response = {}
         self.evaldelivery_response = {}
+        self.evalreports_response = {}
 
     def set_setup_response(self, response):
         self.setup_response = response
@@ -524,6 +525,13 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def evaldelivery(self, json_reviewers, is_reminder: bool = False):
         self.update_calls('evaldelivery')
         return True, self.evaldelivery_response
+
+    def set_evalreports_response(self, response):
+        self.evalreports_response = response
+
+    def evalreports(self, dry_run, uids):
+        self.update_calls('evalreports')
+        return True, self.evalreports_response
 
     def get_data_response(self, response):
         self.update_calls('get_data_response')
@@ -581,6 +589,14 @@ class MockEvalyticsClient(EvalyticsClient):
 
     def whitelist_send_reminder(self, dry_run: bool = False):
         self.update_calls('whitelist_send_reminder')
+        self.dry_run = dry_run
+
+    def generate_reports(self, whitelist=None, dry_run: bool = False):
+        self.update_calls('generate_reports')
+        self.dry_run = dry_run
+
+    def whitelist_generate_reports(self, dry_run: bool = False):
+        self.update_calls('whitelist_generate_reports')
         self.dry_run = dry_run
 
     def help(self, command):

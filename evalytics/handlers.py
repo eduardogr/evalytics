@@ -138,17 +138,13 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
 
             area = self.get_argument('area', None, strip=False)
             managers_arg = self.get_argument('managers', None, strip=False)
-            employee_uids_arg = self.get_argument('uids', "[]", strip=False)
+            employee_uids_arg = self.get_argument('uids', None, strip=False)
 
-            dry_run_arg = self.get_argument('dry_run', False, strip=False)
-            
-            print(employee_uids_arg)
+            dry_run_arg = self.get_argument('dry_run', 'False', strip=False)
 
             managers = super().json_to_list(managers_arg)
             employee_uids = super().json_to_list(employee_uids_arg)
             dry_run = super().json_to_bool(dry_run_arg)
-
-            print(employee_uids)
             
             created, not_created = GenerateEvalReportsUseCase().generate(
                 dry_run,
