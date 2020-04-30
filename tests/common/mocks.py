@@ -333,6 +333,14 @@ class MockGoogleStorage(GoogleStorage):
     def get_evaluations_map(self):
         return
 
+    def generate_eval_reports_in_storage(self,
+                                         dry_run,
+                                         eval_process_id,
+                                         reviewee,
+                                         reviewee_evaluations,
+                                         employee_managers):
+        return
+
 class MockGmailChannel(GmailChannel):
 
     def send(self, reviewer: Reviewer, mail_subject, data):
