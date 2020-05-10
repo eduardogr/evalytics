@@ -48,12 +48,53 @@ class TestJsonToReviewer(TestCase):
 
         self.assertEqual(self.reviewer_with_no_evals, reviewer['mail'])
 
-
     def test_json_to_reviewer_with_evals(self):
         json_reviewers = "[%s]" % self.json_reviewer_with_evals
         reviewer = self.sut.json_to_reviewers(json_reviewers)
 
         self.assertEqual(self.reviewer_with_evals, reviewer['mail'])
+
+    def test_json_to_bool_when_true(self):
+        json_bool = "True"
+
+        result = self.sut.json_to_bool(json_bool)
+
+        self.assertEqual(True, result)
+
+    def test_json_to_bool_when_false(self):
+        json_bool = "anything not true"
+
+        result = self.sut.json_to_bool(json_bool)
+
+        self.assertEqual(False, result)
+
+    def test_json_to_list(self):
+        json_list = "[1,2,3,4]"
+
+        result = self.sut.json_to_list(json_list)
+
+        self.assertEqual([1, 2, 3, 4], result)
+
+    def test_json_to_list_when_none(self):
+        json_list = None
+
+        result = self.sut.json_to_list(json_list)
+
+        self.assertEqual(None, result)
+
+    def test_json_to_list_when_is_an_integer(self):
+        json_list = 3
+
+        result = self.sut.json_to_list(json_list)
+
+        self.assertEqual(3, result)
+
+    def test_list_to_json(self):
+        list_to_convert = [1, 2, 3, 4]
+
+        result = self.sut.list_to_json(list_to_convert)
+
+        self.assertEqual('[1, 2, 3, 4]', result)
 
 class TestReviewerToJson(TestCase):
 
