@@ -68,6 +68,28 @@ class TestEmployeeAdapter(TestCase):
             }
         }
 
+    def test_get_employee_manager_for_cto(self):
+        # given:
+        employee_uid = 'cto'
+
+        # when:
+        managers = self.sut.get_employee_managers(self.employees, employee_uid)
+
+        self.assertEqual(1, len(managers))
+        self.assertIn('ceo', managers)
+
+    def test_get_employee_manager_for_sw(self):
+        # given:
+        employee_uid = 'sw1'
+
+        # when:
+        managers = self.sut.get_employee_managers(self.employees, employee_uid)
+
+        self.assertEqual(3, len(managers))
+        self.assertIn('tl1', managers)
+        self.assertIn('cto', managers)
+        self.assertIn('ceo', managers)
+
     def test_get_managers(self):
         managers = self.sut.get_employees_by_manager(self.employees)
 
