@@ -136,8 +136,8 @@ class Reviewer:
 class ReviewerResponse:
 
     def __init__(self,
-                 reviewee, reviewer, 
-                 eval_kind, eval_response, 
+                 reviewee, reviewer,
+                 eval_kind, eval_response,
                  filename, line_number):
         self.reviewee = reviewee
         self.reviewer = reviewer

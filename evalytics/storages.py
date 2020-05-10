@@ -169,7 +169,10 @@ class GoogleStorage(GoogleAPI, Config):
         filename = '{} {}'.format(filename_prefix, reviewee)
 
         company_domain = super().read_company_domain()
-        employee_managers = ['{}@{}'.format(m, company_domain) for m in employee_managers]
+        employee_managers = [
+            '{}@{}'.format(m, company_domain)
+            for m in employee_managers
+        ]
 
         document_id = super().copy_file(template_id, filename)
 
@@ -190,6 +193,13 @@ class GoogleStorage(GoogleAPI, Config):
             return employee_managers
 
     def __get_reviewer_responses(self, response_kind):
+        '''
+        return {
+            key_1: ReviewerResponse(...),
+            ...
+            key_N: ReviewerResponse(...),
+        }
+        '''
         key_strategy = response_kind
         responses = {}
         responses_by_filename = self.__get_responses_by_filename()

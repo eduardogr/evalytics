@@ -13,6 +13,7 @@ from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendEvalUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
+from evalytics.filters import ReviewerResponseFilter
 
 from client import EvalyticsRequests
 from client import EvalyticsClient
@@ -21,6 +22,10 @@ from client import FileManager
 from tests.common.employees import employees_collection
 
 class MockDataRepository(DataRepository):
+
+    def __init__(self):
+        self.evaluations_response = {}
+        self.evaluations_raise_exception_by_reviewee = []
 
     def setup_storage(self):
         mock_fileid = 'mockid'
@@ -41,8 +46,25 @@ class MockDataRepository(DataRepository):
     def get_responses(self):
         return {}
 
+    def set_evaluations_response(self, response):
+        self.evaluations_response = response
+
+    def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
+        self.evaluations_raise_exception_by_reviewee.append(reviewee)
+
     def get_evaluations(self):
-        return {}
+        return self.evaluations_response
+
+    def generate_eval_reports(self,
+                              dry_run,
+                              eval_process_id,
+                              reviewee,
+                              reviewee_evaluations,
+                              employee_managers):
+        if reviewee in self.evaluations_raise_exception_by_reviewee:
+            raise Exception
+
+        return []
 
 class MockCommunicationsProvider(CommunicationsProvider):
 
@@ -73,6 +95,9 @@ class MockEmployeeAdapter(EmployeeAdapter):
 
     def set_employees_by_manager(self, employees_by_manager):
         self.employees_by_manager = employees_by_manager
+
+    def get_employee_managers(self, employees, employee_uid):
+        return []
 
 class MockReviewerAdapter(ReviewerAdapter):
 
@@ -417,6 +442,16 @@ class MockMapper(Mapper):
 
     def json_to_reviewers(self, json_reviewers):
         return self.reviewers
+
+class MockReviewerResponseFilter(ReviewerResponseFilter):
+
+    def filter_reviewees(self,
+                         reviewee_evaluations,
+                         employees,
+                         area,
+                         managers,
+                         allowed_uids):
+        return reviewee_evaluations
 
 class SendEvalUseCaseMock(SendEvalUseCase):
 

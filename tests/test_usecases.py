@@ -3,12 +3,15 @@ from unittest import TestCase
 from evalytics.usecases import SetupUseCase
 from evalytics.usecases import GetReviewersUseCase, SendEvalUseCase
 from evalytics.usecases import GetResponseStatusUseCase
+from evalytics.usecases import GenerateEvalReportsUseCase
+from evalytics.models import ReviewerResponse
 
 from tests.common.employees import employees_collection
 from tests.common.mocks import MockDataRepository, MockConfig
 from tests.common.mocks import MockEmployeeAdapter, MockReviewerAdapter
 from tests.common.mocks import MockCommunicationsProvider
 from tests.common.mocks import GetReviewersUseCaseMock
+from tests.common.mocks import MockReviewerResponseFilter
 
 class SetupUseCaseSut(SetupUseCase, MockDataRepository):
     'Inject a mock into the SetupUseCase dependency'
@@ -26,13 +29,19 @@ class SendEvalUseCaseSut(
         MockConfig):
     'Inject mocks into SendEmailUseCase dependencies'
 
-class GetResponseStatusSut(
+class GetResponseStatusUseCaseSut(
         GetResponseStatusUseCase,
         GetReviewersUseCaseMock,
         MockDataRepository,
         MockReviewerAdapter):
     'Inject mocks into GetResponseStatusUseCase dependencies'
 
+class GenerateEvalReportsUseCaseSut(
+        GenerateEvalReportsUseCase,
+        MockDataRepository,
+        MockEmployeeAdapter,
+        MockReviewerResponseFilter):
+    'Inject mocks into GenerateEvalReportsUseCaseS dependencies'
 
 class TestSetupUseCase(TestCase):
 
@@ -91,11 +100,70 @@ class TestSendEvalUseCase(TestCase):
         self.assertIn('manager_em', evals_not_sent)
         self.assertEqual(1, len(evals_not_sent))
 
-class TestGetResponseStatus(TestCase):
+class TestGetResponseStatusUseCase(TestCase):
 
     def setUp(self):
-        self.sut = GetResponseStatusSut()
+        self.sut = GetResponseStatusUseCaseSut()
 
 
     def test_get_response_status(self):
         status = self.sut.get_response_status()
+
+class TestGenerateEvalReportsUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GenerateEvalReportsUseCaseSut()
+
+        self.any_reviewer_response = ReviewerResponse(
+            'reviewee',
+            'reviewer',
+            'eval_kind',
+            [],
+            'filename',
+            0
+        )
+        self.evaluations_response = {
+            'uid1': self.any_reviewer_response,
+            'uid2': self.any_reviewer_response,
+            'uid3': self.any_reviewer_response,
+        }
+
+
+    def test_get_response_status(self):
+        dry_run = False
+        eval_process_id = ''
+        area = ''
+        managers = []
+        employee_uids = []
+        self.sut.set_evaluations_response(self.evaluations_response)
+
+        created, not_created = self.sut.generate(
+            dry_run,
+            eval_process_id,
+            area,
+            managers,
+            employee_uids
+        )
+
+        self.assertEqual(0, len(not_created))
+        self.assertEqual(3, len(created))
+
+    def test_get_response_status_when_exceptions_is_raised(self):
+        dry_run = False
+        eval_process_id = ''
+        area = ''
+        managers = []
+        employee_uids = []
+        self.sut.set_evaluations_response(self.evaluations_response)
+        self.sut.get_evaluations_will_raise_exception_for_reviewee('uid1')
+
+        created, not_created = self.sut.generate(
+            dry_run,
+            eval_process_id,
+            area,
+            managers,
+            employee_uids
+        )
+
+        self.assertEqual(1, len(not_created))
+        self.assertEqual(2, len(created))

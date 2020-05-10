@@ -51,7 +51,12 @@ class GetResponseStatusUseCase(
 class GenerateEvalReportsUseCase(
         DataRepository, EmployeeAdapter, ReviewerResponseFilter):
 
-    def generate(self, dry_run, eval_process_id, area, managers, employee_uids):
+    def generate(
+            self,
+            dry_run,
+            eval_process_id,
+            area, managers,
+            employee_uids):
         reviewee_evaluations = super().get_evaluations()
         employees = super().get_employees()
 
@@ -74,6 +79,7 @@ class GenerateEvalReportsUseCase(
                     uid,
                     reviewee_evaluations,
                     employee_managers)
+
                 created.update({
                     uid: {
                         'employee': uid,
@@ -81,7 +87,7 @@ class GenerateEvalReportsUseCase(
                     }
                 })
             except:
-                created.update({
+                not_created.update({
                     uid: {
                         'employee': uid,
                         'managers': employee_managers
