@@ -1,38 +1,27 @@
-class MissingDataException(Exception):
+class CustomException(Exception):
     def __init__(self, *args):
         if args:
             self.message = args[0]
         else:
             self.message = None
 
-    def __str__(self):
+    def get_str(self, class_name):
         if self.message:
-            return 'MissingDataException, {0} '.format(self.message)
+            return '{0}, {1} '.format(self.message, class_name)
         else:
-            return 'MissingDataException has been raised'
+            return '{0} has been raised'.format(class_name)
 
-class NoFormsException(Exception):
-    def __init__(self, *args):
-        if args:
-            self.message = args[0]
-        else:
-            self.message = None
+class MissingDataException(CustomException):
 
     def __str__(self):
-        if self.message:
-            return 'NoFormsException, {0} '.format(self.message)
-        else:
-            return 'NoFormsException has been raised'
+        return super().get_str('MissingDataException')
 
-class NotExistentEmployeeException(Exception):
-    def __init__(self, *args):
-        if args:
-            self.message = args[0]
-        else:
-            self.message = None
+class NoFormsException(CustomException):
 
     def __str__(self):
-        if self.message:
-            return 'NotExistentEmployeException, {0} '.format(self.message)
-        else:
-            return 'NotExistentEmployeException has been raised'
+        return super().get_str('NoFormsException')
+
+class NotExistentEmployeeException(CustomException):
+
+    def __str__(self):
+        return super().get_str('NotExistentEmployeeException')
