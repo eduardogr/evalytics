@@ -7,7 +7,7 @@ from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage
 from evalytics.google_api import GoogleAPI
-from evalytics.google_api import GmailService, DriveService, SheetsService
+from evalytics.google_api import GmailService, DriveService, SheetsService, DocsService
 from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendEvalUseCase
@@ -152,6 +152,17 @@ class MockDriveService(DriveService):
             'nextPageToken': None
         }
 
+    def create_permission(self, document_id: str, role: str, email_address):
+        self.__update_calls(
+            'create_permission',
+            params={
+                'document_id': document_id,
+                'role': role,
+                'email_address': email_address
+            }
+        )
+        return
+
     def get_calls(self):
         return self.calls
 
@@ -207,6 +218,65 @@ class MockSheetsService(SheetsService):
         return {
             'values': ['whatever']
         }
+
+    def get_calls(self):
+        return self.calls
+
+    def __update_calls(self, function, params):
+        current_call_number = 0
+
+        if function in self.calls:
+            sorted_keys = sorted(self.calls[function].keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+            self.calls[function].update({
+                current_call_number: params
+            })
+        else:
+            self.calls.update({
+                function: {
+                    current_call_number: params
+                }
+            })
+
+class MockDocsService(DocsService):
+
+    def __init__(self):
+        self.calls = {}
+
+    def get_document(self, document_id):
+        self.__update_calls(
+            'get_document',
+            params={
+                'document_id': document_id,
+            }
+        )
+        return {
+            'body': {
+                'content': [
+                    {
+                        'paragraph': {
+                            'elements': [
+                                {
+                                    'horizontalRule': {},
+                                    'endIndex': 99
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+
+    def batch_update(self, document_id, requests):
+        self.__update_calls(
+            'batch_update',
+            params={
+                'document_id': document_id,
+                'requests': requests
+            }
+        )
 
     def get_calls(self):
         return self.calls

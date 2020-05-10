@@ -1,11 +1,19 @@
 from unittest import TestCase
 
-from evalytics.google_api import GmailAPI, FilesAPI
+from evalytics.google_api import GmailAPI, FilesAPI, DocsService, DriveService
 
 from tests.common.mocks import MockGmailService
 from tests.common.mocks import MockDriveService, MockSheetsService
+from tests.common.mocks import MockDocsService
 
-class FilesAPISut(FilesAPI, MockDriveService, MockSheetsService):
+class DocServiceSut(DocsService):
+    'Inject a mock into the DocsService dependency'
+
+class FilesAPISut(
+        FilesAPI,
+        MockDriveService,
+        MockSheetsService,
+        MockDocsService):
     'Inject mocks into FilesAPI dependencies'
 
 class GmailAPISut(GmailAPI, MockGmailService):
@@ -24,6 +32,78 @@ class TestGmailApi(TestCase):
         self.assertEqual(1, len(calls))
         self.assertEqual(user_id, calls[0]['user_id'])
 
+class TestDocsService(TestCase):
+
+    def setUp(self):
+        self.sut = DocServiceSut()
+
+    def test_get_eval_report_style_tokens_has_tokens(self):
+        style_tokens = self.sut.get_eval_report_style_tokens()
+
+        self.assertEqual(4, len(style_tokens))
+        self.assertIn('eval_title', style_tokens)
+        self.assertIn('reviewer', style_tokens)
+        self.assertIn('question', style_tokens)
+        self.assertIn('answer', style_tokens)
+
+    def test_get_delete_tokens_requests(self):
+        delete_token_requests = self.sut.get_delete_tokens_requests()
+
+        self.assertEqual(8, len(delete_token_requests))
+
+    def test_get_eval_report_style_for_question(self):
+        # given:
+        kind = 'question'
+        start_index = 0
+        end_index = 0
+
+        # when:
+        style = self.sut.get_eval_report_style(kind, start_index, end_index)
+
+        self.assertIn('updateTextStyle', style)
+
+    def test_get_eval_report_style_for_reviewer(self):
+        # given:
+        kind = 'reviewer'
+        start_index = 0
+        end_index = 0
+
+        # when:
+        style = self.sut.get_eval_report_style(kind, start_index, end_index)
+
+        self.assertIn('updateTextStyle', style)
+
+    def test_get_eval_report_style_for_eval_title(self):
+        # given:
+        kind = 'eval_title'
+        start_index = 0
+        end_index = 0
+
+        # when:
+        style = self.sut.get_eval_report_style(kind, start_index, end_index)
+
+        self.assertIn('updateTextStyle', style)
+
+    def test_get_eval_report_style_for_answer(self):
+        # given:
+        kind = 'answer'
+        start_index = 0
+        end_index = 0
+
+        # when:
+        style = self.sut.get_eval_report_style(kind, start_index, end_index)
+
+        self.assertEqual(None, style)
+
+    def test_get_eval_report_style_when_no_defined_kind_exception_is_raised(self):
+        # given:
+        kind = 'whateverthinkthatNOTexist'
+        start_index = 0
+        end_index = 0
+
+        with self.assertRaises(NotImplementedError):
+            self.sut.get_eval_report_style(kind, start_index, end_index)
+
 class TestFilesAPI(TestCase):
 
     def setUp(self):
@@ -32,8 +112,10 @@ class TestFilesAPI(TestCase):
     def test_create_drive_folder(self):
         folder_name = 'test folder'
 
+        # when:
         self.sut.create_folder(folder_name)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
         self.assertIn('create_drive_folder', calls)
@@ -49,8 +131,10 @@ class TestFilesAPI(TestCase):
         folder = {'id': 'new_parent_id'}
         filename = 'filename'
 
+        # when:
         self.sut.create_sheet(folder_parent, folder, filename)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(2, len(calls))
 
@@ -100,8 +184,10 @@ class TestFilesAPI(TestCase):
             }
         ])
 
+        # when:
         folder = self.sut.get_folder(folder_name)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
         self.assertIn('list_files', calls)
@@ -206,3 +292,113 @@ class TestFilesAPI(TestCase):
 
         call = calls['get_file_rows_from_folder'][0]
         self.assertEqual(file_id, call['spreadsheet_id'])
+
+    def test_get_folder_from_folder(self):
+        foldername = 'my_folder'
+        parent_foldername = 'i am you father'
+        number_of_requests = 2
+        self.sut.set_pages_requested(number_of_requests)
+        self.sut.set_response_files([
+            {
+                'name': foldername
+            },
+            {
+                'name': parent_foldername
+            }, {
+                'name': 'file2'
+            }
+        ])
+
+        # when:
+        folder = self.sut.get_folder_from_folder(foldername, parent_foldername)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('list_files', calls)
+
+        calls = calls['list_files']
+        self.assertEqual(number_of_requests, len(calls))
+
+        self.assertEqual(foldername, folder.get('name'))
+
+    def test_get_folder_from_folder_when_folder_does_not_exist(self):
+        # given:
+        foldername = 'my_folder'
+        parent_foldername = 'i am you father'
+        self.sut.set_pages_requested(0)
+
+        # when:
+        folder = self.sut.get_folder_from_folder(foldername, parent_foldername)
+
+        # then:
+        self.assertEqual(None, folder)
+
+    def test_get_files_from_folder(self):
+        # given:
+        folder_id = 'lASDF::asdf::ID'
+        number_of_requests = 2
+        self.sut.set_pages_requested(number_of_requests)
+        self.sut.set_response_files([
+            {
+                'name': 'file1'
+            }, {
+                'name': 'file2'
+            }, {
+                'name': 'file3'
+            }
+        ])
+
+        # when:
+        files = self.sut.get_files_from_folder(folder_id)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('list_files', calls)
+
+        calls = calls['list_files']
+        self.assertEqual(number_of_requests + 1, len(calls))
+        self.assertEqual(3 * number_of_requests, len(files))
+
+    def test_add_comenter_permission(self):
+        # given:
+        document_id = 'ID'
+        emails = ['email1', 'email2', 'email3']
+
+        # when:
+        self.sut.add_comenter_permission(document_id, emails)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('create_permission', calls)
+
+        calls = calls['create_permission']
+        for _, call in calls.items():
+            self.assertEqual(
+                DriveService.PERMISSION_ROLE_COMMENTER,
+                call.get('role'))
+
+    def test_insert_eval_report_in_document_when_no_evaluations_then_empty_file(self):
+        # given:
+        eval_process_id = ''
+        document_id = 'ID'
+        reviewee = ''
+        reviewee_evaluations = {}
+
+        # when:
+        self.sut.insert_eval_report_in_document(
+            eval_process_id,
+            document_id,
+            reviewee,
+            reviewee_evaluations)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(2, len(calls))
+        self.assertIn('batch_update', calls)
+        self.assertIn('get_document', calls)
+
+    def test_insert_eval_report_in_document(self):
+        pass
