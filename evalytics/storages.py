@@ -50,6 +50,7 @@ class ReviewerResponseKeyDictStrategy:
 
         elif self.REVIEWER_RESPONSE == data_kind:
             return reviewer_response.reviewer
+
         else:
             raise NotImplementedError('ExtractResponseDataStrategy does not implement %s strategy' % data_kind)
 

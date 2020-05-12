@@ -1,8 +1,9 @@
 from unittest import TestCase
 
-from evalytics.storages import GoogleStorage
+from evalytics.storages import GoogleStorage, ReviewerResponseKeyDictStrategy, ReviewerResponseBuilder
+
 from evalytics.exceptions import MissingDataException, NoFormsException
-from evalytics.models import EvalKind
+from evalytics.models import EvalKind, ReviewerResponse
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
@@ -288,3 +289,162 @@ class TestGoogleStorage(TestCase):
 
         with self.assertRaises(MissingDataException):
             self.sut.get_responses_map()
+
+    def test_get_evaluations_map_correct_when_no_files(self):
+        # given:
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([])
+
+        # when:
+        evaluations = self.sut.get_evaluations_map()
+
+        # then:
+        self.assertEqual(0, len(evaluations))
+
+    def test_generate_eval_reports_in_storage_when_files(self):
+        # given:
+        file_id_manager_by = 'file_id_manager_by'
+        file_id_report_by = 'file_id_report_by'
+        file_id_self = 'file_id_self'
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([{
+                'id': file_id_manager_by,
+                'name': 'Manager Evaluation By Team Member',
+            }, {
+                'id': file_id_report_by,
+                'name': 'Report Evaluation by Manager',
+            }, {
+                'id': file_id_self,
+                'name': 'Self Evaluation',
+            },
+        ])
+        self.sut.set_file_rows_by_id(
+            file_id_manager_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporter1', 'manager1', 'answer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_report_by,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'manager1', 'reporter1', 'answer1', 'answer2']
+            ]
+        )
+        self.sut.set_file_rows_by_id(
+            file_id_self,
+            [
+                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
+                ['', 'reporter1', 'reporter1', 'answer1', 'answer2'],
+                ['', 'reporter2', 'reporter2', 'answer1', 'answer2'],
+                ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
+            ]
+        )
+
+        # when:
+        evalutations_map = self.sut.get_evaluations_map()
+
+        # then:
+        self.assertEqual(4, len(evalutations_map))
+
+        print(evalutations_map)
+        self.assertIn('reporter1', evalutations_map)
+        self.assertIn('reporter2', evalutations_map)
+        self.assertIn('reporter3', evalutations_map)
+        self.assertIn('manager1', evalutations_map)
+
+        self.assertEqual(2, len(evalutations_map['reporter1']))
+        self.assertEqual(1, len(evalutations_map['manager1']))
+        self.assertEqual(1, len(evalutations_map['reporter3']))
+
+class TestReviewerResponseKeyDictStrategy(TestCase):
+    
+    def setUp(self):
+        self.reviewer_response = ReviewerResponse(
+            reviewer='reviewer',
+            reviewee='reviewee',
+            eval_kind='kind',
+            eval_response='eval',
+            filename='name',
+            line_number=0
+        )
+
+        self.sut = ReviewerResponseKeyDictStrategy()
+
+    def test_get_key_for_reviewee(self):
+        # given:
+        strategy = ReviewerResponseKeyDictStrategy.REVIEWEE_EVALUATION
+
+        # when:
+        key = self.sut.get_key(strategy, self.reviewer_response)
+
+        # then:
+        self.assertEqual('reviewee', key)
+
+    def test_get_key_for_reviewer(self):
+        # given:
+        strategy = ReviewerResponseKeyDictStrategy.REVIEWER_RESPONSE
+        
+        # when:
+        key = self.sut.get_key(strategy, self.reviewer_response)
+
+        # then:
+        self.assertEqual('reviewer', key)
+
+    def test_get_key_for_non_implemented_strategy(self):
+        with self.assertRaises(NotImplementedError):
+            self.sut.get_key('THIS_STRATEGY_DOES_NOT_EXIST', self.reviewer_response)
+
+
+class TestReviewerResponseBuilder(TestCase):
+    
+    def setUp(self):
+        self.questions = ['question1', 'question2']
+        self.line_response = ['', 'manager1', 'reporter1', 'answer1', 'answer2']
+        self.filename = 'this is a filename'
+        self.eval_kind = 'super special eval kind'
+        self.line_number = 169
+        self.sut = ReviewerResponseBuilder()
+
+    def test_build_correct_reviewer(self):
+        # when:
+        reviewer_response = self.sut.build(
+            questions=self.questions,
+            filename=self.filename,
+            eval_kind=self.eval_kind,
+            line=self.line_response,
+            line_number=self.line_number
+        )
+
+        # then:
+        self.assertEqual('manager1', reviewer_response.reviewer)
+
+    def test_build_correct_reviewee(self):
+        # when:
+        reviewer_response = self.sut.build(
+            questions=self.questions,
+            filename=self.filename,
+            eval_kind=self.eval_kind,
+            line=self.line_response,
+            line_number=self.line_number
+        )
+
+        # then:
+        self.assertEqual('reporter1', reviewer_response.reviewee)
+
+    def test_build_correct_eval_response(self):
+        # when:
+        reviewer_response = self.sut.build(
+            questions=self.questions,
+            filename=self.filename,
+            eval_kind=self.eval_kind,
+            line=self.line_response,
+            line_number=self.line_number
+        )
+
+        # then:
+        self.assertEqual(
+            [('question1', 'answer1'), ('question2', 'answer2')],
+            reviewer_response.eval_response
+        )
