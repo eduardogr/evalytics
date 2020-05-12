@@ -49,6 +49,25 @@ class EvalyticsRequests:
 
         return self.__get_data_response(response)
 
+    def evalreports(
+            self,
+            uids=None,
+            managers=None,
+            area=None,
+            dry_run: bool = False):
+        response = requests.post(
+            url="%s/evalreports" % self.BASE_URL,
+            data={
+                "eval_process_id": '2020 Q1', # TODO: place this in other piece of code
+                "uids": uids,
+                "managers": managers,
+                "area": area,
+                "dry_run": dry_run
+            }
+        )
+
+        return self.__get_data_response(response)
+
     def __get_data_response(self, response):
         if response.ok:
             data = response.json()
@@ -266,6 +285,34 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         whitelisted_evals_file.close()
         self.send_reminder(whitelist=whitelisted_evals, dry_run=dry_run)
 
+    def generate_reports(self, dry_run, employee_uids = None):
+        uids = super().list_to_json(employee_uids)
+        success, response = super().evalreports(
+            dry_run=dry_run,
+            uids=uids)
+
+        if success:
+            evals_reports = response['evals_reports']
+            created = evals_reports['created']
+            not_created = evals_reports['not_created']
+
+            print('[DRY-RUN] %s' % dry_run)
+            print("Reports created:")
+            for uid, reports_created in created.items():
+                print(' - {} report will be shared with {}'.format(uid, reports_created['managers']))
+
+            print("Reports NOT created: %s" % not_created)
+            for uid, reports_not_created in not_created.items():
+                print(' - {} report will be shared with {}'.format(uid, reports_not_created['managers']))
+
+    def whitelist_generate_reports(self, dry_run):
+        whitelisted_evals = []
+        whitelisted_evals_file = super().open(self.EVALS_WHITELIST, "r")
+        for reviewer in whitelisted_evals_file.readlines():
+            whitelisted_evals.append(reviewer.strip())
+        whitelisted_evals_file.close()
+        self.generate_reports(dry_run=dry_run, employee_uids=whitelisted_evals)
+
     def __eval_delivery(self, reviewers, is_reminder: bool, dry_run: bool):
         json_reviewers = super().reviewer_to_json(reviewers)
 
@@ -349,6 +396,14 @@ class CommandFactory(EvalyticsClient):
                 super().print_inconsistent_files_status()
             else:
                 super().print_status()
+
+        elif 'reports' in args:
+            dry_run = '--dry-run' in args
+
+            if '--whitelist' in args:
+                super().whitelist_generate_reports(dry_run=dry_run)
+            else:
+                super().generate_reports(dry_run=dry_run)
         else:
             super().help(command)
 

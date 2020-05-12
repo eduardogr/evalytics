@@ -1,8 +1,23 @@
 from .models import EvalKind, Eval, Reviewer, Employee
+from .models import ReviewerResponse
 from .config import Config
 from .exceptions import MissingDataException
 
 class EmployeeAdapter(Config):
+
+    def get_employee_managers(self, employees, employee_uid):
+        managers = []
+        employee = employees.get(employee_uid, None)
+
+        if employee is None:
+            return managers
+
+        employee_pointer = employee
+        while employee_pointer is not None and employee_pointer.has_manager:
+            managers.append(employee_pointer.manager)
+            employee_pointer = employees.get(employee_pointer.manager, None)
+
+        return managers
 
     def get_employees_by_manager(self, employees):
         managers = {
@@ -109,6 +124,20 @@ class EmployeeAdapter(Config):
 class ReviewerAdapter(EmployeeAdapter):
 
     def get_status_from_responses(self, reviewers, responses):
+        '''
+        args:
+            reviewers: {
+                reviewer.uid: reviewer1,
+                ...
+                reviewerN.uid: reviewerN
+            }
+
+            responses: [
+                ReviewerResponse(),
+                ReviewerResponse(),
+                ReviewerResponse()
+            ]
+        '''
         completed = {}
         pending = {}
         inconsistent = {}
@@ -132,17 +161,17 @@ class ReviewerAdapter(EmployeeAdapter):
 
                 if inconsistent_reason is None:
                     completed_responses.update({
-                        response['reviewee']: {
-                            'kind': response['kind'],
+                        response.reviewee: {
+                            'kind': response.eval_kind.name,
                         }
                     })
                 else:
                     inconsistent_responses.update({
-                        response['reviewee']: {
-                            'kind': response['kind'],
+                        response.reviewee: {
+                            'kind': response.eval_kind.name,
                             'reason': inconsistent_reason,
-                            'filename': response['filename'],
-                            'line_number': response['line_number'],
+                            'filename': response.filename,
+                            'line_number': response.line_number,
                         }
                     })
             if len(completed_responses) > 0:
@@ -172,19 +201,19 @@ class ReviewerAdapter(EmployeeAdapter):
         return completed, pending, inconsistent
 
     def __get_reason_of_inconsistent_response(self,
-                                              reviewer,
-                                              response,
+                                              reviewer: Reviewer,
+                                              response: ReviewerResponse,
                                               employees_by_manager):
         reason = None
-        if response['kind'] == EvalKind.PEER_MANAGER.name:
-            if reviewer.employee.manager != response['reviewee']:
+        if response.eval_kind == EvalKind.PEER_MANAGER:
+            if reviewer.employee.manager != response.reviewee:
                 reason = "WRONG_MANAGER: '%s', it should be '%s'." % (
-                    response['reviewee'], reviewer.employee.manager)
+                    response.reviewee, reviewer.employee.manager)
 
-        elif response['kind'] == EvalKind.MANAGER_PEER.name:
+        elif response.eval_kind == EvalKind.MANAGER_PEER:
             reporters = employees_by_manager.get(reviewer.uid, [])
-            if response['reviewee'] not in reporters:
+            if response.reviewee not in reporters:
                 reason = "WRONG_REPORTER: '%s' is not one of expected reporters. Reporters: %s." % (
-                    response['reviewee'], reporters)
+                    response.reviewee, reporters)
 
         return reason

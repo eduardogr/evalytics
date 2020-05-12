@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.models import Employee, EvalKind, Eval, Reviewer
+from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException
 
 from tests.common.mocks import MockConfig, MockEmployeeAdapter
@@ -66,6 +67,28 @@ class TestEmployeeAdapter(TestCase):
                 EvalKind.MANAGER_PEER: self.manager_peer_form,
             }
         }
+
+    def test_get_employee_manager_for_cto(self):
+        # given:
+        employee_uid = 'cto'
+
+        # when:
+        managers = self.sut.get_employee_managers(self.employees, employee_uid)
+
+        self.assertEqual(1, len(managers))
+        self.assertIn('ceo', managers)
+
+    def test_get_employee_manager_for_sw(self):
+        # given:
+        employee_uid = 'sw1'
+
+        # when:
+        managers = self.sut.get_employee_managers(self.employees, employee_uid)
+
+        self.assertEqual(3, len(managers))
+        self.assertIn('tl1', managers)
+        self.assertIn('cto', managers)
+        self.assertIn('ceo', managers)
 
     def test_get_managers(self):
         managers = self.sut.get_employees_by_manager(self.employees)
@@ -324,15 +347,21 @@ class TestReviewerAdapter(TestCase):
     def test_get_status_from_responses_when_some_completed_responses(self):
         self.sut.set_employees_by_manager(self.employees_by_manager)
         responses = {
-            self.reviewers['cto'].uid: [{
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl1',
-                    'eval_response': [],
-                }, {
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl2',
-                    'eval_response': [],
-                }
+            self.reviewers['cto'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl1',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[]),
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl2',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[])
             ],
             self.reviewers['tl1'].uid: [],
             self.reviewers['tl2'].uid: [],
@@ -364,21 +393,30 @@ class TestReviewerAdapter(TestCase):
     def test_get_status_from_responses_when_completed_responses(self):
         self.sut.set_employees_by_manager(self.employees_by_manager)
         responses = {
-            self.reviewers['cto'].uid: [{
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl1',
-                    'eval_response': [],
-                }, {
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl2',
-                    'eval_response': [],
-                }
+            self.reviewers['cto'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl1',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[]),
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl2',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[])
             ],
-            self.reviewers['tl1'].uid: [{
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'sw1',
-                    'eval_response': [],
-                }
+            self.reviewers['tl1'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='sw1',
+                    reviewer='tl1',
+                    filename='',
+                    line_number=0,
+                    eval_response=[])
             ],
             self.reviewers['tl2'].uid: [],
             self.reviewers['sw1'].uid: [],
@@ -409,27 +447,37 @@ class TestReviewerAdapter(TestCase):
     def test_get_status_from_responses_when_inconsistent_reporter_responses(self):
         self.sut.set_employees_by_manager(self.employees_by_manager)
         responses = {
-            self.reviewers['cto'].uid: [{
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl1',
-                    'eval_response': [],
-                }, {
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl2',
-                    'eval_response': [],
-                }
+            self.reviewers['cto'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl1',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[]),
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl2',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[])
             ],
-            self.reviewers['tl1'].uid: [{
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'sw1',
-                    'eval_response': [],
-                }, {
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'sw3',
-                    'eval_response': [],
-                    'filename': 'whatever',
-                    'line_number': 10,
-                }
+            self.reviewers['tl1'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='sw1',
+                    reviewer='tl1',
+                    filename='',
+                    line_number=0,
+                    eval_response=[]),
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='sw3',
+                    reviewer='tl1',
+                    filename='whatever',
+                    line_number=10,
+                    eval_response=[])
             ],
             self.reviewers['tl2'].uid: [],
             self.reviewers['sw1'].uid: [],
@@ -463,34 +511,48 @@ class TestReviewerAdapter(TestCase):
     def test_get_status_from_responses_when_inconsistent_manager_responses(self):
         self.sut.set_employees_by_manager(self.employees_by_manager)
         responses = {
-            self.reviewers['cto'].uid: [{
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl1',
-                    'eval_response': [],
-                }, {
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'tl2',
-                    'eval_response': [],
-                }
+            self.reviewers['cto'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl1',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[]),
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='tl2',
+                    reviewer='cto',
+                    filename='',
+                    line_number=0,
+                    eval_response=[])
             ],
-            self.reviewers['tl1'].uid: [{
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'sw1',
-                    'eval_response': [],
-                }, {
-                    'kind': 'MANAGER_PEER',
-                    'reviewee': 'sw2',
-                    'eval_response': [],
-                }
+            self.reviewers['tl1'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='sw1',
+                    reviewer='tl1',
+                    filename='',
+                    line_number=0,
+                    eval_response=[]),
+                ReviewerResponse(
+                    eval_kind=EvalKind.MANAGER_PEER,
+                    reviewee='sw2',
+                    reviewer='tl1',
+                    filename='whatever',
+                    line_number=10,
+                    eval_response=[])
             ],
             self.reviewers['tl2'].uid: [],
-            self.reviewers['sw1'].uid: [{
-                    'kind': 'PEER_MANAGER',
-                    'reviewee': 'tl2',
-                    'eval_response': [],
-                    'filename': 'whatever',
-                    'line_number': 10,
-            }],
+            self.reviewers['sw1'].uid: [
+                ReviewerResponse(
+                    eval_kind=EvalKind.PEER_MANAGER,
+                    reviewee='tl2',
+                    reviewer='sw1',
+                    filename='whatever',
+                    line_number=10,
+                    eval_response=[])
+            ],
             self.reviewers['sw2'].uid: [],
             self.reviewers['sw3'].uid: [],
         }

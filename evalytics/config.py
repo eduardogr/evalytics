@@ -28,6 +28,14 @@ class Config(ConfigParser):
         super().read(self.CONFIG_FILE)
         return super().get('GOOGLE', 'form_responses_folder')
 
+    def read_google_eval_report_template_id(self):
+        super().read(self.CONFIG_FILE)
+        return super().get('GOOGLE', 'eval_report_template_id')
+
+    def read_google_eval_report_prefix_name(self):
+        super().read(self.CONFIG_FILE)
+        return super().get('GOOGLE', 'eval_report_prefix_name')
+
     def read_needed_spreadsheets(self):
         orgchart_filename = self.read_google_orgchart()
         formmap_filename = self.read_google_form_map()

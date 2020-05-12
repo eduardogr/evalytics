@@ -131,3 +131,17 @@ class Reviewer:
             "employee": self.employee.to_json(),
             "evals": [e.to_json() for e in self.evals]
         }
+
+@dataclass
+class ReviewerResponse:
+
+    def __init__(self,
+                 reviewee, reviewer,
+                 eval_kind, eval_response,
+                 filename, line_number):
+        self.reviewee = reviewee
+        self.reviewer = reviewer
+        self.eval_kind = eval_kind
+        self.eval_response = eval_response
+        self.filename = filename
+        self.line_number = line_number

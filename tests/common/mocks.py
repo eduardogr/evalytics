@@ -7,12 +7,13 @@ from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage
 from evalytics.google_api import GoogleAPI
-from evalytics.google_api import GmailService, DriveService, SheetsService
+from evalytics.google_api import GmailService, DriveService, SheetsService, DocsService
 from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendEvalUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
+from evalytics.filters import ReviewerResponseFilter
 
 from client import EvalyticsRequests
 from client import EvalyticsClient
@@ -21,6 +22,10 @@ from client import FileManager
 from tests.common.employees import employees_collection
 
 class MockDataRepository(DataRepository):
+
+    def __init__(self):
+        self.evaluations_response = {}
+        self.evaluations_raise_exception_by_reviewee = []
 
     def setup_storage(self):
         mock_fileid = 'mockid'
@@ -40,6 +45,26 @@ class MockDataRepository(DataRepository):
 
     def get_responses(self):
         return {}
+
+    def set_evaluations_response(self, response):
+        self.evaluations_response = response
+
+    def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
+        self.evaluations_raise_exception_by_reviewee.append(reviewee)
+
+    def get_evaluations(self):
+        return self.evaluations_response
+
+    def generate_eval_reports(self,
+                              dry_run,
+                              eval_process_id,
+                              reviewee,
+                              reviewee_evaluations,
+                              employee_managers):
+        if reviewee in self.evaluations_raise_exception_by_reviewee:
+            raise Exception
+
+        return []
 
 class MockCommunicationsProvider(CommunicationsProvider):
 
@@ -70,6 +95,9 @@ class MockEmployeeAdapter(EmployeeAdapter):
 
     def set_employees_by_manager(self, employees_by_manager):
         self.employees_by_manager = employees_by_manager
+
+    def get_employee_managers(self, employees, employee_uid):
+        return []
 
 class MockReviewerAdapter(ReviewerAdapter):
 
@@ -123,6 +151,17 @@ class MockDriveService(DriveService):
             'files': [],
             'nextPageToken': None
         }
+
+    def create_permission(self, document_id: str, role: str, email_address):
+        self.__update_calls(
+            'create_permission',
+            params={
+                'document_id': document_id,
+                'role': role,
+                'email_address': email_address
+            }
+        )
+        return
 
     def get_calls(self):
         return self.calls
@@ -179,6 +218,65 @@ class MockSheetsService(SheetsService):
         return {
             'values': ['whatever']
         }
+
+    def get_calls(self):
+        return self.calls
+
+    def __update_calls(self, function, params):
+        current_call_number = 0
+
+        if function in self.calls:
+            sorted_keys = sorted(self.calls[function].keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+            self.calls[function].update({
+                current_call_number: params
+            })
+        else:
+            self.calls.update({
+                function: {
+                    current_call_number: params
+                }
+            })
+
+class MockDocsService(DocsService):
+
+    def __init__(self):
+        self.calls = {}
+
+    def get_document(self, document_id):
+        self.__update_calls(
+            'get_document',
+            params={
+                'document_id': document_id,
+            }
+        )
+        return {
+            'body': {
+                'content': [
+                    {
+                        'paragraph': {
+                            'elements': [
+                                {
+                                    'horizontalRule': {},
+                                    'endIndex': 99
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+
+    def batch_update(self, document_id, requests):
+        self.__update_calls(
+            'batch_update',
+            params={
+                'document_id': document_id,
+                'requests': requests
+            }
+        )
 
     def get_calls(self):
         return self.calls
@@ -327,6 +425,17 @@ class MockGoogleStorage(GoogleStorage):
     def get_responses_map(self):
         return
 
+    def get_evaluations_map(self):
+        return
+
+    def generate_eval_reports_in_storage(self,
+                                         dry_run,
+                                         eval_process_id,
+                                         reviewee,
+                                         reviewee_evaluations,
+                                         employee_managers):
+        return
+
 class MockGmailChannel(GmailChannel):
 
     def send(self, reviewer: Reviewer, mail_subject, data):
@@ -381,6 +490,8 @@ class MockConfigParser(ConfigParser):
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
                 'form_responses_folder': 'mock_tests_folder',
+                'eval_report_template_id': 'ID',
+                'eval_report_prefix_name': 'Prefix'
             },
             'COMPANY': {
                 'domain': 'mock_domain.com',
@@ -401,6 +512,16 @@ class MockMapper(Mapper):
 
     def json_to_reviewers(self, json_reviewers):
         return self.reviewers
+
+class MockReviewerResponseFilter(ReviewerResponseFilter):
+
+    def filter_reviewees(self,
+                         reviewee_evaluations,
+                         employees,
+                         area,
+                         managers,
+                         allowed_uids):
+        return reviewee_evaluations
 
 class SendEvalUseCaseMock(SendEvalUseCase):
 
@@ -490,6 +611,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.reviewers_response = {}
         self.status_response = {}
         self.evaldelivery_response = {}
+        self.evalreports_response = {}
 
     def set_setup_response(self, response):
         self.setup_response = response
@@ -518,6 +640,13 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def evaldelivery(self, json_reviewers, is_reminder: bool = False):
         self.update_calls('evaldelivery')
         return True, self.evaldelivery_response
+
+    def set_evalreports_response(self, response):
+        self.evalreports_response = response
+
+    def evalreports(self, dry_run, uids):
+        self.update_calls('evalreports')
+        return True, self.evalreports_response
 
     def get_data_response(self, response):
         self.update_calls('get_data_response')
@@ -575,6 +704,14 @@ class MockEvalyticsClient(EvalyticsClient):
 
     def whitelist_send_reminder(self, dry_run: bool = False):
         self.update_calls('whitelist_send_reminder')
+        self.dry_run = dry_run
+
+    def generate_reports(self, whitelist=None, dry_run: bool = False):
+        self.update_calls('generate_reports')
+        self.dry_run = dry_run
+
+    def whitelist_generate_reports(self, dry_run: bool = False):
+        self.update_calls('whitelist_generate_reports')
         self.dry_run = dry_run
 
     def help(self, command):

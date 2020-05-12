@@ -1,7 +1,7 @@
 import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
-from .usecases import GetResponseStatusUseCase
+from .usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
 
@@ -61,7 +61,7 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 }
             })
 
-class SendMailHandler(tornado.web.RequestHandler, Mapper):
+class EvalDeliveryHandler(tornado.web.RequestHandler, Mapper):
     path = r"/evaldelivery"
 
     async def post(self):
@@ -118,6 +118,52 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
                 }
             })
         except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
+                }
+            })
+
+class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
+    path = r"/evalreports"
+
+    async def post(self):
+        try:
+            eval_process_id = self.get_argument('eval_process_id', 'EVAL_ID', strip=False)
+
+            area = self.get_argument('area', None, strip=False)
+            managers_arg = self.get_argument('managers', None, strip=False)
+            employee_uids_arg = self.get_argument('uids', None, strip=False)
+
+            dry_run_arg = self.get_argument('dry_run', 'False', strip=False)
+
+            managers = super().json_to_list(managers_arg)
+            employee_uids = super().json_to_list(employee_uids_arg)
+            dry_run = super().json_to_bool(dry_run_arg)
+            
+            created, not_created = GenerateEvalReportsUseCase().generate(
+                dry_run,
+                eval_process_id,
+                area,
+                managers,
+                employee_uids
+            )
+
+            self.finish({
+                'success': True,
+                'response': {
+                    'evals_reports': {
+                        'created': created,
+                        'not_created': not_created,
+                    }
+                }
+            })
+        except MissingDataException as e:
             if hasattr(e, 'message'):
                 message = e.message
             else:

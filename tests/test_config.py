@@ -49,6 +49,16 @@ class TestConfig(TestCase):
 
         self.assertEqual('mock_tests_folder', tests_folder)
 
+    def test_read_google_eval_report_template_id(self):
+        template_id = self.sut.read_google_eval_report_template_id()
+
+        self.assertEqual('ID', template_id)
+
+    def test_read_google_eval_report_prefix_name(self):
+        prefix = self.sut.read_google_eval_report_prefix_name()
+
+        self.assertEqual('Prefix', prefix)
+
     def test_read_company_domain(self):
         domain = self.sut.read_company_domain()
 

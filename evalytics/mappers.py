@@ -1,6 +1,6 @@
 import json
 
-from .models import Reviewer, Employee, EvalKind, Eval
+from evalytics.models import Reviewer, Employee, EvalKind, Eval
 
 class JsonToReviewer:
 
@@ -33,6 +33,21 @@ class JsonToReviewer:
     def json_to_bool(self, json_bool):
         true_strings = ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']
         return json_bool.lower() in true_strings
+
+    def json_to_list(self, json_list):
+        if json_list is None:
+            return None
+
+        if isinstance(json_list, str):
+            json_list = json.loads(json_list)
+
+        return json_list
+    
+    def list_to_json(self, some_list):
+        return json.dumps(
+            some_list,
+            default=lambda o:
+            o.__dict__ if type(o) is not EvalKind else str(o.name))
 
 class ReviewerToJson:
 
