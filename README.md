@@ -69,7 +69,7 @@ There's an [Evalytics config](./config.ini) to help you configure your Evalytics
   - domain: domain of your company, e.g. mycompany.com. This will be used for email delivery.
   - number_of_employees: number of employees in your [orgchart file](./examples/eval-process/0_existing_OrgChart.csv)
 
-Fill the [Evalytics config](./config.ini) to let it work properly.
+Create a config.ini file from [config.ini.example](./config.ini.example) with correct values for each key to let Evalytics work properly.
 
 ## :rocket: Running evalytics
 
