@@ -54,16 +54,20 @@ To generate this we have the make target google-auth, so, you just have to tun
 
 There's an [Evalytics config](./config.ini) to help you configure your Evalytics instance:
 
-* *Google*
+* **Google**
 
-  - FOLDER: Google Drive folder where files are stored.
-  - ORGCHART: Google Spreadsheet where employees are listed. [See the example](./examples/eval-process/0_existing_OrgChart.csv).
-  - FORM_MAP: Google Spreadsheet where employees forms are listed by kind of form. [See the example](./examples/eval-process/0_existing_FormMap.csv).
+  - folder: Google Drive folder where files are stored.
+  - org_chart: Google Spreadsheet where employees are listed. [See an example](./examples/eval-process/0_existing_OrgChart.csv).
+  - form_map: Google Spreadsheet where employees forms are listed by kind of form. [See an example](./examples/eval-process/0_existing_FormMap.csv).
+  - form_responses_folder: Google Drive folder where response files are stored.
+  - eval_report_template_id: Google Document ID where we've defined our eval report template. [See an example](./examples/eval-process/0_existing_EvalReportTemplate.md).
+  - eval_report_prefix_name: Prefix for eval reports documents we are going to create.
+      - e.g. if prefix is 'Eval Report: ', files generated for employee1 and employee2 are going to have titles; 'Eval Report: employee1' and 'Eval Report: employee2' 
 
-* *Company*
+* **Company**
 
-  - DOMAIN: domain of your company, e.g. mycompany.com. This will be used for email delivery.
-  - NUMBER_OF_EMPLOYEES: number of employees in your [orgchart file](./examples/eval-process/0_existing_OrgChart.csv)
+  - domain: domain of your company, e.g. mycompany.com. This will be used for email delivery.
+  - number_of_employees: number of employees in your [orgchart file](./examples/eval-process/0_existing_OrgChart.csv)
 
 Fill the [Evalytics config](./config.ini) to let it work properly.
 
@@ -73,28 +77,30 @@ Preparing local environment to run evalytics:
 
 ### Prerequisites to running it locally
 
+#### Using make + docker-compose
+
+Install docker-compose 
+
+#### Using Python virtual envs
+
 From the root path of this project:
 
 ```
-python3 -m venv env
-source env/bin/activate
-pip install -r requirements/dev.txt
-export PYTHONPATH=`pwd`
-make google-auth
+./setup.sh
 ```
 
 Check values of [evalytics config](./config.ini)
 
 ### Running Evalytics server
 
-Using make + docker-compose:
+#### Using make + docker-compose
 
 ```
 make build
 make up
 ```
 
-Using Python virtual envs:
+#### Using Python virtual envs
 
 ```
 python3 evalytics/server.py
@@ -107,19 +113,31 @@ API Endpoints:
   - /setup
   - /reviewers
   - /evaldelivery
+  - /status
+  - /evalreports
 
 #### Using make + docker-compose
 
 ```
 make request ARGS='setup'
+
 make request ARGS='reviewers'
 make request ARGS='reviewers --stats'
+
 make request ARGS='send_evals'
 make request ARGS='send_evals --retry'
 make request ARGS='send_evals --whitelist'
+
 make request ARGS='send_reminders'
 make request ARGS='send_reminders --retry'
 make request ARGS='send_reminders --whitelist'
+
+make request ARGS='status'
+make request ARGS='status --inconsistent-files'
+
+make request ARGS='reports'
+make request ARGS='reports --dry-run'
+make request ARGS='reports --whitelist'
 ```
 
 #### Using Python virtual envs
@@ -128,14 +146,24 @@ Using provided Python client:
 
 ```
 python3 evalytics/client.py setup
+
 python3 evalytics/client.py reviewers
 python3 evalytics/client.py reviewers --stats
+
 python3 evalytics/client.py send_evals
 python3 evalytics/client.py send_evals --retry
 python3 evalytics/client.py send_evals --whitelist
+
 python3 evalytics/client.py send_reminders
 python3 evalytics/client.py send_reminders --retry
 python3 evalytics/client.py send_reminders --whitelist
+
+python3 evalytics/client.py status
+python3 evalytics/client.py status --inconsistent-files
+
+python3 evalytics/client.py reports
+python3 evalytics/client.py reports --dry-run
+python3 evalytics/client.py reports --whitelist
 ```
 
 #### Using cURL directly:
