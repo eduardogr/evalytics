@@ -1,8 +1,7 @@
 
-from configparser import ConfigParser
 import tornado.web
 
-from evalytics.config import Config
+from evalytics.config import Config, ConfigReader
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage
@@ -477,15 +476,15 @@ class MockConfig(Config):
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
 
-class MockConfigParser(ConfigParser):
+class MockConfigReader(ConfigReader):
 
     def read(self, filename: str = ''):
         return {
-            'APP': {
+            'app': {
                 'mail_subject': 'this is the mail subject',
                 'reminder_mail_subject': 'reminder subject'
             },
-            'GOOGLE': {
+            'google': {
                 'folder': 'mock_folder',
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
@@ -493,7 +492,7 @@ class MockConfigParser(ConfigParser):
                 'eval_report_template_id': 'ID',
                 'eval_report_prefix_name': 'Prefix'
             },
-            'COMPANY': {
+            'company': {
                 'domain': 'mock_domain.com',
                 'number_of_employees': 20,
             }

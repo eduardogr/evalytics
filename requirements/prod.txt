@@ -5,4 +5,4 @@ google-auth-httplib2==0.0.3
 google-auth-oauthlib==0.4.1
 
 dataclasses==0.6
-configparser==5.0.0
+pyyaml==5.3.1

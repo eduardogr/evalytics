@@ -134,5 +134,5 @@ token.pickle
 evals_not_sent.csv
 evals_whitelist.csv
 
-config.ini
-config.ini.prod
+config.yaml
+config.yaml.prod

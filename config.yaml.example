@@ -1,0 +1,17 @@
+---
+app:
+    name: "Evalytics"
+    mail_subject: "Evalytics: You can now complete your evaluation assignments!"
+    reminder_mail_subject: "Reminder Evalytics: 'You have pending evals to complete'"
+
+google:
+    folder: "2020 Q1 Evals"
+    org_chart: "My Employee List"
+    form_map: "Form mapping"
+    form_responses_folder: "ResponsesTest"
+    eval_report_template_id: "ID_OF_GOOGLE_DOCUMENT"
+    eval_report_prefix_name: "Prefix Doc: "
+
+company:
+    domain: "company.com"
+    number_of_employees: 1000
