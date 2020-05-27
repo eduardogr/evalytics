@@ -1,40 +1,62 @@
-from configparser import ConfigParser
+import yaml
 
-class Config(ConfigParser):
+class ConfigReader:
 
-    CONFIG_FILE = 'config.ini'
+    CONFIG_FILE = 'config.yaml'
+
+    def read(self):
+        with open(self.CONFIG_FILE, 'r') as stream:
+            data_loaded = yaml.safe_load(stream)
+
+        return data_loaded
+
+class AppConfig(ConfigReader):
+
+    APP = 'app'
+    MAIL_SUBJECT = 'mail_subject'
+    REMINDER_MAIL_SUBJECT = 'reminder_mail_subject'
 
     def read_mail_subject(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('APP', 'mail_subject')
+        config = super().read()
+        return config.get(self.APP).get(self.MAIL_SUBJECT)
 
     def read_reminder_mail_subject(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('APP', 'reminder_mail_subject')
+        config = super().read()
+        return config.get(self.APP).get(self.REMINDER_MAIL_SUBJECT)
+
+class GoogleConfig(ConfigReader):
+
+    GOOGLE = 'google'
+    FOLDER = 'folder'
+    ORG_CHART = 'org_chart'
+    FORM_MAP = 'form_map'
+    FORM_RESPONSES_FOLDER = 'form_responses_folder'
+    EVAL_REPORT_TEMPLATE_ID = 'eval_report_template_id'
+    EVAL_REPORT_PREFIX_NAME = 'eval_report_prefix_name'
 
     def read_google_folder(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'folder')
+        config = super().read()
+        return config.get(self.GOOGLE).get(self.FOLDER)
 
     def read_google_orgchart(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'org_chart')
+        config = super().read()
+        return config.get(self.GOOGLE).get(self.ORG_CHART)
 
     def read_google_form_map(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'form_map')
+        config = super().read()
+        return config.get(self.GOOGLE).get(self.FORM_MAP)
 
     def read_google_responses_folder(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'form_responses_folder')
+        config = super().read()
+        return config.get(self.GOOGLE).get(self.FORM_RESPONSES_FOLDER)
 
     def read_google_eval_report_template_id(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'eval_report_template_id')
+        config = super().read()
+        return config.get(self.GOOGLE).get(self.EVAL_REPORT_TEMPLATE_ID)
 
     def read_google_eval_report_prefix_name(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('GOOGLE', 'eval_report_prefix_name')
+        config = super().read()
+        return config.get(self.GOOGLE).get(self.EVAL_REPORT_PREFIX_NAME)
 
     def read_needed_spreadsheets(self):
         orgchart_filename = self.read_google_orgchart()
@@ -44,10 +66,19 @@ class Config(ConfigParser):
             formmap_filename
         ]
 
+class CompanyConfig(ConfigReader):
+
+    COMPANY = 'company'
+    DOMAIN = 'domain'
+    NUMBER_OF_EMPLOYEES = 'number_of_employees'
+
     def read_company_domain(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('COMPANY', 'domain')
+        config = super().read()
+        return config.get(self.COMPANY).get(self.DOMAIN)
 
     def read_company_number_of_employees(self):
-        super().read(self.CONFIG_FILE)
-        return super().get('COMPANY', 'number_of_employees',)
+        config = super().read()
+        return config.get(self.COMPANY).get(self.NUMBER_OF_EMPLOYEES)
+
+class Config(AppConfig, GoogleConfig, CompanyConfig):
+    'Composition of configs'

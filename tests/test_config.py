@@ -2,9 +2,9 @@ from unittest import TestCase
 
 from evalytics.config import Config
 
-from tests.common.mocks import MockConfigParser
+from tests.common.mocks import MockConfigReader
 
-class ConfigSut(Config, MockConfigParser):
+class ConfigSut(Config, MockConfigReader):
     'Injecting a mock into the Config dependency'
 
 class TestConfig(TestCase):
