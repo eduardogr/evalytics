@@ -3,20 +3,22 @@ from unittest import TestCase
 from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.models import Reviewer, Employee
 
+from tests.common.mocks import MockStorageFactory, MockCommunicationChannelFactory
 from tests.common.mocks import MockGoogleStorage, MockGmailChannel
 
-class DataRepositorySut(DataRepository, MockGoogleStorage):
+class DataRepositorySut(DataRepository, MockStorageFactory):
     'Inject a mock into the DataRepository dependency'
 
 class CommunicationsProviderSut(
         CommunicationsProvider,
-        MockGmailChannel):
+        MockCommunicationChannelFactory):
     'Inject a mock into the CommunicationsProvider dependency'
 
 class TestDataRepository(TestCase):
 
     def setUp(self):
         self.sut = DataRepositorySut()
+        self.sut.set_storage(MockGoogleStorage())
 
     def test_setup_call(self):
         self.sut.setup_storage()
@@ -46,6 +48,7 @@ class TestCommunicationsProvider(TestCase):
 
     def setUp(self):
         self.sut = CommunicationsProviderSut()
+        self.sut.set_communication_channel(MockGmailChannel())
 
     def test_send_communication_call(self):
         employee = Employee(

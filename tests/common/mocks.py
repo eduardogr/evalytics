@@ -3,8 +3,8 @@ import tornado.web
 
 from evalytics.config import Config, ConfigReader
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
-from evalytics.communications_channels import GmailChannel
-from evalytics.storages import GoogleStorage
+from evalytics.communications_channels import CommunicationChannelFactory, GmailChannel
+from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.google_api import GoogleAPI
 from evalytics.google_api import GmailService, DriveService, SheetsService, DocsService
 from evalytics.core import DataRepository, CommunicationsProvider
@@ -410,36 +410,6 @@ class MockGoogleAPI(GoogleAPI):
             }
         })
 
-class MockGoogleStorage(GoogleStorage):
-
-    def setup(self):
-        return
-
-    def get_employee_map(self):
-        return
-
-    def get_forms_map(self):
-        return
-
-    def get_responses_map(self):
-        return
-
-    def get_evaluations_map(self):
-        return
-
-    def generate_eval_reports_in_storage(self,
-                                         dry_run,
-                                         eval_process_id,
-                                         reviewee,
-                                         reviewee_evaluations,
-                                         employee_managers):
-        return
-
-class MockGmailChannel(GmailChannel):
-
-    def send(self, reviewer: Reviewer, mail_subject, data):
-        return
-
 class MockConfig(Config):
 
     def __init__(self):
@@ -475,6 +445,57 @@ class MockConfig(Config):
 
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
+
+class MockStorageFactory(StorageFactory, MockConfig):
+
+    storage_impl = None
+
+    def get_storage(self):
+        return self.storage_impl
+
+    def set_storage(self, storage_impl):
+        self.storage_impl = storage_impl
+        print(self.storage_impl)
+
+class MockGoogleStorage(GoogleStorage):
+
+    def setup(self):
+        return
+
+    def get_employee_map(self):
+        return
+
+    def get_forms_map(self):
+        return
+
+    def get_responses_map(self):
+        return
+
+    def get_evaluations_map(self):
+        return
+
+    def generate_eval_reports_in_storage(self,
+                                         dry_run,
+                                         eval_process_id,
+                                         reviewee,
+                                         reviewee_evaluations,
+                                         employee_managers):
+        return
+
+class MockCommunicationChannelFactory(CommunicationChannelFactory, MockConfig):
+
+    impl = None
+
+    def get_communication_channel(self):
+        return self.impl
+
+    def set_communication_channel(self, impl):
+        self.impl = impl
+
+class MockGmailChannel(GmailChannel):
+
+    def send(self, reviewer: Reviewer, mail_subject, data):
+        return
 
 class MockConfigReader(ConfigReader):
 

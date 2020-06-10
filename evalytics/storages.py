@@ -5,6 +5,15 @@ from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
 
+class StorageFactory(Config):
+
+    def get_storage(self):
+        storage_kind = super().read_storage_provider()
+        if storage_kind == Config.STORAGE_PROVIDER_GOOGLE:
+            return GoogleStorage()
+
+        raise ValueError(storage_kind)
+
 class ReviewerResponseBuilder:
 
     def build(self, questions, filename, eval_kind, line, line_number):
