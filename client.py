@@ -51,6 +51,7 @@ class EvalyticsRequests:
 
     def evalreports(
             self,
+            eval_process_id: str,
             uids=None,
             managers=None,
             area=None,
@@ -58,7 +59,7 @@ class EvalyticsRequests:
         response = requests.post(
             url="%s/evalreports" % self.BASE_URL,
             data={
-                "eval_process_id": '2020 Q1', # TODO: place this in other piece of code
+                "eval_process_id": eval_process_id,
                 "uids": uids,
                 "managers": managers,
                 "area": area,
@@ -285,9 +286,10 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         whitelisted_evals_file.close()
         self.send_reminder(whitelist=whitelisted_evals, dry_run=dry_run)
 
-    def generate_reports(self, dry_run, employee_uids = None):
+    def generate_reports(self, eval_process_id, dry_run, employee_uids = None):
         uids = super().list_to_json(employee_uids)
         success, response = super().evalreports(
+            eval_process_id=eval_process_id,
             dry_run=dry_run,
             uids=uids)
 
@@ -305,13 +307,13 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
             for uid, reports_not_created in not_created.items():
                 print(' - {} report will be shared with {}'.format(uid, reports_not_created['managers']))
 
-    def whitelist_generate_reports(self, dry_run):
+    def whitelist_generate_reports(self, eval_process_id, dry_run):
         whitelisted_evals = []
         whitelisted_evals_file = super().open(self.EVALS_WHITELIST, "r")
         for reviewer in whitelisted_evals_file.readlines():
             whitelisted_evals.append(reviewer.strip())
         whitelisted_evals_file.close()
-        self.generate_reports(dry_run=dry_run, employee_uids=whitelisted_evals)
+        self.generate_reports(eval_process_id=eval_process_id, dry_run=dry_run, employee_uids=whitelisted_evals)
 
     def __eval_delivery(self, reviewers, is_reminder: bool, dry_run: bool):
         json_reviewers = super().reviewer_to_json(reviewers)
@@ -362,51 +364,72 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         print("  - %s --inconsistent-files" % 'status')
 
 class CommandFactory(EvalyticsClient):
-    def execute(self, command):
-        args = command.split(' ')
-        if 'setup' in args:
+    def execute(self, args):
+
+        command = args.pop(0)
+        dry_run = '--dry-run' in args
+        with_retry = '--retry' in args
+        with_whitelist = '--whitelist' in args
+
+        if dry_run:
+            args.remove('--dry-run')
+        if with_retry:
+            args.remove('--retry')
+        if with_whitelist:
+            args.remove('--whitelist')
+
+        eval_process_id = 'Default eval id'
+        for arg in args:
+            arg_with_value = arg.split('=')
+            if arg_with_value[0] == '--eval-process-id':
+                eval_process_id = arg_with_value[1]
+
+        if command == 'setup':
             super().post_setup()
 
-        elif 'reviewers' in args:
+        elif command == 'reviewers':
             show_stats = '--stats' in args
             super().print_reviewers(show_stats=show_stats)
 
-        elif 'send_evals' in args:
-            dry_run = '--dry-run' in args
+        elif command == 'send_evals':
 
-            if '--retry' in args:
+            if with_retry:
                 super().retry_send_eval(dry_run=dry_run)
-            elif '--whitelist' in args:
+            elif with_whitelist:
                 super().whitelist_send_eval(dry_run=dry_run)
             else:
                 super().send_eval(dry_run=dry_run)
 
-        elif 'send_reminders' in args:
-            dry_run = '--dry-run' in args
+        elif command == 'send_reminders':
 
-            if '--retry' in args:
+            if with_retry:
                 super().retry_send_reminder(dry_run=dry_run)
-            elif '--whitelist' in args:
+            elif with_whitelist:
                 super().whitelist_send_reminder(dry_run=dry_run)
             else:
                 super().send_reminder(dry_run=dry_run)
 
-        elif 'status' in args:
+        elif command == 'status':
             if '--inconsistent-files' in args:
                 super().print_inconsistent_files_status()
             else:
                 super().print_status()
 
-        elif 'reports' in args:
-            dry_run = '--dry-run' in args
+        elif command == 'reports':
 
-            if '--whitelist' in args:
-                super().whitelist_generate_reports(dry_run=dry_run)
+            if with_whitelist:
+                super().whitelist_generate_reports(
+                    eval_process_id=eval_process_id,
+                    dry_run=dry_run)
             else:
-                super().generate_reports(dry_run=dry_run)
+                super().generate_reports(
+                    eval_process_id=eval_process_id,
+                    dry_run=dry_run)
         else:
             super().help(command)
 
 if __name__ == "__main__":
-    command_arg = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
-    CommandFactory().execute(command_arg)
+    if len(sys.argv) == 1:
+        raise Exception("No arguments given")
+
+    CommandFactory().execute(sys.argv[1:])

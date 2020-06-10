@@ -643,7 +643,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def set_evalreports_response(self, response):
         self.evalreports_response = response
 
-    def evalreports(self, dry_run, uids):
+    def evalreports(self, eval_process_id, dry_run, uids):
         self.update_calls('evalreports')
         return True, self.evalreports_response
 
@@ -705,11 +705,11 @@ class MockEvalyticsClient(EvalyticsClient):
         self.update_calls('whitelist_send_reminder')
         self.dry_run = dry_run
 
-    def generate_reports(self, whitelist=None, dry_run: bool = False):
+    def generate_reports(self, eval_process_id, whitelist=None, dry_run: bool = False):
         self.update_calls('generate_reports')
         self.dry_run = dry_run
 
-    def whitelist_generate_reports(self, dry_run: bool = False):
+    def whitelist_generate_reports(self, eval_process_id, dry_run: bool = False):
         self.update_calls('whitelist_generate_reports')
         self.dry_run = dry_run
 
