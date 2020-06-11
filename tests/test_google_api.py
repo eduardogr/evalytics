@@ -21,7 +21,7 @@ class GmailAPISut(GmailAPI, MockGmailService):
 
 class TestGmailApi(TestCase):
 
-    def test_send(self):
+    def test_send_message(self):
         user_id = 'any_user_id'
         message = 'any_message'
         sut = GmailAPISut()

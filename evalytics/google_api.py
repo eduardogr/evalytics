@@ -170,7 +170,7 @@ class GmailService(GoogleService):
     GMAIL_SERVICE_ID = 'gmail'
     GMAIL_SERVICE_VERSION = 'v1'
 
-    def send(self, user_id, body):
+    def send_email(self, user_id, body):
         gmail_service = super().get_service(
             self.GMAIL_SERVICE_ID,
             self.GMAIL_SERVICE_VERSION
@@ -367,7 +367,11 @@ class FilesAPI(DriveService, SheetsService, DocsService):
 
         return values
 
-    def insert_eval_report_in_document(self, eval_process_id, document_id, reviewee, reviewee_evaluations):
+    def insert_eval_report_in_document(self,
+                                       eval_process_id,
+                                       document_id,
+                                       reviewee,
+                                       reviewee_evaluations):
         eval_report_with_tokens = self.__build_eval_report_with_tokens(
             eval_process_id,
             reviewee_evaluations)
@@ -573,7 +577,7 @@ class GmailAPI(GmailService):
         Returns:
         Sent Message.
         """
-        message = super().send(
+        message = super().send_email(
             user_id=user_id,
             body=message
         )

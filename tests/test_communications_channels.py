@@ -9,7 +9,7 @@ from tests.common.mocks import MockGoogleAPI
 class GmailChannelSut(GmailChannel, MockGoogleAPI):
     'Inject mocks into GmailChannel dependencies'
 
-class TestGoogleStorage(TestCase):
+class TestGmailChannel(TestCase):
 
     def setUp(self):
         self.sut = GmailChannelSut()
@@ -28,7 +28,7 @@ class TestGoogleStorage(TestCase):
     def test_send_empty_message(self):
         expected_user_id = GoogleAPI.AUTHENTICATED_USER
 
-        self.sut.send(
+        self.sut.send_communication(
             reviewer=self.reviewer,
             mail_subject=self.any_mail_subject,
             data='')

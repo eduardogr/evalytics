@@ -17,7 +17,7 @@ class CommunicationChannelFactory(Config):
 
 class GmailChannel(GoogleAPI):
 
-    def send(self, reviewer: Reviewer, mail_subject: str, data):
+    def send_communication(self, reviewer: Reviewer, mail_subject: str, data):
         destiny = reviewer.mail
         super().send_message(
             user_id=GoogleAPI.AUTHENTICATED_USER,

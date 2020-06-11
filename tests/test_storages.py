@@ -87,84 +87,84 @@ class TestGoogleStorage(TestCase):
 
         self.assertEqual(2, len(setup.files))
 
-    def test_get_employee_map_correct_when_no_values(self):
-        employees = self.sut.get_employee_map()
+    def test_get_employees_correct_when_no_values(self):
+        employees = self.sut.get_employees()
 
         self.assertEqual(0, len(employees))
 
-    def test_get_employee_map_correct_when_non_repeated_mails(self):
+    def test_get_employees_correct_when_non_repeated_mails(self):
         self.sut.set_file_rows_response([
             ['employee_juan@mail', 'manager', 'area'],
             ['employee_fulanito@mail', 'manager', 'area'],
         ])
 
-        employees = self.sut.get_employee_map()
+        employees = self.sut.get_employees()
 
         self.assertEqual(2, len(employees))
 
-    def test_get_employee_map_correct_when_repeated_mails(self):
+    def test_get_employees_correct_when_repeated_mails(self):
         self.sut.set_file_rows_response([
             ['employee_juan@mail', 'manager', 'area'],
             ['employee_juan@mail', 'last-manager', 'area'],
         ])
 
-        employees = self.sut.get_employee_map()
+        employees = self.sut.get_employees()
 
         self.assertEqual(1, len(employees))
         self.assertEqual('last-manager', employees['employee_juan'].manager)
 
-    def test_get_employee_map_when_missing_data(self):
+    def test_get_employees_when_missing_data(self):
         self.sut.set_file_rows_response([
             ['employee@mail', 'manager', 'area'],
             ['employee@mail', 'manager'],
         ])
 
         with self.assertRaises(MissingDataException):
-            self.sut.get_employee_map()
+            self.sut.get_employees()
 
-    def test_get_forms_map_correct_when_no_values_raise_excpetion(self):
+    def test_get_forms_correct_when_no_values_raise_excpetion(self):
         with self.assertRaises(NoFormsException):
-            self.sut.get_forms_map()
+            self.sut.get_forms()
 
-    def test_get_forms_map_correct_when_non_repeated_areas(self):
+    def test_get_forms_correct_when_non_repeated_areas(self):
         self.sut.set_file_rows_response([
             ['area1', 'form-self', 'form-manager', 'form-peer'],
             ['area2', 'form-self', 'form-manager', 'form-peer'],
         ])
 
-        forms = self.sut.get_forms_map()
+        forms = self.sut.get_forms()
 
         self.assertEqual(2, len(forms))
 
-    def test_get_forms_map_correct_when_repeated_areas(self):
+    def test_get_forms_correct_when_repeated_areas(self):
         self.sut.set_file_rows_response([
             ['area1', 'form-self', 'form-manager', 'form-peer'],
             ['area1', 'last-form-self', 'last-form-manager', 'last-form-peer'],
         ])
 
-        forms = self.sut.get_forms_map()
+        forms = self.sut.get_forms()
 
         self.assertEqual(1, len(forms))
         self.assertEqual('last-form-self', forms['area1'][EvalKind.SELF])
 
-    def test_get_forms_map_when_missing_data(self):
+    def test_get_forms_when_missing_data(self):
         self.sut.set_file_rows_response([
             ['area1', 'form-self', 'form-manager', 'form-peer'],
             ['area2', 'form-self', 'form-manager'],
         ])
 
         with self.assertRaises(MissingDataException):
-            self.sut.get_forms_map()
+            self.sut.get_forms()
 
-    def test_get_responses_map_when_no_files(self):
+    def test_get_responses_when_no_files(self):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([])
 
-        responses_map = self.sut.get_responses_map()
+        responses_map = self.sut.get_responses()
 
         self.assertEqual(0, len(responses_map))
 
-    def test_get_responses_map_when_files(self):
+    def test_get_responses_when_files(self):
         file_id_manager_by = 'file_id_manager_by'
         file_id_report_by = 'file_id_report_by'
         file_id_self = 'file_id_self'
@@ -203,7 +203,7 @@ class TestGoogleStorage(TestCase):
             ]
         )
 
-        responses_map = self.sut.get_responses_map()
+        responses_map = self.sut.get_responses()
 
         self.assertEqual(3, len(responses_map))
 
@@ -246,9 +246,9 @@ class TestGoogleStorage(TestCase):
         )
 
         with self.assertRaises(MissingDataException):
-            self.sut.get_responses_map()
+            self.sut.get_responses()
 
-    def test_get_responses_map_when_uncompleted_data_in_files(self):
+    def test_get_responses_when_uncompleted_data_in_files(self):
         file_id_manager_by = 'file_id_manager_by'
         file_id_report_by = 'file_id_report_by'
         file_id_self = 'file_id_self'
@@ -288,78 +288,49 @@ class TestGoogleStorage(TestCase):
         )
 
         with self.assertRaises(MissingDataException):
-            self.sut.get_responses_map()
+            self.sut.get_responses()
 
-    def test_get_evaluations_map_correct_when_no_files(self):
+    def test_get_evaluations_correct_when_no_files(self):
         # given:
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([])
 
         # when:
-        evaluations = self.sut.get_evaluations_map()
+        evaluations = self.sut.get_evaluations()
 
         # then:
         self.assertEqual(0, len(evaluations))
 
-    def test_generate_eval_reports_in_storage_when_files(self):
+    def test_generate_eval_reports_when_files(self):
         # given:
-        file_id_manager_by = 'file_id_manager_by'
-        file_id_report_by = 'file_id_report_by'
-        file_id_self = 'file_id_self'
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
-        self.sut.set_files_from_folder_response([{
-                'id': file_id_manager_by,
-                'name': 'Manager Evaluation By Team Member',
-            }, {
-                'id': file_id_report_by,
-                'name': 'Report Evaluation by Manager',
-            }, {
-                'id': file_id_self,
-                'name': 'Self Evaluation',
-            },
-        ])
-        self.sut.set_file_rows_by_id(
-            file_id_manager_by,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'reporter1', 'manager1', 'answer1', 'answer2']
-            ]
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_report_by,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'manager1', 'reporter1', 'answer1', 'answer2']
-            ]
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_self,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'reporter1', 'reporter1', 'answer1', 'answer2'],
-                ['', 'reporter2', 'reporter2', 'answer1', 'answer2'],
-                ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
-            ]
-        )
+        dry_run = False
+        eval_process_id = 'anyprocessid'
+        reviewee = 'pepe'
+        reviewee_evaluations = [
+            ReviewerResponse(
+                reviewee=reviewee,
+                reviewer=reviewee,
+                eval_kind=EvalKind.SELF,
+                eval_response=(),
+                filename="filename",
+                line_number=10
+            )
+        ]
+        employee_managers = ['jefe', 'manager']
 
         # when:
-        evalutations_map = self.sut.get_evaluations_map()
+        employee_managers_response = self.sut.generate_eval_reports(
+            dry_run,
+            eval_process_id,
+            reviewee,
+            reviewee_evaluations,
+            employee_managers)
 
         # then:
-        self.assertEqual(4, len(evalutations_map))
-
-        print(evalutations_map)
-        self.assertIn('reporter1', evalutations_map)
-        self.assertIn('reporter2', evalutations_map)
-        self.assertIn('reporter3', evalutations_map)
-        self.assertIn('manager1', evalutations_map)
-
-        self.assertEqual(2, len(evalutations_map['reporter1']))
-        self.assertEqual(1, len(evalutations_map['manager1']))
-        self.assertEqual(1, len(evalutations_map['reporter3']))
+        self.assertEqual(2, len(employee_managers_response))
 
 class TestReviewerResponseKeyDictStrategy(TestCase):
-    
+
     def setUp(self):
         self.reviewer_response = ReviewerResponse(
             reviewer='reviewer',
@@ -385,7 +356,7 @@ class TestReviewerResponseKeyDictStrategy(TestCase):
     def test_get_key_for_reviewer(self):
         # given:
         strategy = ReviewerResponseKeyDictStrategy.REVIEWER_RESPONSE
-        
+
         # when:
         key = self.sut.get_key(strategy, self.reviewer_response)
 
@@ -394,7 +365,9 @@ class TestReviewerResponseKeyDictStrategy(TestCase):
 
     def test_get_key_for_non_implemented_strategy(self):
         with self.assertRaises(NotImplementedError):
-            self.sut.get_key('THIS_STRATEGY_DOES_NOT_EXIST', self.reviewer_response)
+            self.sut.get_key(
+                'THIS_STRATEGY_DOES_NOT_EXIST',
+                self.reviewer_response)
 
 
 class TestReviewerResponseBuilder(TestCase):

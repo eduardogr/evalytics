@@ -98,7 +98,7 @@ class GoogleStorage(GoogleAPI, Config):
             folder=folder,
             files=files)
 
-    def get_employee_map(self):
+    def get_employees(self):
         employees = {}
         number_of_employees = int(super().read_company_number_of_employees())
 
@@ -130,7 +130,7 @@ class GoogleStorage(GoogleAPI, Config):
 
         return employees
 
-    def get_forms_map(self):
+    def get_forms(self):
         values = super().get_file_rows_from_folder(
             foldername=super().read_google_folder(),
             filename=super().read_google_form_map(),
@@ -160,20 +160,20 @@ class GoogleStorage(GoogleAPI, Config):
 
         return forms
 
-    def get_responses_map(self):
+    def get_responses(self):
         response_kind = ReviewerResponseKeyDictStrategy.REVIEWER_RESPONSE
         return self.__get_reviewer_responses(response_kind)
 
-    def get_evaluations_map(self):
+    def get_evaluations(self):
         response_kind = ReviewerResponseKeyDictStrategy.REVIEWEE_EVALUATION
         return self.__get_reviewer_responses(response_kind)
 
-    def generate_eval_reports_in_storage(self,
-                                         dry_run,
-                                         eval_process_id,
-                                         reviewee,
-                                         reviewee_evaluations: ReviewerResponse,
-                                         employee_managers):
+    def generate_eval_reports(self,
+                              dry_run,
+                              eval_process_id,
+                              reviewee,
+                              reviewee_evaluations: ReviewerResponse,
+                              employee_managers):
         template_id = super().read_google_eval_report_template_id()
         filename_prefix = super().read_google_eval_report_prefix_name()
         filename = '{} {}'.format(filename_prefix, reviewee)

@@ -7,24 +7,24 @@ from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.models import ReviewerResponse
 
 from tests.common.employees import employees_collection
-from tests.common.mocks import MockDataRepository, MockConfig
+from tests.common.mocks import MockStorageFactory, MockGoogleStorage, MockConfig
 from tests.common.mocks import MockEmployeeAdapter, MockReviewerAdapter
-from tests.common.mocks import MockCommunicationsProvider
+from tests.common.mocks import MockCommunicationChannelFactory, MockGmailChannel
 from tests.common.mocks import GetReviewersUseCaseMock
 from tests.common.mocks import MockReviewerResponseFilter
 
-class SetupUseCaseSut(SetupUseCase, MockDataRepository):
+class SetupUseCaseSut(SetupUseCase, MockStorageFactory):
     'Inject a mock into the SetupUseCase dependency'
 
 class GetReviewersUseCaseSut(
         GetReviewersUseCase,
-        MockDataRepository,
+        MockStorageFactory,
         MockEmployeeAdapter):
     'Inject mocks into GetReviewersUseCase dependencies'
 
 class SendEvalUseCaseSut(
         SendEvalUseCase,
-        MockCommunicationsProvider,
+        MockCommunicationChannelFactory,
         MockEmployeeAdapter,
         MockConfig):
     'Inject mocks into SendEmailUseCase dependencies'
@@ -32,13 +32,13 @@ class SendEvalUseCaseSut(
 class GetResponseStatusUseCaseSut(
         GetResponseStatusUseCase,
         GetReviewersUseCaseMock,
-        MockDataRepository,
+        MockStorageFactory,
         MockReviewerAdapter):
     'Inject mocks into GetResponseStatusUseCase dependencies'
 
 class GenerateEvalReportsUseCaseSut(
         GenerateEvalReportsUseCase,
-        MockDataRepository,
+        MockStorageFactory,
         MockEmployeeAdapter,
         MockReviewerResponseFilter):
     'Inject mocks into GenerateEvalReportsUseCaseS dependencies'
@@ -49,6 +49,7 @@ class TestSetupUseCase(TestCase):
         self.mock_fileid = 'mockid'
         self.mock_filename = 'mockfolder'
         self.sut = SetupUseCaseSut()
+        self.sut.set_storage(MockGoogleStorage())
 
     def test_setup_usecase(self):
         setup = self.sut.setup()
@@ -60,6 +61,7 @@ class TestGetReviewersUseCase(TestCase):
 
     def setUp(self):
         self.sut = GetReviewersUseCaseSut()
+        self.sut.set_storage(MockGoogleStorage())
 
     def test_get_reviewers_usecase(self):
         reviewers = self.sut.get_reviewers()
@@ -72,27 +74,28 @@ class TestSendEvalUseCase(TestCase):
 
     def setUp(self):
         self.sut = SendEvalUseCaseSut()
-
-    def test_send_email_usecase(self):
-        reviewers = {
+        self.communication_channel = MockGmailChannel()
+        self.reviewers = {
             'em_email': employees_collection().get('em_email'),
             'manager_em': employees_collection().get('manager_em'),
         }
 
-        evals_sent, evals_not_sent = self.sut.send_eval(reviewers)
+    def test_send_email_usecase(self):
+        self.sut.set_communication_channel(self.communication_channel)
+
+        evals_sent, evals_not_sent = self.sut.send_eval(self.reviewers)
 
         self.assertIn('em_email', evals_sent)
         self.assertIn('manager_em', evals_sent)
         self.assertEqual(0, len(evals_not_sent))
 
     def test_send_email_usecase_when_exception(self):
-        reviewers = {
-            'em_email': employees_collection().get('em_email'),
-            'manager_em': employees_collection().get('manager_em'),
-        }
-        self.sut.add_raise_exception_for_reviewer(reviewers['manager_em'].uid)
+        self.communication_channel.add_raise_exception_for_reviewer(
+            self.reviewers['manager_em'].uid
+        )
+        self.sut.set_communication_channel(self.communication_channel)
 
-        evals_sent, evals_not_sent = self.sut.send_eval(reviewers)
+        evals_sent, evals_not_sent = self.sut.send_eval(self.reviewers)
 
         self.assertIn('em_email', evals_sent)
         self.assertEqual(1, len(evals_sent))
@@ -104,16 +107,16 @@ class TestGetResponseStatusUseCase(TestCase):
 
     def setUp(self):
         self.sut = GetResponseStatusUseCaseSut()
-
+        self.sut.set_storage(MockGoogleStorage())
 
     def test_get_response_status(self):
-        status = self.sut.get_response_status()
+        _ = self.sut.get_response_status()
 
 class TestGenerateEvalReportsUseCase(TestCase):
 
     def setUp(self):
         self.sut = GenerateEvalReportsUseCaseSut()
-
+        self.storage = MockGoogleStorage()
         self.any_reviewer_response = ReviewerResponse(
             'reviewee',
             'reviewer',
@@ -128,14 +131,14 @@ class TestGenerateEvalReportsUseCase(TestCase):
             'uid3': self.any_reviewer_response,
         }
 
-
     def test_get_response_status(self):
         dry_run = False
         eval_process_id = ''
         area = ''
         managers = []
         employee_uids = []
-        self.sut.set_evaluations_response(self.evaluations_response)
+        self.storage.set_evaluations_response(self.evaluations_response)
+        self.sut.set_storage(self.storage)
 
         created, not_created = self.sut.generate(
             dry_run,
@@ -154,8 +157,9 @@ class TestGenerateEvalReportsUseCase(TestCase):
         area = ''
         managers = []
         employee_uids = []
-        self.sut.set_evaluations_response(self.evaluations_response)
-        self.sut.get_evaluations_will_raise_exception_for_reviewee('uid1')
+        self.storage.set_evaluations_response(self.evaluations_response)
+        self.storage.get_evaluations_will_raise_exception_for_reviewee('uid1')
+        self.sut.set_storage(self.storage)
 
         created, not_created = self.sut.generate(
             dry_run,
