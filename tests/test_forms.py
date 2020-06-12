@@ -5,7 +5,7 @@ from evalytics.forms import ReviewerResponseKeyDictStrategy
 from evalytics.forms import ReviewerResponseBuilder
 from evalytics.models import ReviewerResponse
 from evalytics.forms import FormsPlatformFactory, GoogleForms
-from evalytics.config import Config
+from evalytics.config import Config, ProvidersConfig
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
@@ -21,7 +21,7 @@ class TestFormsPlatformFactory(TestCase):
         self.sut = FormsPlatformFactorySut()
 
     def test_get_google_forms_platform(self):
-        self.sut.set_forms_platform_provider(Config.FORMS_PLATFORM_PROVIDER_GOOGLE)
+        self.sut.set_forms_platform_provider(ProvidersConfig.GOOGLE_FORMS)
 
         forms_platform = self.sut.get_forms_platform()
 

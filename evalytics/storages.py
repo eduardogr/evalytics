@@ -1,5 +1,5 @@
 from evalytics.google_api import GoogleAPI
-from evalytics.config import Config
+from evalytics.config import Config, ProvidersConfig
 from evalytics.models import GoogleSetup, GoogleFile
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
@@ -9,7 +9,7 @@ class StorageFactory(Config):
 
     def get_storage(self):
         storage_kind = super().read_storage_provider()
-        if storage_kind == Config.STORAGE_PROVIDER_GOOGLE:
+        if storage_kind == ProvidersConfig.GOOGLE_DRIVE:
             return GoogleStorage()
 
         raise ValueError(storage_kind)

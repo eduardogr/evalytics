@@ -4,7 +4,7 @@ from evalytics.storages import GoogleStorage
 from evalytics.storages import StorageFactory
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.models import EvalKind, ReviewerResponse
-from evalytics.config import Config
+from evalytics.config import Config, ProvidersConfig
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
@@ -20,7 +20,7 @@ class TestStorageFactory(TestCase):
         self.sut = StorageFactorySut()
 
     def test_get_google_storage(self):
-        self.sut.set_storage_provider(Config.STORAGE_PROVIDER_GOOGLE)
+        self.sut.set_storage_provider(ProvidersConfig.GOOGLE_DRIVE)
 
         storage = self.sut.get_storage()
 
