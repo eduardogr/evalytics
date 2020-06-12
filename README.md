@@ -54,7 +54,23 @@ To generate this we have the make target google-auth, so, you just have to tun
 
 There's an [Evalytics config](./config.yaml.example) to help you configure your Evalytics instance:
 
-* **Google**
+* **Company**
+
+  - domain: domain of your company, e.g. mycompany.com. This will be used for email delivery.
+  - number_of_employees: number of employees in your [orgchart file](./examples/eval-process/0_existing_OrgChart.csv)
+
+* **Providers**
+
+  - storage: Evalytics provider for storage. e.g. google drive.
+  - communication_channel: Evalytics provider for communications delivery. e.g. gmail.
+  - forms_platform: Evalytics provider for surveys. e.g. google forms.
+
+* **Gmail provider**
+
+  - mail_subject: Email subject for eval delivery communications.
+  - reminder_mail_subject: Email subject for reminder communications.
+
+* **Google Drive provider**
 
   - folder: Google Drive folder where files are stored.
   - org_chart: Google Spreadsheet where employees are listed. [See an example](./examples/eval-process/0_existing_OrgChart.csv).
@@ -64,12 +80,7 @@ There's an [Evalytics config](./config.yaml.example) to help you configure your 
   - eval_report_prefix_name: Prefix for eval reports documents we are going to create.
       - e.g. if prefix is 'Eval Report: ', files generated for employee1 and employee2 are going to have titles; 'Eval Report: employee1' and 'Eval Report: employee2' 
 
-* **Company**
-
-  - domain: domain of your company, e.g. mycompany.com. This will be used for email delivery.
-  - number_of_employees: number of employees in your [orgchart file](./examples/eval-process/0_existing_OrgChart.csv)
-
-Create a config.ini file from [config.yaml.example](./config.yaml.example) with correct values for each key to let Evalytics work properly.
+Create a config.yaml file from [config.yaml.example](./config.yaml.example) with correct values for each key to let Evalytics work properly.
 
 ## :rocket: Running evalytics
 
