@@ -7,10 +7,20 @@ from tests.common.mocks import MockConfigReader
 class ConfigSut(Config, MockConfigReader):
     'Injecting a mock into the Config dependency'
 
-class TestConfig(TestCase):
+class TestAppConfig(TestCase):
 
     def setUp(self):
         self.sut = ConfigSut()
+
+    def test_read_storage_provider(self):
+        provider = self.sut.read_storage_provider()
+
+        self.assertEqual('storage-provider', provider)
+
+    def test_read_communication_channel_provider(self):
+        provider = self.sut.read_communication_channel_provider()
+
+        self.assertEqual('comm-provider', provider)
 
     def test_read_mail_subject(self):
         mail_subject = self.sut.read_mail_subject()
@@ -21,6 +31,11 @@ class TestConfig(TestCase):
         reminder_mail_subject = self.sut.read_reminder_mail_subject()
 
         self.assertEqual('reminder subject', reminder_mail_subject)
+
+class TestConfig(TestCase):
+
+    def setUp(self):
+        self.sut = ConfigSut()
 
     def test_read_google_folder(self):
         google_folder = self.sut.read_google_folder()

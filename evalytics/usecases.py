@@ -1,24 +1,28 @@
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.filters import ReviewerResponseFilter
-from evalytics.core import DataRepository, CommunicationsProvider
+from .storages import StorageFactory
+from .communications_channels import CommunicationChannelFactory
 from evalytics.config import Config
 
-class SetupUseCase(DataRepository):
+class SetupUseCase(StorageFactory):
 
     def setup(self):
-        setup = super().setup_storage()
+        storage = super().get_storage()
+        setup = storage.setup()
         return setup
 
-class GetReviewersUseCase(DataRepository, EmployeeAdapter):
+class GetReviewersUseCase(StorageFactory, EmployeeAdapter):
 
     def get_reviewers(self):
+        storage = super().get_storage()
         return super().build_reviewers(
-            super().get_employees(),
-            super().get_forms())
+            storage.get_employees(),
+            storage.get_forms())
 
-class SendEvalUseCase(CommunicationsProvider, EmployeeAdapter, Config):
+class SendEvalUseCase(CommunicationChannelFactory, EmployeeAdapter, Config):
 
     def send_eval(self, revieweers, is_reminder: bool = False):
+        communication_channel = super().get_communication_channel()
         if is_reminder:
             mail_subject = super().read_reminder_mail_subject()
             message = 'You have pending evals:'
@@ -30,7 +34,7 @@ class SendEvalUseCase(CommunicationsProvider, EmployeeAdapter, Config):
         evals_not_sent = []
         for _, reviewer in revieweers.items():
             try:
-                super().send_communication(
+                communication_channel.send_communication(
                     reviewer=reviewer,
                     mail_subject=mail_subject,
                     data=super().build_message(message, reviewer))
@@ -41,15 +45,15 @@ class SendEvalUseCase(CommunicationsProvider, EmployeeAdapter, Config):
         return evals_sent, evals_not_sent
 
 class GetResponseStatusUseCase(
-        GetReviewersUseCase, DataRepository, ReviewerAdapter):
+        GetReviewersUseCase, StorageFactory, ReviewerAdapter):
 
     def get_response_status(self):
         reviewers = super().get_reviewers()
-        responses = super().get_responses()
+        responses = super().get_storage().get_responses()
         return super().get_status_from_responses(reviewers, responses)
 
 class GenerateEvalReportsUseCase(
-        DataRepository, EmployeeAdapter, ReviewerResponseFilter):
+        StorageFactory, EmployeeAdapter, ReviewerResponseFilter):
 
     def generate(
             self,
@@ -57,8 +61,9 @@ class GenerateEvalReportsUseCase(
             eval_process_id,
             area, managers,
             employee_uids):
-        reviewee_evaluations = super().get_evaluations()
-        employees = super().get_employees()
+        storage = super().get_storage()
+        reviewee_evaluations = storage.get_evaluations()
+        employees = storage.get_employees()
 
         reviewee_evaluations = super().filter_reviewees(
             reviewee_evaluations,
@@ -71,9 +76,9 @@ class GenerateEvalReportsUseCase(
         not_created = {}
         for uid, reviewee_evaluations in reviewee_evaluations.items():
             employee_managers = super().get_employee_managers(employees, uid)
-            
+
             try:
-                super().generate_eval_reports(
+                storage.generate_eval_reports(
                     dry_run,
                     eval_process_id,
                     uid,

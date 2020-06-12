@@ -13,8 +13,21 @@ class ConfigReader:
 class AppConfig(ConfigReader):
 
     APP = 'app'
+    STORAGE_PROVIDER = 'storage_provider'
+    COMMUNICATION_CHANNEL_PROVIDER = 'communication_channel_provider'
     MAIL_SUBJECT = 'mail_subject'
     REMINDER_MAIL_SUBJECT = 'reminder_mail_subject'
+
+    STORAGE_PROVIDER_GOOGLE = "google"
+    COMMUNICATION_CHANNEL_PROVIDER_GOOGLE = "google"
+
+    def read_storage_provider(self):
+        config = super().read()
+        return config.get(self.APP).get(self.STORAGE_PROVIDER)
+
+    def read_communication_channel_provider(self):
+        config = super().read()
+        return config.get(self.APP).get(self.COMMUNICATION_CHANNEL_PROVIDER)
 
     def read_mail_subject(self):
         config = super().read()

@@ -3,11 +3,10 @@ import tornado.web
 
 from evalytics.config import Config, ConfigReader
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
-from evalytics.communications_channels import GmailChannel
-from evalytics.storages import GoogleStorage
+from evalytics.communications_channels import CommunicationChannelFactory, GmailChannel
+from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.google_api import GoogleAPI
 from evalytics.google_api import GmailService, DriveService, SheetsService, DocsService
-from evalytics.core import DataRepository, CommunicationsProvider
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendEvalUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
@@ -19,64 +18,6 @@ from client import EvalyticsClient
 from client import FileManager
 
 from tests.common.employees import employees_collection
-
-class MockDataRepository(DataRepository):
-
-    def __init__(self):
-        self.evaluations_response = {}
-        self.evaluations_raise_exception_by_reviewee = []
-
-    def setup_storage(self):
-        mock_fileid = 'mockid'
-        mock_filename = 'mockfolder'
-        folder = GoogleFile(name=mock_filename, id=mock_fileid)
-        orgchart = GoogleFile(name=mock_filename, id=mock_fileid)
-        return GoogleSetup(folder=folder, files=[orgchart])
-
-    def get_employees(self):
-        return {
-            'em_email': employees_collection().get('em_email'),
-            'manager_em': employees_collection().get('manager_em'),
-        }
-
-    def get_forms(self):
-        return {}
-
-    def get_responses(self):
-        return {}
-
-    def set_evaluations_response(self, response):
-        self.evaluations_response = response
-
-    def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
-        self.evaluations_raise_exception_by_reviewee.append(reviewee)
-
-    def get_evaluations(self):
-        return self.evaluations_response
-
-    def generate_eval_reports(self,
-                              dry_run,
-                              eval_process_id,
-                              reviewee,
-                              reviewee_evaluations,
-                              employee_managers):
-        if reviewee in self.evaluations_raise_exception_by_reviewee:
-            raise Exception
-
-        return []
-
-class MockCommunicationsProvider(CommunicationsProvider):
-
-    def __init__(self):
-        self.raise_exception_for_reviewers = []
-
-    def add_raise_exception_for_reviewer(self, reviewer_uid: str):
-        self.raise_exception_for_reviewers.append(reviewer_uid)
-
-    def send_communication(self, reviewer: Reviewer, mail_subject: str, data):
-        if reviewer.uid in self.raise_exception_for_reviewers:
-            raise Exception("MockCommunicationsProvider was asked to throw this exception")
-        return
 
 class MockEmployeeAdapter(EmployeeAdapter):
 
@@ -150,6 +91,9 @@ class MockDriveService(DriveService):
             'files': [],
             'nextPageToken': None
         }
+
+    def copy_file(self, file_id, new_filename):
+        return "ID"
 
     def create_permission(self, document_id: str, role: str, email_address):
         self.__update_calls(
@@ -303,7 +247,7 @@ class MockGmailService(GmailService):
     def __init__(self):
         self.send_calls = {}
 
-    def send(self, user_id, body):
+    def send_email(self, user_id, body):
         current_call_number = 0
 
         if len(self.send_calls) > 0:
@@ -323,7 +267,11 @@ class MockGmailService(GmailService):
     def get_send_calls(self):
         return self.send_calls
 
-class MockGoogleAPI(GoogleAPI):
+class MockGoogleAPI(GoogleAPI,
+                    MockDriveService,
+                    MockSheetsService,
+                    MockDocsService,
+                    MockGmailService):
 
     def __init__(self):
         self.response = []
@@ -383,6 +331,16 @@ class MockGoogleAPI(GoogleAPI):
             }
         })
 
+    def insert_eval_report_in_document(self,
+                                       eval_process_id,
+                                       document_id,
+                                       reviewee,
+                                       reviewee_evaluations):
+       return
+
+    def add_comenter_permission(self, document_id, emails):
+        return
+
     def get_send_message_calls(self):
         return self.send_message_calls
 
@@ -410,41 +368,19 @@ class MockGoogleAPI(GoogleAPI):
             }
         })
 
-class MockGoogleStorage(GoogleStorage):
-
-    def setup(self):
-        return
-
-    def get_employee_map(self):
-        return
-
-    def get_forms_map(self):
-        return
-
-    def get_responses_map(self):
-        return
-
-    def get_evaluations_map(self):
-        return
-
-    def generate_eval_reports_in_storage(self,
-                                         dry_run,
-                                         eval_process_id,
-                                         reviewee,
-                                         reviewee_evaluations,
-                                         employee_managers):
-        return
-
-class MockGmailChannel(GmailChannel):
-
-    def send(self, reviewer: Reviewer, mail_subject, data):
-        return
-
 class MockConfig(Config):
 
     def __init__(self):
         super().__init__()
         self.needed_spreadsheets = []
+        self.storage_provider = ""
+        self.communications_provider = ""
+
+    def read_storage_provider(self):
+        return self.storage_provider
+
+    def read_communication_channel_provider(self):
+        return self.communications_provider
 
     def read_mail_subject(self):
         return "important subject"
@@ -473,14 +409,107 @@ class MockConfig(Config):
     def read_company_number_of_employees(self):
         return 1000
 
+    def read_google_eval_report_template_id(self):
+        return "ID::ADSFASDFRE"
+
+    def read_google_eval_report_prefix_name(self):
+        return "PREFIX: "
+
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
+
+    def set_storage_provider(self, provider):
+        self.storage_provider = provider
+
+    def set_communications_provider_provider(self, provider):
+        self.communications_provider = provider
+
+class MockStorageFactory(StorageFactory, MockConfig):
+
+    storage_impl = None
+
+    def get_storage(self):
+        return self.storage_impl
+
+    def set_storage(self, storage_impl):
+        self.storage_impl = storage_impl
+        print(self.storage_impl)
+
+class MockGoogleStorage(GoogleStorage):
+
+    def __init__(self):
+        self.evaluations_response = {}
+        self.evaluations_raise_exception_by_reviewee = []
+
+    def setup(self):
+        mock_fileid = 'mockid'
+        mock_filename = 'mockfolder'
+        folder = GoogleFile(name=mock_filename, id=mock_fileid)
+        orgchart = GoogleFile(name=mock_filename, id=mock_fileid)
+        return GoogleSetup(folder=folder, files=[orgchart])
+
+    def get_employees(self):
+        return {
+            'em_email': employees_collection().get('em_email'),
+            'manager_em': employees_collection().get('manager_em'),
+        }
+
+    def get_forms(self):
+        return {}
+
+    def get_responses(self):
+        return {}
+
+    def set_evaluations_response(self, response):
+        self.evaluations_response = response
+
+    def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
+        self.evaluations_raise_exception_by_reviewee.append(reviewee)
+
+    def get_evaluations(self):
+        return self.evaluations_response
+
+    def generate_eval_reports(self,
+                              dry_run,
+                              eval_process_id,
+                              reviewee,
+                              reviewee_evaluations,
+                              employee_managers):
+        if reviewee in self.evaluations_raise_exception_by_reviewee:
+            raise Exception
+
+        return []
+
+class MockCommunicationChannelFactory(CommunicationChannelFactory, MockConfig):
+
+    impl = None
+
+    def get_communication_channel(self):
+        return self.impl
+
+    def set_communication_channel(self, impl):
+        self.impl = impl
+
+class MockGmailChannel(GmailChannel):
+
+    def __init__(self):
+        self.raise_exception_for_reviewers = []
+
+    def add_raise_exception_for_reviewer(self, reviewer_uid: str):
+        self.raise_exception_for_reviewers.append(reviewer_uid)
+
+    def send_communication(self, reviewer: Reviewer, mail_subject: str, data):
+        if reviewer.uid in self.raise_exception_for_reviewers:
+            raise Exception("MockCommunicationsProvider was asked to throw this exception")
+        return
 
 class MockConfigReader(ConfigReader):
 
     def read(self, filename: str = ''):
         return {
             'app': {
+                'storage_provider': 'storage-provider',
+                'communication_channel_provider': 'comm-provider',
                 'mail_subject': 'this is the mail subject',
                 'reminder_mail_subject': 'reminder subject'
             },
@@ -522,7 +551,11 @@ class MockReviewerResponseFilter(ReviewerResponseFilter):
                          allowed_uids):
         return reviewee_evaluations
 
-class SendEvalUseCaseMock(SendEvalUseCase):
+class SendEvalUseCaseMock(
+        SendEvalUseCase,
+        MockCommunicationChannelFactory,
+        MockEmployeeAdapter,
+        MockConfig):
 
     def __init__(self):
         self.evals_sent = []
@@ -538,7 +571,7 @@ class SendEvalUseCaseMock(SendEvalUseCase):
     def get_response(self):
         return self.response
 
-class GetReviewersUseCaseMock(GetReviewersUseCase, MockDataRepository, MockEmployeeAdapter):
+class GetReviewersUseCaseMock(GetReviewersUseCase, MockStorageFactory, MockEmployeeAdapter):
 
     def __init__(self):
         self.response = {}
@@ -549,7 +582,7 @@ class GetReviewersUseCaseMock(GetReviewersUseCase, MockDataRepository, MockEmplo
     def get_reviewers(self):
         return self.response
 
-class SetupUseCaseMock(SetupUseCase, MockDataRepository):
+class SetupUseCaseMock(SetupUseCase, MockStorageFactory):
 
     def __init__(self):
         self.response = {}
