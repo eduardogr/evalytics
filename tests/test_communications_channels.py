@@ -1,13 +1,35 @@
 from unittest import TestCase
 
 from evalytics.google_api import GoogleAPI
-from evalytics.communications_channels import GmailChannel
+from evalytics.communications_channels import CommunicationChannelFactory, GmailChannel
 from evalytics.models import Reviewer, Employee
+from evalytics.config import Config
 
-from tests.common.mocks import MockGoogleAPI
+from tests.common.mocks import MockGoogleAPI, MockConfig
+
+class CommunicationChannelFactorySut(CommunicationChannelFactory, MockConfig):
+    'Inject a mock into CommunicationChannelFactory dependency'
 
 class GmailChannelSut(GmailChannel, MockGoogleAPI):
     'Inject mocks into GmailChannel dependencies'
+
+class TestCommunicationChannelFactory(TestCase):
+
+    def setUp(self):
+        self.sut = CommunicationChannelFactorySut()
+
+    def test_get_google_storage(self):
+        self.sut.set_communications_provider_provider(Config.COMMUNICATION_CHANNEL_PROVIDER_GOOGLE)
+
+        comm_channel = self.sut.get_communication_channel()
+
+        self.assertTrue(isinstance(comm_channel, GmailChannel))
+
+    def test_get_not_existent_storage(self):
+        self.sut.set_communications_provider_provider("NOT_EXISTENT")
+
+        with self.assertRaises(ValueError):
+            self.sut.get_communication_channel()
 
 class TestGmailChannel(TestCase):
 

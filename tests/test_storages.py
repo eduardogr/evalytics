@@ -1,14 +1,37 @@
 from unittest import TestCase
 
 from evalytics.storages import GoogleStorage, ReviewerResponseKeyDictStrategy, ReviewerResponseBuilder
+from evalytics.storages import StorageFactory
 
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.models import EvalKind, ReviewerResponse
+from evalytics.config import Config
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
+class StorageFactorySut(StorageFactory, MockConfig):
+    'Inject a mock into StorageFactory dependency'
+
 class GoogleStorageSut(GoogleStorage, MockGoogleAPI, MockConfig):
     'Inject mocks into GoogleStorage dependencies'
+
+class TestStorageFactory(TestCase):
+
+    def setUp(self):
+        self.sut = StorageFactorySut()
+
+    def test_get_google_storage(self):
+        self.sut.set_storage_provider(Config.STORAGE_PROVIDER_GOOGLE)
+
+        storage = self.sut.get_storage()
+
+        self.assertTrue(isinstance(storage, GoogleStorage))
+
+    def test_get_not_existent_storage(self):
+        self.sut.set_storage_provider("NOT_EXISTENT")
+
+        with self.assertRaises(ValueError):
+            self.sut.get_storage()
 
 class TestGoogleStorage(TestCase):
 

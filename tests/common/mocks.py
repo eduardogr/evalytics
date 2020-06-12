@@ -373,6 +373,14 @@ class MockConfig(Config):
     def __init__(self):
         super().__init__()
         self.needed_spreadsheets = []
+        self.storage_provider = ""
+        self.communications_provider = ""
+
+    def read_storage_provider(self):
+        return self.storage_provider
+
+    def read_communication_channel_provider(self):
+        return self.communications_provider
 
     def read_mail_subject(self):
         return "important subject"
@@ -409,6 +417,12 @@ class MockConfig(Config):
 
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
+
+    def set_storage_provider(self, provider):
+        self.storage_provider = provider
+
+    def set_communications_provider_provider(self, provider):
+        self.communications_provider = provider
 
 class MockStorageFactory(StorageFactory, MockConfig):
 
@@ -494,6 +508,8 @@ class MockConfigReader(ConfigReader):
     def read(self, filename: str = ''):
         return {
             'app': {
+                'storage_provider': 'storage-provider',
+                'communication_channel_provider': 'comm-provider',
                 'mail_subject': 'this is the mail subject',
                 'reminder_mail_subject': 'reminder subject'
             },
