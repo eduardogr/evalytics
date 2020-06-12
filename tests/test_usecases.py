@@ -7,9 +7,12 @@ from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.models import ReviewerResponse
 
 from tests.common.employees import employees_collection
-from tests.common.mocks import MockStorageFactory, MockGoogleStorage, MockConfig
+from tests.common.mocks import MockStorageFactory
+from tests.common.mocks import MockGoogleStorage, MockConfig
 from tests.common.mocks import MockEmployeeAdapter, MockReviewerAdapter
-from tests.common.mocks import MockCommunicationChannelFactory, MockGmailChannel
+from tests.common.mocks import MockCommunicationChannelFactory
+from tests.common.mocks import MockFormsPlatformFactory, MockGoogleForms
+from tests.common.mocks import MockGmailChannel
 from tests.common.mocks import GetReviewersUseCaseMock
 from tests.common.mocks import MockReviewerResponseFilter
 
@@ -32,13 +35,14 @@ class SendEvalUseCaseSut(
 class GetResponseStatusUseCaseSut(
         GetResponseStatusUseCase,
         GetReviewersUseCaseMock,
-        MockStorageFactory,
+        MockFormsPlatformFactory,
         MockReviewerAdapter):
     'Inject mocks into GetResponseStatusUseCase dependencies'
 
 class GenerateEvalReportsUseCaseSut(
         GenerateEvalReportsUseCase,
         MockStorageFactory,
+        MockFormsPlatformFactory,
         MockEmployeeAdapter,
         MockReviewerResponseFilter):
     'Inject mocks into GenerateEvalReportsUseCaseS dependencies'
@@ -107,7 +111,7 @@ class TestGetResponseStatusUseCase(TestCase):
 
     def setUp(self):
         self.sut = GetResponseStatusUseCaseSut()
-        self.sut.set_storage(MockGoogleStorage())
+        self.sut.set_forms_platform(MockGoogleForms())
 
     def test_get_response_status(self):
         _ = self.sut.get_response_status()
@@ -117,6 +121,7 @@ class TestGenerateEvalReportsUseCase(TestCase):
     def setUp(self):
         self.sut = GenerateEvalReportsUseCaseSut()
         self.storage = MockGoogleStorage()
+        self.forms_platform = MockGoogleForms()
         self.any_reviewer_response = ReviewerResponse(
             'reviewee',
             'reviewer',
@@ -137,8 +142,10 @@ class TestGenerateEvalReportsUseCase(TestCase):
         area = ''
         managers = []
         employee_uids = []
-        self.storage.set_evaluations_response(self.evaluations_response)
+
+        self.forms_platform.set_evaluations_response(self.evaluations_response)
         self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
 
         created, not_created = self.sut.generate(
             dry_run,
@@ -157,9 +164,11 @@ class TestGenerateEvalReportsUseCase(TestCase):
         area = ''
         managers = []
         employee_uids = []
-        self.storage.set_evaluations_response(self.evaluations_response)
+
+        self.forms_platform.set_evaluations_response(self.evaluations_response)
         self.storage.get_evaluations_will_raise_exception_for_reviewee('uid1')
         self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
 
         created, not_created = self.sut.generate(
             dry_run,

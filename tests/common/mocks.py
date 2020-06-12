@@ -3,10 +3,13 @@ import tornado.web
 
 from evalytics.config import Config, ConfigReader
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
-from evalytics.communications_channels import CommunicationChannelFactory, GmailChannel
+from evalytics.communications_channels import CommunicationChannelFactory
+from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage, StorageFactory
+from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.google_api import GoogleAPI
-from evalytics.google_api import GmailService, DriveService, SheetsService, DocsService
+from evalytics.google_api import GmailService, DriveService
+from evalytics.google_api import SheetsService, DocsService
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import SendEvalUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
@@ -375,12 +378,16 @@ class MockConfig(Config):
         self.needed_spreadsheets = []
         self.storage_provider = ""
         self.communications_provider = ""
+        self.forms_platform_provider = ""
 
     def read_storage_provider(self):
         return self.storage_provider
 
     def read_communication_channel_provider(self):
         return self.communications_provider
+
+    def read_forms_platform_provider(self):
+        return self.forms_platform_provider
 
     def read_mail_subject(self):
         return "important subject"
@@ -424,6 +431,9 @@ class MockConfig(Config):
     def set_communications_provider_provider(self, provider):
         self.communications_provider = provider
 
+    def set_forms_platform_provider(self, provider):
+        self.forms_platform_provider = provider
+
 class MockStorageFactory(StorageFactory, MockConfig):
 
     storage_impl = None
@@ -431,14 +441,36 @@ class MockStorageFactory(StorageFactory, MockConfig):
     def get_storage(self):
         return self.storage_impl
 
-    def set_storage(self, storage_impl):
-        self.storage_impl = storage_impl
-        print(self.storage_impl)
+    def set_storage(self, impl):
+        self.storage_impl = impl
+
+class MockFormsPlatformFactory(FormsPlatformFactory, MockConfig):
+
+    forms_platform_impl = None
+
+    def get_forms_platform(self):
+        return self.forms_platform_impl
+
+    def set_forms_platform(self, impl):
+        self.forms_platform_impl = impl
+
+class MockGoogleForms(GoogleForms):
+
+    def __init__(self):
+        self.evaluations_response = {}
+
+    def get_responses(self):
+        return {}
+
+    def get_evaluations(self):
+        return self.evaluations_response
+
+    def set_evaluations_response(self, response):
+        self.evaluations_response = response
 
 class MockGoogleStorage(GoogleStorage):
 
     def __init__(self):
-        self.evaluations_response = {}
         self.evaluations_raise_exception_by_reviewee = []
 
     def setup(self):
@@ -457,18 +489,6 @@ class MockGoogleStorage(GoogleStorage):
     def get_forms(self):
         return {}
 
-    def get_responses(self):
-        return {}
-
-    def set_evaluations_response(self, response):
-        self.evaluations_response = response
-
-    def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
-        self.evaluations_raise_exception_by_reviewee.append(reviewee)
-
-    def get_evaluations(self):
-        return self.evaluations_response
-
     def generate_eval_reports(self,
                               dry_run,
                               eval_process_id,
@@ -479,6 +499,9 @@ class MockGoogleStorage(GoogleStorage):
             raise Exception
 
         return []
+
+    def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
+        self.evaluations_raise_exception_by_reviewee.append(reviewee)
 
 class MockCommunicationChannelFactory(CommunicationChannelFactory, MockConfig):
 

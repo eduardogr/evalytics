@@ -1,7 +1,8 @@
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.filters import ReviewerResponseFilter
-from .storages import StorageFactory
-from .communications_channels import CommunicationChannelFactory
+from evalytics.storages import StorageFactory
+from evalytics.communications_channels import CommunicationChannelFactory
+from evalytics.forms import FormsPlatformFactory
 from evalytics.config import Config
 
 class SetupUseCase(StorageFactory):
@@ -45,15 +46,16 @@ class SendEvalUseCase(CommunicationChannelFactory, EmployeeAdapter, Config):
         return evals_sent, evals_not_sent
 
 class GetResponseStatusUseCase(
-        GetReviewersUseCase, StorageFactory, ReviewerAdapter):
+        GetReviewersUseCase, FormsPlatformFactory, ReviewerAdapter):
 
     def get_response_status(self):
         reviewers = super().get_reviewers()
-        responses = super().get_storage().get_responses()
+        responses = super().get_forms_platform().get_responses()
         return super().get_status_from_responses(reviewers, responses)
 
 class GenerateEvalReportsUseCase(
-        StorageFactory, EmployeeAdapter, ReviewerResponseFilter):
+        StorageFactory, FormsPlatformFactory,
+        EmployeeAdapter, ReviewerResponseFilter):
 
     def generate(
             self,
@@ -62,7 +64,9 @@ class GenerateEvalReportsUseCase(
             area, managers,
             employee_uids):
         storage = super().get_storage()
-        reviewee_evaluations = storage.get_evaluations()
+        forms_platform = super().get_forms_platform()
+
+        reviewee_evaluations = forms_platform.get_evaluations()
         employees = storage.get_employees()
 
         reviewee_evaluations = super().filter_reviewees(
