@@ -100,8 +100,6 @@ From the root path of this project:
 ./setup.sh
 ```
 
-Check values of [evalytics config](./config.ini)
-
 ### Running Evalytics server
 
 #### Using make + docker-compose
