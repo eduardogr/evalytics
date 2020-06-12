@@ -7,7 +7,7 @@ from tests.common.mocks import MockConfigReader
 class ConfigSut(Config, MockConfigReader):
     'Injecting a mock into the Config dependency'
 
-class TestAppConfig(TestCase):
+class TestProvidersConfig(TestCase):
 
     def setUp(self):
         self.sut = ConfigSut()

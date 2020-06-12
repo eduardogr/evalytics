@@ -530,14 +530,16 @@ class MockConfigReader(ConfigReader):
 
     def read(self, filename: str = ''):
         return {
-            'app': {
-                'storage_provider': 'storage-provider',
-                'communication_channel_provider': 'comm-provider',
-                'forms_platform_provider': 'form-provider',
+            'providers': {
+                'storage': 'storage-provider',
+                'communication_channel': 'comm-provider',
+                'forms_platform': 'form-provider',
+            },
+            'gmail_provider': {
                 'mail_subject': 'this is the mail subject',
                 'reminder_mail_subject': 'reminder subject'
             },
-            'google': {
+            'google_drive_provider': {
                 'folder': 'mock_folder',
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
@@ -591,9 +593,6 @@ class SendEvalUseCaseMock(
 
     def send_eval(self, reviewers, is_reminder=False):
         return self.evals_sent, self.evals_not_sent
-
-    def get_response(self):
-        return self.response
 
 class GetReviewersUseCaseMock(GetReviewersUseCase, MockStorageFactory, MockEmployeeAdapter):
 

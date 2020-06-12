@@ -3,7 +3,7 @@ from unittest import TestCase
 from evalytics.google_api import GoogleAPI
 from evalytics.communications_channels import CommunicationChannelFactory, GmailChannel
 from evalytics.models import Reviewer, Employee
-from evalytics.config import Config
+from evalytics.config import Config, ProvidersConfig
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
@@ -19,7 +19,7 @@ class TestCommunicationChannelFactory(TestCase):
         self.sut = CommunicationChannelFactorySut()
 
     def test_get_google_storage(self):
-        self.sut.set_communications_provider_provider(Config.COMMUNICATION_CHANNEL_PROVIDER_GOOGLE)
+        self.sut.set_communications_provider_provider(ProvidersConfig.GMAIL)
 
         comm_channel = self.sut.get_communication_channel()
 

@@ -4,13 +4,13 @@ import base64
 
 from .google_api import GoogleAPI
 from .models import Reviewer
-from .config import Config
+from .config import Config, ProvidersConfig
 
 class CommunicationChannelFactory(Config):
 
     def get_communication_channel(self):
         communication_channel_provider = super().read_communication_channel_provider()
-        if communication_channel_provider == Config.COMMUNICATION_CHANNEL_PROVIDER_GOOGLE:
+        if communication_channel_provider == ProvidersConfig.GMAIL:
             return GmailChannel()
 
         raise ValueError(communication_channel_provider)

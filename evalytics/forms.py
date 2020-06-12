@@ -1,14 +1,14 @@
 from evalytics.models import EvalKind
 from evalytics.models import ReviewerResponse, ReviewerResponseBuilder
 from evalytics.google_api import GoogleAPI
-from evalytics.config import Config
+from evalytics.config import Config, ProvidersConfig
 from evalytics.exceptions import MissingDataException
 
 class FormsPlatformFactory(Config):
 
     def get_forms_platform(self):
         forms_platform = super().read_forms_platform_provider()
-        if forms_platform == Config.FORMS_PLATFORM_PROVIDER_GOOGLE:
+        if forms_platform == ProvidersConfig.GOOGLE_FORMS:
             return GoogleForms()
 
         raise ValueError(forms_platform)
