@@ -15,11 +15,13 @@ class AppConfig(ConfigReader):
     APP = 'app'
     STORAGE_PROVIDER = 'storage_provider'
     COMMUNICATION_CHANNEL_PROVIDER = 'communication_channel_provider'
+    FORMS_PLATFORM_PROVIDER = 'forms_platform_provider'
     MAIL_SUBJECT = 'mail_subject'
     REMINDER_MAIL_SUBJECT = 'reminder_mail_subject'
 
     STORAGE_PROVIDER_GOOGLE = "google"
     COMMUNICATION_CHANNEL_PROVIDER_GOOGLE = "google"
+    FORMS_PLATFORM_PROVIDER_GOOGLE = "google"
 
     def read_storage_provider(self):
         config = super().read()
@@ -28,6 +30,10 @@ class AppConfig(ConfigReader):
     def read_communication_channel_provider(self):
         config = super().read()
         return config.get(self.APP).get(self.COMMUNICATION_CHANNEL_PROVIDER)
+
+    def read_forms_platform_provider(self):
+        config = super().read()
+        return config.get(self.APP).get(self.FORMS_PLATFORM_PROVIDER)
 
     def read_mail_subject(self):
         config = super().read()

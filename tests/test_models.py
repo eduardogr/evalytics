@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from evalytics.models import Employee, Eval, EvalKind, Reviewer
+from evalytics.models import ReviewerResponseBuilder
 
 class TestEval(TestCase):
 
@@ -19,7 +20,7 @@ class TestEval(TestCase):
         )
 
         self.assertEqual(self.evaluation, other_evaluation)
-    
+
     def test_eval_to_json(self):
         jsondict = self.evaluation.to_json()
 
@@ -206,3 +207,55 @@ class TestReviewer(TestCase):
         reviewer_str = str(reviewer)
 
         self.assertEqual(expected_str, reviewer_str)
+
+class TestReviewerResponseBuilder(TestCase):
+
+    def setUp(self):
+        self.questions = ['question1', 'question2']
+        self.line_response = ['', 'manager1', 'reporter1', 'answer1', 'answer2']
+        self.filename = 'this is a filename'
+        self.eval_kind = 'super special eval kind'
+        self.line_number = 169
+        self.sut = ReviewerResponseBuilder()
+
+    def test_build_correct_reviewer(self):
+        # when:
+        reviewer_response = self.sut.build(
+            questions=self.questions,
+            filename=self.filename,
+            eval_kind=self.eval_kind,
+            line=self.line_response,
+            line_number=self.line_number
+        )
+
+        # then:
+        self.assertEqual('manager1', reviewer_response.reviewer)
+
+    def test_build_correct_reviewee(self):
+        # when:
+        reviewer_response = self.sut.build(
+            questions=self.questions,
+            filename=self.filename,
+            eval_kind=self.eval_kind,
+            line=self.line_response,
+            line_number=self.line_number
+        )
+
+        # then:
+        self.assertEqual('reporter1', reviewer_response.reviewee)
+
+    def test_build_correct_eval_response(self):
+        # when:
+        reviewer_response = self.sut.build(
+            questions=self.questions,
+            filename=self.filename,
+            eval_kind=self.eval_kind,
+            line=self.line_response,
+            line_number=self.line_number
+        )
+
+        # then:
+        self.assertEqual(
+            [('question1', 'answer1'), ('question2', 'answer2')],
+            reviewer_response.eval_response
+        )
