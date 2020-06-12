@@ -3,7 +3,7 @@ app:
     name: "Evalytics"
     storage_provider: "google"
     communication_channel_provider: "google"
-    forms_provider: "google"
+    forms_platform_provider: "google"
     mail_subject: "Evalytics: You can now complete your evaluation assignments!"
     reminder_mail_subject: "Reminder Evalytics: 'You have pending evals to complete'"
 

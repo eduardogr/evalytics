@@ -22,6 +22,11 @@ class TestAppConfig(TestCase):
 
         self.assertEqual('comm-provider', provider)
 
+    def test_read_forms_platform_provider(self):
+        provider = self.sut.read_forms_platform_provider()
+
+        self.assertEqual('form-provider', provider)
+
     def test_read_mail_subject(self):
         mail_subject = self.sut.read_mail_subject()
 

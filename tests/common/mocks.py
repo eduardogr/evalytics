@@ -533,6 +533,7 @@ class MockConfigReader(ConfigReader):
             'app': {
                 'storage_provider': 'storage-provider',
                 'communication_channel_provider': 'comm-provider',
+                'forms_platform_provider': 'form-provider',
                 'mail_subject': 'this is the mail subject',
                 'reminder_mail_subject': 'reminder subject'
             },
