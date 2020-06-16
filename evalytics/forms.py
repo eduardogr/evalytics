@@ -3,7 +3,7 @@ from evalytics.models import ReviewerResponse, ReviewerResponseBuilder
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
 from evalytics.exceptions import MissingDataException
-from evalytics.exceptions import NotExistentGoogleDriveFolderException
+from evalytics.exceptions import MissingGoogleDriveFolderException
 
 class FormsPlatformFactory(Config):
 
@@ -103,7 +103,7 @@ class GoogleForms(GoogleAPI, Config):
             google_folder)
 
         if folder is None:
-            raise NotExistentGoogleDriveFolderException(
+            raise MissingGoogleDriveFolderException(
                 "Missing folder: {}".format(responses_folder))
 
         files = super().get_files_from_folder(folder.get('id'))
@@ -149,7 +149,7 @@ class GoogleForms(GoogleAPI, Config):
             google_folder)
 
         if folder is None:
-            raise NotExistentGoogleDriveFolderException(
+            raise MissingGoogleDriveFolderException(
                 "Missing folder: {}".format(assignments_folder))
 
         folder = super().get_folder_from_folder(
@@ -157,7 +157,7 @@ class GoogleForms(GoogleAPI, Config):
             assignments_folder)
 
         if folder is None:
-            raise NotExistentGoogleDriveFolderException(
+            raise MissingGoogleDriveFolderException(
                 "Missing folder: {}".format(assignments_manager_forms_folder))
 
         files = super().get_files_from_folder(folder.get('id'))
@@ -175,7 +175,7 @@ class GoogleForms(GoogleAPI, Config):
                 raise MissingDataException("Missing data in response file: %s" % (file.get('name')))
 
             questions = rows[0][1:]
-            reviewees = list(map(self.__get_reviewer_from_question, questions))
+            reviewees = list(map(self.__get_reviewee_from_question, questions))
             for answer in rows[1:]:
                 assignments = list(zip(reviewees, answer[1:]))
                 for assignment in assignments:
@@ -184,18 +184,24 @@ class GoogleForms(GoogleAPI, Config):
 
                     for reviewer in reviewers_assigned:
                         reviewees = peers_assignment.get(reviewer, [])
-                        reviewees.append(reviewee)
-                        peers_assignment.update({
-                            reviewer: reviewees
-                        })
-    
+                        if reviewee not in reviewees:
+                            reviewees.append(reviewee)
+                            peers_assignment.update({
+                                reviewer: reviewees
+                            })
+
         return peers_assignment
 
-    def __get_reviewer_from_question(self, question):
-        s = question.split()
-        r = s[len(s)-1]
-        r = r[:len(r)-1]
-        return r
+    def __get_reviewee_from_question(self, question):
+        '''
+            question: Who will review <reviewee>?
+
+            return <reviewee>
+        '''
+        parts = question.split()
+        reviewee = parts[len(parts)-1]
+        reviewee = reviewee[:len(reviewee)-1]
+        return reviewee
 
     def __get_eval_kind(self, filename):
         # TODO: config this

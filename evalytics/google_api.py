@@ -141,12 +141,12 @@ class DriveService(GoogleService):
 class SheetsService(GoogleService):
 
     SHEETS_SERVICE_ID = 'sheets'
-    SHEETS_SERVICE_VERISON = 'v4'
+    SHEETS_SERVICE_VERSION = 'v4'
 
     def create_spreadsheet(self, file_metadata):
         sheets_service = super().get_service(
             self.SHEETS_SERVICE_ID,
-            self.SHEETS_SERVICE_VERISON
+            self.SHEETS_SERVICE_VERSION
         )
         spreadsheet = sheets_service.spreadsheets().create(
             body=file_metadata,
@@ -156,12 +156,30 @@ class SheetsService(GoogleService):
     def get_file_values(self, spreadsheet_id, rows_range):
         sheets_service = super().get_service(
             self.SHEETS_SERVICE_ID,
-            self.SHEETS_SERVICE_VERISON
+            self.SHEETS_SERVICE_VERSION
         )
         sheet = sheets_service.spreadsheets()
         result = sheet.values().get(
             spreadsheetId=spreadsheet_id,
             range=rows_range
+        ).execute()
+        return result.get('values', [])
+
+    def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
+        sheets_service = super().get_service(
+            self.SHEETS_SERVICE_ID,
+            self.SHEETS_SERVICE_VERSION
+        )
+        sheet = sheets_service.spreadsheets()
+
+        value_range_body = {
+            'values': values
+        }
+        result = sheet.values().update(
+            spreadsheetId=spreadsheet_id,
+            range=rows_range,
+            valueInputOption=value_input_option,
+            body=value_range_body
         ).execute()
         return result.get('values', [])
 
@@ -371,6 +389,14 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         return super().get_file_values(
             file_id,
             rows_range
+        )
+
+    def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
+        return super().update_file_values(
+            file_id,
+            rows_range,
+            value_input_option,
+            values
         )
 
     def insert_eval_report_in_document(self,
