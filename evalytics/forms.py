@@ -3,6 +3,7 @@ from evalytics.models import ReviewerResponse, ReviewerResponseBuilder
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
 from evalytics.exceptions import MissingDataException
+from evalytics.exceptions import NotExistentGoogleDriveFolderException
 
 class FormsPlatformFactory(Config):
 
@@ -30,6 +31,9 @@ class ReviewerResponseKeyDictStrategy:
             raise NotImplementedError('ExtractResponseDataStrategy does not implement %s strategy' % data_kind)
 
 class GoogleForms(GoogleAPI, Config):
+
+    def get_peers_assignment(self):
+        return self.__read_peers_assignment()
 
     def get_responses(self):
         response_kind = ReviewerResponseKeyDictStrategy.REVIEWER_RESPONSE
@@ -94,10 +98,14 @@ class GoogleForms(GoogleAPI, Config):
         google_folder = super().read_google_folder()
         responses_folder = super().read_google_responses_folder()
 
-        # TODO: check if folder does not exist
         folder = super().get_folder_from_folder(
             responses_folder,
             google_folder)
+
+        if folder is None:
+            raise NotExistentGoogleDriveFolderException(
+                "Missing folder: {}".format(responses_folder))
+
         files = super().get_files_from_folder(folder.get('id'))
 
         number_of_employees = int(super().read_company_number_of_employees())
@@ -130,6 +138,64 @@ class GoogleForms(GoogleAPI, Config):
             })
 
         return responses_by_file
+
+    def __read_peers_assignment(self):
+        google_folder = super().read_google_folder()
+        assignments_folder = super().read_assignments_folder()
+        assignments_manager_forms_folder = super().read_assignments_manager_forms_folder()
+
+        folder = super().get_folder_from_folder(
+            assignments_folder,
+            google_folder)
+
+        if folder is None:
+            raise NotExistentGoogleDriveFolderException(
+                "Missing folder: {}".format(assignments_folder))
+
+        folder = super().get_folder_from_folder(
+            assignments_manager_forms_folder,
+            assignments_folder)
+
+        if folder is None:
+            raise NotExistentGoogleDriveFolderException(
+                "Missing folder: {}".format(assignments_manager_forms_folder))
+
+        files = super().get_files_from_folder(folder.get('id'))
+
+        number_of_employees = int(super().read_company_number_of_employees())
+        responses_range = 'A1:S' + str(number_of_employees + 2)
+
+        peers_assignment = {}
+        for file in files:
+            rows = super().get_file_rows(
+                file.get('id'),
+                responses_range)
+
+            if len(rows) < 1:
+                raise MissingDataException("Missing data in response file: %s" % (file.get('name')))
+
+            questions = rows[0][1:]
+            reviewees = list(map(self.__get_reviewer_from_question, questions))
+            for answer in rows[1:]:
+                assignments = list(zip(reviewees, answer[1:]))
+                for assignment in assignments:
+                    reviewee = assignment[0]
+                    reviewers_assigned = list(map(str.strip, assignment[1].split(',')))
+
+                    for reviewer in reviewers_assigned:
+                        reviewees = peers_assignment.get(reviewer, [])
+                        reviewees.append(reviewee)
+                        peers_assignment.update({
+                            reviewer: reviewees
+                        })
+    
+        return peers_assignment
+
+    def __get_reviewer_from_question(self, question):
+        s = question.split()
+        r = s[len(s)-1]
+        r = r[:len(r)-1]
+        return r
 
     def __get_eval_kind(self, filename):
         # TODO: config this

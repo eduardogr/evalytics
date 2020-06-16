@@ -367,6 +367,12 @@ class FilesAPI(DriveService, SheetsService, DocsService):
 
         return values
 
+    def get_file_rows(self, file_id: str, rows_range: str):
+        return super().get_file_values(
+            file_id,
+            rows_range
+        )
+
     def insert_eval_report_in_document(self,
                                        eval_process_id,
                                        document_id,
@@ -495,12 +501,6 @@ class FilesAPI(DriveService, SheetsService, DocsService):
     def __delete_tokens_from_document(self, document_id):
         delete_token_requests = super().get_delete_tokens_requests()
         super().batch_update(document_id=document_id, requests=delete_token_requests)
-
-    def get_file_rows(self, file_id: str, rows_range: str):
-        return super().get_file_values(
-            file_id,
-            rows_range
-        )
 
     def __get_file(self, query: str, filename):
         try:

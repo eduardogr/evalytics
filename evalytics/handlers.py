@@ -2,6 +2,7 @@ import tornado.web
 
 from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
 from .usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
+from .usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
 from .mappers import Mapper
 from .exceptions import MissingDataException, NoFormsException
 
@@ -162,6 +163,53 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
                         'not_created': not_created,
                     }
                 }
+            })
+        except MissingDataException as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
+                }
+            })
+
+class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
+    path = r"/peers"
+
+    async def get(self):
+        try:
+
+            peers_assignment = GetPeersAssignmentUseCase().get_peers()
+
+            self.finish({
+                'success': True,
+                'response': {
+                    'peers_assignment': peers_assignment
+                }
+            })
+        except MissingDataException as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
+                }
+            })
+
+    async def post(self):
+        try:
+
+            GeneratePeersAssignmentUseCase().generate()
+
+            self.finish({
+                'success': True,
+                'response': {}
             })
         except MissingDataException as e:
             if hasattr(e, 'message'):

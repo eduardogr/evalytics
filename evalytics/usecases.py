@@ -18,6 +18,7 @@ class GetReviewersUseCase(StorageFactory, EmployeeAdapter):
         storage = super().get_storage()
         return super().build_reviewers(
             storage.get_employees(),
+            {},
             storage.get_forms())
 
 class SendEvalUseCase(CommunicationChannelFactory, EmployeeAdapter, Config):
@@ -104,3 +105,18 @@ class GenerateEvalReportsUseCase(
                 })
 
         return created, not_created
+
+class GetPeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
+
+    def get_peers(self):
+        forms_platform = super().get_forms_platform()
+        return forms_platform.get_peers_assignment()
+
+class GeneratePeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
+
+    def generate(self):
+        storage = super().get_storage()
+        forms_platform = super().get_forms_platform()
+
+        peers_assignment = forms_platform.get_peers_assignment()
+        storage.write_peers_assignment(peers_assignment)

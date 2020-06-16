@@ -30,7 +30,7 @@ class EmployeeAdapter(Config):
 
         return managers
 
-    def build_reviewers(self, employees, forms):
+    def build_reviewers(self, employees, peers_assignment, forms):
         employees_by_manager = self.get_employees_by_manager(employees)
 
         reviewers = {}

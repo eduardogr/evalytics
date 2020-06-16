@@ -107,7 +107,7 @@ class TestEmployeeAdapter(TestCase):
 
 
     def test_build_reviewers_correct_number_of_evals(self):
-        reviewers = self.sut.build_reviewers(self.employees, self.forms)
+        reviewers = self.sut.build_reviewers(self.employees, {}, self.forms)
 
         self.assertIn('ceo', reviewers)
         self.assertIn('cto', reviewers)
@@ -131,6 +131,7 @@ class TestEmployeeAdapter(TestCase):
     def test_build_reviewers_correct_if_not_an_employee_and_is_manager(self):
         reviewers = self.sut.build_reviewers(
             self.employees_with_blacklisted_reviewers,
+            {},
             self.forms)
 
         self.assertIn('ceo', reviewers)
@@ -139,6 +140,7 @@ class TestEmployeeAdapter(TestCase):
     def test_build_reviewers_correct_number_of_evals_when_uncompleted_employees(self):
         reviewers = self.sut.build_reviewers(
             self.employees_with_blacklisted_reviewers,
+            {},
             self.forms)
 
         self.assertIn('ceo', reviewers)
@@ -154,7 +156,7 @@ class TestEmployeeAdapter(TestCase):
         self.assertEqual(2, len(reviewers['sw2'].evals))
 
     def test_build_reviewers_correct_evals(self):
-        reviewers = self.sut.build_reviewers(self.employees, self.forms)
+        reviewers = self.sut.build_reviewers(self.employees, {}, self.forms)
 
         self.assertEqual(reviewers['ceo'].evals, [
             Eval(reviewee='ceo',
@@ -201,13 +203,13 @@ class TestEmployeeAdapter(TestCase):
         no_forms = {}
 
         with self.assertRaises(MissingDataException):
-            self.sut.build_reviewers(self.employees, no_forms)
+            self.sut.build_reviewers(self.employees, {}, no_forms)
 
     def test_build_reviewers_with_other_area_forms(self):
         form_with_other_area = self.forms_with_other_area
 
         with self.assertRaises(MissingDataException):
-            self.sut.build_reviewers(self.employees, form_with_other_area)
+            self.sut.build_reviewers(self.employees,{}, form_with_other_area)
 
     def test_build_message_correct(self):
         message = 'some message'

@@ -144,3 +144,8 @@ class GoogleStorage(GoogleAPI, Config):
                 employee_managers
             )
             return employee_managers
+
+    def write_peers_assignment(self, peers_assignment):
+        assignments_peers_file = super().read_assignments_peers_file()
+
+        

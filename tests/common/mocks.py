@@ -27,7 +27,7 @@ class MockEmployeeAdapter(EmployeeAdapter):
     def __init__(self):
         self.employees_by_manager = {}
 
-    def build_reviewers(self, employees, forms):
+    def build_reviewers(self, employees, peers_assignment, forms):
         return employees
 
     def build_message(self, message, reviewer: Reviewer):

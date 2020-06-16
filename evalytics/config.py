@@ -55,9 +55,12 @@ class GoogleDriveProviderConfig(ConfigReader):
 
     FOLDER = 'folder'
     FORM_RESPONSES_FOLDER = 'form_responses_folder'
+    ASSIGNMENTS_FOLDER = 'assignments_folder'
+    ASSIGNMENTS_MANAGER_FORMS_FOLDER = 'assignments_manager_forms_folder'
 
     ORG_CHART = 'org_chart'
     FORM_MAP = 'form_map'
+    ASSIGNMENTS_PEERS_FILE = 'assignments_peers_file'
 
     EVAL_REPORT_TEMPLATE_ID = 'eval_report_template_id'
     EVAL_REPORT_PREFIX_NAME = 'eval_report_prefix_name'
@@ -66,6 +69,14 @@ class GoogleDriveProviderConfig(ConfigReader):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.FOLDER)
 
+    def read_assignments_folder(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ASSIGNMENTS_FOLDER)
+
+    def read_assignments_manager_forms_folder(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ASSIGNMENTS_MANAGER_FORMS_FOLDER)
+
     def read_google_orgchart(self):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ORG_CHART)
@@ -73,6 +84,10 @@ class GoogleDriveProviderConfig(ConfigReader):
     def read_google_form_map(self):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.FORM_MAP)
+
+    def read_assignments_peers_file(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ASSIGNMENTS_PEERS_FILE)
 
     def read_google_responses_folder(self):
         config = super().read()

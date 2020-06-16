@@ -38,7 +38,7 @@ class TestEvalKind(TestCase):
         self.assertEqual(eval_kind, obtained_eval_kind)
 
     def test_evalkinf_from_str_peer(self):
-        eval_kind = EvalKind.PEER
+        eval_kind = EvalKind.PEER_TO_PEER
 
         obtained_eval_kind = EvalKind.from_str(eval_kind.name)
         self.assertEqual(eval_kind, obtained_eval_kind)
