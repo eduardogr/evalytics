@@ -18,7 +18,8 @@ class StorageFactory(Config):
 
 class GoogleStorage(GoogleAPI, Config):
 
-    FORM_MAP_RANGE = 'A2:D3'
+    # TODO: should be config
+    FORM_MAP_RANGE = 'A2:D4'
 
     def setup(self):
         folder_name = super().read_google_folder()
