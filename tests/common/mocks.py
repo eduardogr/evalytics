@@ -598,9 +598,7 @@ class MockReviewerResponseFilter(ReviewerResponseFilter):
 
 class SendEvalUseCaseMock(
         SendEvalUseCase,
-        MockCommunicationChannelFactory,
-        MockEmployeeAdapter,
-        MockConfig):
+        MockCommunicationChannelFactory):
 
     def __init__(self):
         self.evals_sent = []

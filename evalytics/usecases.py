@@ -22,7 +22,7 @@ class GetReviewersUseCase(StorageFactory, FormsPlatformFactory, EmployeeAdapter)
             forms_platform.get_peers_assignment(),
             storage.get_forms())
 
-class SendEvalUseCase(CommunicationChannelFactory, EmployeeAdapter, Config):
+class SendEvalUseCase(CommunicationChannelFactory):
 
     def send_eval(self, revieweers, is_reminder: bool = False):
         communication_channel = super().get_communication_channel()
