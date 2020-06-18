@@ -14,8 +14,11 @@ gmail_provider:
 
 google_drive_provider:
     folder: "2020 Q1 Evals"
+    assignments_folder: "Assignments"
+    assignments_manager_forms_folder: "Manager assignments forms"
     form_responses_folder: "ResponsesTest"
     org_chart: "My Employee List"
     form_map: "Form mapping"
+    assignments_peers_file: "Peers file"
     eval_report_template_id: "ID_OF_GOOGLE_DOCUMENT"
     eval_report_prefix_name: "Prefix Doc: "

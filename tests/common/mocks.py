@@ -398,11 +398,20 @@ class MockConfig(Config):
     def read_google_folder(self):
         return "google_folder"
 
+    def read_assignments_folder(self):
+        return "assignments_folder"
+
+    def read_assignments_manager_forms_folder(self):
+        return "assignments_manager_forms_folder("
+
     def read_google_orgchart(self):
         return "google_orgchart"
 
     def read_google_form_map(self):
         return "google_form_map"
+
+    def read_assignments_peers_file(self):
+        return "assignments_peers_file"
 
     def read_needed_spreadsheets(self):
         return self.needed_spreadsheets
@@ -541,9 +550,12 @@ class MockConfigReader(ConfigReader):
             },
             'google_drive_provider': {
                 'folder': 'mock_folder',
+                'form_responses_folder': 'mock_tests_folder',
+                'assignments_folder': 'mock_assignments_folder',
+                'assignments_manager_forms_folder': 'mock_man_ssignments_folder',
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
-                'form_responses_folder': 'mock_tests_folder',
+                'assignments_peers_file': 'assignments_peers_file',
                 'eval_report_template_id': 'ID',
                 'eval_report_prefix_name': 'Prefix'
             },

@@ -2,10 +2,9 @@ from unittest import TestCase
 
 from evalytics.exceptions import MissingDataException
 from evalytics.forms import ReviewerResponseKeyDictStrategy
-from evalytics.forms import ReviewerResponseBuilder
 from evalytics.models import ReviewerResponse
 from evalytics.forms import FormsPlatformFactory, GoogleForms
-from evalytics.config import Config, ProvidersConfig
+from evalytics.config import ProvidersConfig
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
