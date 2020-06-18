@@ -22,6 +22,7 @@ class SetupUseCaseSut(SetupUseCase, MockStorageFactory):
 class GetReviewersUseCaseSut(
         GetReviewersUseCase,
         MockStorageFactory,
+        MockFormsPlatformFactory,
         MockEmployeeAdapter):
     'Inject mocks into GetReviewersUseCase dependencies'
 
@@ -66,6 +67,7 @@ class TestGetReviewersUseCase(TestCase):
     def setUp(self):
         self.sut = GetReviewersUseCaseSut()
         self.sut.set_storage(MockGoogleStorage())
+        self.sut.set_forms_platform(MockGoogleForms())
 
     def test_get_reviewers_usecase(self):
         reviewers = self.sut.get_reviewers()

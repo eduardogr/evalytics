@@ -12,13 +12,14 @@ class SetupUseCase(StorageFactory):
         setup = storage.setup()
         return setup
 
-class GetReviewersUseCase(StorageFactory, EmployeeAdapter):
+class GetReviewersUseCase(StorageFactory, FormsPlatformFactory, EmployeeAdapter):
 
     def get_reviewers(self):
         storage = super().get_storage()
+        forms_platform = super().get_forms_platform()
         return super().build_reviewers(
             storage.get_employees(),
-            {},
+            forms_platform.get_peers_assignment(),
             storage.get_forms())
 
 class SendEvalUseCase(CommunicationChannelFactory, EmployeeAdapter, Config):

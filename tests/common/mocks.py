@@ -467,6 +467,10 @@ class MockGoogleForms(GoogleForms):
 
     def __init__(self):
         self.evaluations_response = {}
+        self.peers_assignment = {}
+
+    def get_peers_assignment(self):
+        return self.peers_assignment
 
     def get_responses(self):
         return {}
@@ -476,6 +480,9 @@ class MockGoogleForms(GoogleForms):
 
     def set_evaluations_response(self, response):
         self.evaluations_response = response
+
+    def set_peers_assignment_response(self, response):
+        self.peers_assignment = response
 
 class MockGoogleStorage(GoogleStorage):
 
@@ -606,7 +613,11 @@ class SendEvalUseCaseMock(
     def send_eval(self, reviewers, is_reminder=False):
         return self.evals_sent, self.evals_not_sent
 
-class GetReviewersUseCaseMock(GetReviewersUseCase, MockStorageFactory, MockEmployeeAdapter):
+class GetReviewersUseCaseMock(
+        GetReviewersUseCase,
+        MockFormsPlatformFactory,
+        MockStorageFactory,
+        MockEmployeeAdapter):
 
     def __init__(self):
         self.response = {}
