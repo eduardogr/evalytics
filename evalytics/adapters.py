@@ -1,7 +1,7 @@
-from .models import EvalKind, Eval, Reviewer, Employee
-from .models import ReviewerResponse
-from .config import Config
-from .exceptions import MissingDataException
+from evalytics.models import EvalKind, Eval, Reviewer, Employee
+from evalytics.models import ReviewerResponse
+from evalytics.config import Config
+from evalytics.exceptions import MissingDataException
 
 class EmployeeAdapter(Config):
 
@@ -37,8 +37,7 @@ class EmployeeAdapter(Config):
         for uid, employee in employees.items():
             evals = []
 
-            if employee.area not in forms:
-                raise MissingDataException("Missing area '%s' in forms" % employee.area)
+            self.__check_area_exists_in_forms(forms, employee.area)
 
             employee_forms = forms[employee.area]
 
@@ -46,6 +45,20 @@ class EmployeeAdapter(Config):
                 reviewee=uid,
                 kind=EvalKind.SELF,
                 form=employee_forms[EvalKind.SELF]))
+
+            for peer in peers_assignment.get(uid, []):
+                if peer not in employees:
+                    raise MissingDataException("{} peer is not an employee".format(peer))
+
+                peer_employee = employees.get(peer)
+
+                self.__check_area_exists_in_forms(forms, peer_employee.area)
+                peer_forms = forms[peer_employee.area]
+
+                evals.append(Eval(
+                    reviewee=peer,
+                    kind=EvalKind.PEER_TO_PEER,
+                    form=peer_forms[EvalKind.PEER_TO_PEER]))
 
             if employee.has_manager:
                 evals.append(Eval(
@@ -94,6 +107,10 @@ class EmployeeAdapter(Config):
             reviewers.update({reviewer.uid: reviewer})
 
         return reviewers
+
+    def __check_area_exists_in_forms(self, forms, area):
+        if area not in forms:
+                raise MissingDataException("Missing area '{}' in forms".format(area))
 
 class ReviewerAdapter(EmployeeAdapter):
 
