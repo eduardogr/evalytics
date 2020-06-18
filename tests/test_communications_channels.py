@@ -3,7 +3,7 @@ from unittest import TestCase
 from evalytics.google_api import GoogleAPI
 from evalytics.communications_channels import CommunicationChannelFactory, GmailChannel
 from evalytics.models import Reviewer, Employee
-from evalytics.config import Config, ProvidersConfig
+from evalytics.config import ProvidersConfig
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
@@ -47,13 +47,26 @@ class TestGmailChannel(TestCase):
         )
         self.any_mail_subject = 'any mail subject'
 
-    def test_send_empty_message(self):
+    def test_send_communication(self):
         expected_user_id = GoogleAPI.AUTHENTICATED_USER
+        is_reminder = False
 
         self.sut.send_communication(
             reviewer=self.reviewer,
-            mail_subject=self.any_mail_subject,
-            data='')
+            is_reminder=is_reminder)
+
+        calls = self.sut.get_send_message_calls()
+        self.assertEqual(1, len(calls))
+        self.assertEqual(expected_user_id, calls[0]['user_id'])
+        self.assertIn('raw', calls[0]['message'])
+
+    def test_send_communication_when_is_reminder(self):
+        expected_user_id = GoogleAPI.AUTHENTICATED_USER
+        is_reminder = True
+
+        self.sut.send_communication(
+            reviewer=self.reviewer,
+            is_reminder=is_reminder)
 
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))

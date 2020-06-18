@@ -95,32 +95,6 @@ class EmployeeAdapter(Config):
 
         return reviewers
 
-    def build_message(self, message, reviewer: Reviewer):
-        list_of_evals = ''
-        for e_eval in reviewer.evals:
-            if e_eval.kind is EvalKind.SELF:
-                reviewee = 'Your self review'
-            else:
-                reviewee = e_eval.reviewee
-
-            list_of_evals = list_of_evals + \
-                    '<a href="' + e_eval.form \
-                    + '" style="color:#0ADA7C;display:block;margin:5px 0" target="_blank"><b>'\
-                    + reviewee + '</b></a>'
-
-        return '''<div><table style="font-family:HelveticaNeue-Light,Helvetica Neue Light,Helvetica Neue,Helvetica,Arial,Lucida Grande,sans-serif;text-align:center;color:#F6F6F6;font-size:15px" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#EEEEEE">
-	<tbody><tr height="60" bgcolor="#000000;"><td style="text-align:left"></td></tr><tr><td>
-			<table style="max-width:615px;padding:30px 7% 30px;border-bottom:2px solid #EEEEEE;border-radius:5px;text-align:center" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#fff" align="center">
-			<tbody><tr><td><h1 style="font-size:25px;font-weight:normal;letter-spacing:-1px;color:#757575;padding:0 0 10px">
-            Hi {0},</h1>
-            <b></b><p style="color:#757575;line-height:23px;padding:30px auto">
-                {1}	
-            </b></p></td>
-            </tr>
-            <tr><td style="padding:10px 0">
-                    {2}
-            </td></tr></tbody></tr></table></div>'''.format(reviewer.uid, message, list_of_evals)
-
 class ReviewerAdapter(EmployeeAdapter):
 
     def get_status_from_responses(self, reviewers, responses):

@@ -537,7 +537,7 @@ class MockGmailChannel(GmailChannel):
     def add_raise_exception_for_reviewer(self, reviewer_uid: str):
         self.raise_exception_for_reviewers.append(reviewer_uid)
 
-    def send_communication(self, reviewer: Reviewer, mail_subject: str, data):
+    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
         if reviewer.uid in self.raise_exception_for_reviewers:
             raise Exception("MockCommunicationsProvider was asked to throw this exception")
         return

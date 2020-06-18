@@ -26,12 +26,6 @@ class SendEvalUseCase(CommunicationChannelFactory, EmployeeAdapter, Config):
 
     def send_eval(self, revieweers, is_reminder: bool = False):
         communication_channel = super().get_communication_channel()
-        if is_reminder:
-            mail_subject = super().read_reminder_mail_subject()
-            message = 'You have pending evals:'
-        else:
-            mail_subject = super().read_mail_subject()
-            message = 'You have new assignments !'
 
         evals_sent = []
         evals_not_sent = []
@@ -39,8 +33,7 @@ class SendEvalUseCase(CommunicationChannelFactory, EmployeeAdapter, Config):
             try:
                 communication_channel.send_communication(
                     reviewer=reviewer,
-                    mail_subject=mail_subject,
-                    data=super().build_message(message, reviewer))
+                    is_reminder=is_reminder)
                 evals_sent.append(reviewer.uid)
             except:
                 evals_not_sent.append(reviewer.uid)

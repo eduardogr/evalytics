@@ -209,22 +209,7 @@ class TestEmployeeAdapter(TestCase):
         form_with_other_area = self.forms_with_other_area
 
         with self.assertRaises(MissingDataException):
-            self.sut.build_reviewers(self.employees,{}, form_with_other_area)
-
-    def test_build_message_correct(self):
-        message = 'some message'
-        employee = self.employees['cto']
-        reviewer = Reviewer(
-            employee=employee,
-            evals=[
-                Eval(reviewee=employee.uid, kind=EvalKind.SELF, form="coolform"),
-                Eval(reviewee='another', kind=EvalKind.MANAGER_PEER, form="coolformformanagers"),
-            ]
-        )
-
-        eval_message = self.sut.build_message(message, reviewer)
-
-        self.assertIn(employee.uid, eval_message)
+            self.sut.build_reviewers(self.employees, {}, form_with_other_area)
 
 class TestReviewerAdapter(TestCase):
 
