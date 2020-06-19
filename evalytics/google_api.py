@@ -454,6 +454,8 @@ class FilesAPI(DriveService, SheetsService, DocsService):
             return 'Report by direct report'
         elif eval_kind == EvalKind.MANAGER_PEER:
             return 'Report by direct manager'
+        elif eval_kind == EvalKind.PEER_TO_PEER:
+            return 'Report by peer'
         else:
             return ''
 

@@ -31,26 +31,32 @@ class TestEval(TestCase):
 
 class TestEvalKind(TestCase):
 
-    def test_evalkinf_from_str_self(self):
+    def test_evalkind_from_str_self(self):
         eval_kind = EvalKind.SELF
 
         obtained_eval_kind = EvalKind.from_str(eval_kind.name)
         self.assertEqual(eval_kind, obtained_eval_kind)
 
-    def test_evalkinf_from_str_peer(self):
+    def test_evalkind_from_str_peer(self):
         eval_kind = EvalKind.PEER_TO_PEER
 
         obtained_eval_kind = EvalKind.from_str(eval_kind.name)
         self.assertEqual(eval_kind, obtained_eval_kind)
 
-    def test_evalkinf_from_str_peer_manager(self):
+    def test_evalkind_from_str_peer_manager(self):
         eval_kind = EvalKind.PEER_MANAGER
 
         obtained_eval_kind = EvalKind.from_str(eval_kind.name)
         self.assertEqual(eval_kind, obtained_eval_kind)
 
-    def test_evalkinf_from_str_manager_peer(self):
+    def test_evalkind_from_str_manager_peer(self):
         eval_kind = EvalKind.MANAGER_PEER
+
+        obtained_eval_kind = EvalKind.from_str(eval_kind.name)
+        self.assertEqual(eval_kind, obtained_eval_kind)
+
+    def test_evalkind_from_str_peer_to_peer(self):
+        eval_kind = EvalKind.PEER_TO_PEER
 
         obtained_eval_kind = EvalKind.from_str(eval_kind.name)
         self.assertEqual(eval_kind, obtained_eval_kind)

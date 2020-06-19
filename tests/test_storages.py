@@ -150,8 +150,8 @@ class TestGoogleStorage(TestCase):
 
     def test_get_forms_correct_when_non_repeated_areas(self):
         self.sut.set_file_rows_response([
-            ['area1', 'form-self', 'form-manager', 'form-peer'],
-            ['area2', 'form-self', 'form-manager', 'form-peer'],
+            ['area1', 'form-self', 'form-manager', 'form-report', 'peer-peer'],
+            ['area2', 'form-self', 'form-manager', 'form-report', 'peer-peer'],
         ])
 
         forms = self.sut.get_forms()
@@ -160,8 +160,8 @@ class TestGoogleStorage(TestCase):
 
     def test_get_forms_correct_when_repeated_areas(self):
         self.sut.set_file_rows_response([
-            ['area1', 'form-self', 'form-manager', 'form-peer'],
-            ['area1', 'last-form-self', 'last-form-manager', 'last-form-peer'],
+            ['area1', 'form-self', 'form-manager', 'form-report', 'peer-peer'],
+            ['area1', 'last-form-self', 'last-form-manager', 'last-form-report', 'last-peer-peer'],
         ])
 
         forms = self.sut.get_forms()
@@ -171,7 +171,7 @@ class TestGoogleStorage(TestCase):
 
     def test_get_forms_when_missing_data(self):
         self.sut.set_file_rows_response([
-            ['area1', 'form-self', 'form-manager', 'form-peer'],
+            ['area1', 'form-self', 'form-manager', 'form-peer', 'peer-peer'],
             ['area2', 'form-self', 'form-manager'],
         ])
 

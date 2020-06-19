@@ -3,7 +3,6 @@ from evalytics.filters import ReviewerResponseFilter
 from evalytics.storages import StorageFactory
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.forms import FormsPlatformFactory
-from evalytics.config import Config
 
 class SetupUseCase(StorageFactory):
 
@@ -12,7 +11,10 @@ class SetupUseCase(StorageFactory):
         setup = storage.setup()
         return setup
 
-class GetReviewersUseCase(StorageFactory, FormsPlatformFactory, EmployeeAdapter):
+class GetReviewersUseCase(
+        StorageFactory,
+        FormsPlatformFactory,
+        EmployeeAdapter):
 
     def get_reviewers(self):
         storage = super().get_storage()

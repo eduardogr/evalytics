@@ -209,6 +209,8 @@ class GoogleForms(GoogleAPI, Config):
             return EvalKind.PEER_MANAGER
         elif filename.startswith('Report Evaluation by Manager'):
             return EvalKind.MANAGER_PEER
+        elif filename.startswith('Peer Evaluation'):
+            return EvalKind.PEER_TO_PEER
         elif filename.startswith('Self Evaluation'):
             return EvalKind.SELF
         else:
