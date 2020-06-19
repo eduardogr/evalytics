@@ -1,8 +1,9 @@
 from unittest import TestCase
 
 from evalytics.google_api import GoogleAPI
-from evalytics.communications_channels import CommunicationChannelFactory, GmailChannel
-from evalytics.models import Reviewer, Employee
+from evalytics.communications_channels import CommunicationChannelFactory
+from evalytics.communications_channels import GmailChannel
+from evalytics.models import Reviewer, Employee, Eval, EvalKind
 from evalytics.config import ProvidersConfig
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
@@ -36,39 +37,75 @@ class TestGmailChannel(TestCase):
     def setUp(self):
         self.sut = GmailChannelSut()
 
+        self.expected_user_id = GoogleAPI.AUTHENTICATED_USER
         self.employee = Employee(
             mail='em@mail.com',
             manager='',
             area='some'
         )
-        self.reviewer = Reviewer(
+        self.reviewer_with_no_evals = Reviewer(
             employee=self.employee,
             evals=[]
         )
+        self.reviewer_with_self_eval = Reviewer(
+            employee=self.employee,
+            evals=[Eval(
+                reviewee='uid',
+                kind=EvalKind.SELF,
+                form='any form')])
+        self.reviewer_with_any_eval = Reviewer(
+            employee=self.employee,
+            evals=[Eval(
+                reviewee='uid',
+                kind=EvalKind.PEER_TO_PEER,
+                form='any form')]
+        )
         self.any_mail_subject = 'any mail subject'
 
-    def test_send_communication(self):
-        expected_user_id = GoogleAPI.AUTHENTICATED_USER
+    def test_send_communication_when_reviewer_with_no_evals(self):
         is_reminder = False
 
         self.sut.send_communication(
-            reviewer=self.reviewer,
+            reviewer=self.reviewer_with_no_evals,
             is_reminder=is_reminder)
 
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
-        self.assertEqual(expected_user_id, calls[0]['user_id'])
+        self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
 
-    def test_send_communication_when_is_reminder(self):
-        expected_user_id = GoogleAPI.AUTHENTICATED_USER
+    def test_send_communication_when_self_eval(self):
         is_reminder = True
 
         self.sut.send_communication(
-            reviewer=self.reviewer,
+            reviewer=self.reviewer_with_self_eval,
             is_reminder=is_reminder)
 
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
-        self.assertEqual(expected_user_id, calls[0]['user_id'])
+        self.assertEqual(self.expected_user_id, calls[0]['user_id'])
+        self.assertIn('raw', calls[0]['message'])
+
+    def test_send_communication_when_any_eval(self):
+        is_reminder = True
+
+        self.sut.send_communication(
+            reviewer=self.reviewer_with_any_eval,
+            is_reminder=is_reminder)
+
+        calls = self.sut.get_send_message_calls()
+        self.assertEqual(1, len(calls))
+        self.assertEqual(self.expected_user_id, calls[0]['user_id'])
+        self.assertIn('raw', calls[0]['message'])
+
+    def test_send_communication_when_is_reminder(self):
+        is_reminder = True
+
+        self.sut.send_communication(
+            reviewer=self.reviewer_with_no_evals,
+            is_reminder=is_reminder)
+
+        calls = self.sut.get_send_message_calls()
+        self.assertEqual(1, len(calls))
+        self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
