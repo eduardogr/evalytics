@@ -7,7 +7,7 @@ from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.forms import FormsPlatformFactory, GoogleForms
-from evalytics.google_api import GoogleAPI
+from evalytics.google_api import GoogleAPI, GoogleService
 from evalytics.google_api import GmailService, DriveService
 from evalytics.google_api import SheetsService, DocsService
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
@@ -46,6 +46,133 @@ class MockReviewerAdapter(ReviewerAdapter):
 
     def get_status_from_responses(self, reviewers, responses):
         return [], [], []
+
+class MockGoogleService(GoogleService):
+
+    __services_by_id = {}
+
+    def get_service(self, service_id, service_version):
+        return self.__services_by_id[service_id][service_version]
+
+    def set_service(self, service_id, service_version, service):
+        if service_id not in self.__services_by_id:
+            self.__services_by_id.update({
+                service_id: {}
+            })
+
+        if service_version not in self.__services_by_id[service_id]:
+            self.__services_by_id[service_id].update({
+                service_version: None
+            })
+
+        self.__services_by_id[service_id][service_version] = service
+
+class RawSheetsServiceMock:
+
+    def spreadsheets(self):
+        class Spreadsheets:
+            def create(self, body, fields):
+                class Create:
+                    def execute(self):
+                        return {}
+                return Create()
+
+            def values(self):
+                class Values:
+                    def get(self, spreadsheetId, range):
+                        class Get:
+                            def execute(self):
+                                return {
+                                    'values': []
+                                }
+                        return Get()
+
+                    def update(
+                            self,
+                            spreadsheetId,
+                            range,
+                            valueInputOption,
+                            body):
+                        class Update:
+                            def execute(self):
+                                return {
+                                    'values': []
+                                }
+                        return Update()
+                return Values()
+
+        return Spreadsheets()
+
+class RawDriveServiceMock:
+
+    def files(self):
+        class Files:
+            def create(self, body, fields):
+                class Create:
+                    def execute(self):
+                        return {}
+                return Create()
+
+            def update(self, fileId, addParents, removeParents):
+                class Update:
+                    def execute(self):
+                        return {}
+                return Update()
+
+            def list(self, q, pageSize, spaces, corpora, fields, pageToken):
+                class List:
+                    def execute(self):
+                        return {}
+                return List()
+
+            def copy(self, fileId, body):
+                class Copy:
+                    def execute(self):
+                        return {}
+                return Copy()
+
+        return Files()
+
+    def permissions(self):
+        class Permissions:
+            def create(self, fileId, body):
+                class Create:
+                    def execute(self):
+                        return {}
+                return Create()
+        return Permissions()
+
+class RawGmailServiceMock:
+
+    def users(self):
+        class Users:
+            def messages(self):
+                class Messages:
+                    def send(self, userId, body):
+                        class Execute:
+                            def execute(self):
+                                return
+                        return Execute()
+                return Messages()
+        return Users()
+
+class RawDocsServiceMock:
+
+    def documents(self):
+        class Documents:
+            def get(self, documentId):
+                class Execute:
+                    def execute(self):
+                        return
+                return Execute()
+
+            def batchUpdate(self, documentId, body):
+                class Execute:
+                    def execute(self):
+                        return
+                return Execute()
+
+        return Documents()
 
 class MockDriveService(DriveService):
 
@@ -135,7 +262,6 @@ class MockDriveService(DriveService):
                     current_call_number: params
                 }
             })
-
 
 class MockSheetsService(SheetsService):
 
