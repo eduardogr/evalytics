@@ -4,6 +4,8 @@ from evalytics.usecases import SetupUseCase
 from evalytics.usecases import GetReviewersUseCase, SendEvalUseCase
 from evalytics.usecases import GetResponseStatusUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
+from evalytics.usecases import GetPeersAssignmentUseCase
+from evalytics.usecases import GeneratePeersAssignmentUseCase
 from evalytics.models import ReviewerResponse
 
 from tests.common.employees import employees_collection
@@ -47,6 +49,18 @@ class GenerateEvalReportsUseCaseSut(
         MockEmployeeAdapter,
         MockReviewerResponseFilter):
     'Inject mocks into GenerateEvalReportsUseCaseS dependencies'
+
+class GetPeersAssignmentUseCaseSut(
+        GetPeersAssignmentUseCase,
+        MockStorageFactory,
+        MockFormsPlatformFactory,):
+    'Inject mocks into GetPeersAssignmentUseCase dependencies'
+
+class GeneratePeersAssignmentUseCaseSut(
+        GeneratePeersAssignmentUseCase,
+        MockStorageFactory,
+        MockFormsPlatformFactory,):
+    'Inject mocks into GetPeersAssignmentUseCase dependencies'
 
 class TestSetupUseCase(TestCase):
 
@@ -182,3 +196,27 @@ class TestGenerateEvalReportsUseCase(TestCase):
 
         self.assertEqual(1, len(not_created))
         self.assertEqual(2, len(created))
+
+class TestGetPeersAssignmentUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GetPeersAssignmentUseCaseSut()
+        self.storage = MockGoogleStorage()
+        self.forms_platform = MockGoogleForms()
+        self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
+
+    def test_usecase(self):
+        self.sut.get_peers()
+
+class TestGeneratePeersAssignmentUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GeneratePeersAssignmentUseCaseSut()
+        self.storage = MockGoogleStorage()
+        self.forms_platform = MockGoogleForms()
+        self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
+
+    def test_usecase(self):
+        self.sut.generate()

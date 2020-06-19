@@ -681,6 +681,9 @@ class MockGoogleStorage(GoogleStorage):
     def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
         self.evaluations_raise_exception_by_reviewee.append(reviewee)
 
+    def write_peers_assignment(self, peers_assignment):
+        return
+
 class MockCommunicationChannelFactory(CommunicationChannelFactory, MockConfig):
 
     impl = None
