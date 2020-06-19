@@ -371,7 +371,40 @@ class MockGoogleAPI(GoogleAPI,
             }
         })
 
-class MockConfig(Config):
+class MockConfigReader(ConfigReader):
+
+    def read(self, filename: str = ''):
+        return {
+            'providers': {
+                'storage': 'storage-provider',
+                'communication_channel': 'comm-provider',
+                'forms_platform': 'form-provider',
+            },
+            'gmail_provider': {
+                'mail_subject': 'this is the mail subject',
+                'reminder_mail_subject': 'reminder subject'
+            },
+            'google_drive_provider': {
+                'folder': 'mock_folder',
+                'form_responses_folder': 'mock_tests_folder',
+                'assignments_folder': 'mock_assignments_folder',
+                'assignments_manager_forms_folder': 'mock_man_ssignments_folder',
+                'org_chart': 'mock_orgchart',
+                'form_map': 'mock_formmap',
+                'assignments_peers_file': 'assignments_peers_file',
+                'eval_report_template_id': 'ID',
+                'eval_report_prefix_name': 'Prefix'
+            },
+            'company': {
+                'domain': 'mock_domain.com',
+                'number_of_employees': 20,
+            }
+        }
+
+    def get(self, key, section):
+        return self.read()[key][section]
+
+class MockConfig(Config, MockConfigReader):
 
     def __init__(self):
         super().__init__()
@@ -541,39 +574,6 @@ class MockGmailChannel(GmailChannel):
         if reviewer.uid in self.raise_exception_for_reviewers:
             raise Exception("MockCommunicationsProvider was asked to throw this exception")
         return
-
-class MockConfigReader(ConfigReader):
-
-    def read(self, filename: str = ''):
-        return {
-            'providers': {
-                'storage': 'storage-provider',
-                'communication_channel': 'comm-provider',
-                'forms_platform': 'form-provider',
-            },
-            'gmail_provider': {
-                'mail_subject': 'this is the mail subject',
-                'reminder_mail_subject': 'reminder subject'
-            },
-            'google_drive_provider': {
-                'folder': 'mock_folder',
-                'form_responses_folder': 'mock_tests_folder',
-                'assignments_folder': 'mock_assignments_folder',
-                'assignments_manager_forms_folder': 'mock_man_ssignments_folder',
-                'org_chart': 'mock_orgchart',
-                'form_map': 'mock_formmap',
-                'assignments_peers_file': 'assignments_peers_file',
-                'eval_report_template_id': 'ID',
-                'eval_report_prefix_name': 'Prefix'
-            },
-            'company': {
-                'domain': 'mock_domain.com',
-                'number_of_employees': 20,
-            }
-        }
-
-    def get(self, key, section):
-        return self.read()[key][section]
 
 class MockMapper(Mapper):
 
