@@ -38,6 +38,15 @@ class TestGoogleForms(TestCase):
     def setUp(self):
         self.sut = GoogleFormsSut()
 
+        self.file_id_manager_by = 'file_id_manager_by'
+        self.file_id_report_by = 'file_id_report_by'
+        self.file_id_self = 'file_id_self'
+        self.file_id_peer = 'file_id_peer'
+
+        self.assignments_manager_1 = 'assignments for manager1'
+        self.assignments_manager_2 = 'assignments for manager2'
+        self.assignments_manager_3 = 'assignments for manager3'
+
     def test_get_peers_assignment_ok_when_no_files(self):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([])
@@ -51,25 +60,14 @@ class TestGoogleForms(TestCase):
             self.sut.get_peers_assignment()
 
     def test_get_peers_assignment_ok_when_files(self):
+        self.__given_files_within_assignments_folder()
         peer_assignment_file = [
             ['timestamp', 'who will review em1?', 'who will review em2?'],
             ['111111', 'em2,em3', 'em1,em3']
         ]
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
-        self.sut.set_files_from_folder_response([{
-                'id': 'assignments from manager1',
-                'name': 'Manager Evaluation By Team Member',
-            }, {
-                'id': 'assignments from manager2',
-                'name': 'Report Evaluation by Manager',
-            }, {
-                'id': 'assignments from manager3',
-                'name': 'Self Evaluation',
-            },
-        ])
-        self.sut.set_file_rows_by_id('assignments from manager1', peer_assignment_file)
-        self.sut.set_file_rows_by_id('assignments from manager2', peer_assignment_file)
-        self.sut.set_file_rows_by_id('assignments from manager3', peer_assignment_file)
+        self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
+        self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
+        self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
 
         peers_assignment = self.sut.get_peers_assignment()
 
@@ -81,6 +79,22 @@ class TestGoogleForms(TestCase):
         self.assertEqual(peers_assignment['em2'], ['em1'])
         self.assertEqual(peers_assignment['em3'], ['em1', 'em2'])
 
+    def test_get_peers_assignment_ok_when_repeated_reviewees(self):
+        self.__given_files_within_assignments_folder()
+        peer_assignment_file = [
+            ['timestamp', 'who will review em1?', 'who will review em2?'],
+            ['111111', 'em3,em3,em3', 'em3,em3']
+        ]
+        self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
+        self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
+        self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
+
+        peers_assignment = self.sut.get_peers_assignment()
+
+        self.assertEqual(1, len(peers_assignment))
+        self.assertIn('em3', peers_assignment)
+        self.assertEqual(peers_assignment['em3'], ['em1', 'em2'])
+
     def test_get_responses_when_no_files(self):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([])
@@ -90,43 +104,17 @@ class TestGoogleForms(TestCase):
         self.assertEqual(0, len(responses_map))
 
     def test_get_responses_when_files(self):
-        file_id_manager_by = 'file_id_manager_by'
-        file_id_report_by = 'file_id_report_by'
-        file_id_self = 'file_id_self'
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
-        self.sut.set_files_from_folder_response([{
-                'id': file_id_manager_by,
-                'name': 'Manager Evaluation By Team Member',
-            }, {
-                'id': file_id_report_by,
-                'name': 'Report Evaluation by Manager',
-            }, {
-                'id': file_id_self,
-                'name': 'Self Evaluation',
-            },
+        self.__given_files_within_response_folder()
+        self.__set_file_responses(self.file_id_manager_by, [['', 'reporter1', 'manager1', 'answer1', 'answer2']])
+        self.__set_file_responses(self.file_id_report_by, [['', 'manager1', 'reporter1', 'answer1', 'answer2']])
+        self.__set_file_responses(self.file_id_self, [
+            ['', 'reporter1', 'reporter1', 'answer1', 'answer2'],
+            ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
         ])
-        self.sut.set_file_rows_by_id(
-            file_id_manager_by,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'reporter1', 'manager1', 'answer1', 'answer2']
-            ]
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_report_by,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'manager1', 'reporter1', 'answer1', 'answer2']
-            ]
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_self,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'reporter1', 'reporter1', 'answer1', 'answer2'],
-                ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
-            ]
-        )
+        self.__set_file_responses(self.file_id_peer, [
+            ['', 'reporter1', 'reporter2', 'answer1', 'answer2'],
+            ['', 'reporter3', 'reporter2', 'answer1', 'answer2']
+        ])
 
         responses_map = self.sut.get_responses()
 
@@ -136,81 +124,28 @@ class TestGoogleForms(TestCase):
         self.assertIn('reporter3', responses_map)
         self.assertIn('manager1', responses_map)
 
-        self.assertEqual(2, len(responses_map['reporter1']))
+        self.assertEqual(3, len(responses_map['reporter1']))
         self.assertEqual(1, len(responses_map['manager1']))
-        self.assertEqual(1, len(responses_map['reporter3']))
-
+        self.assertEqual(2, len(responses_map['reporter3']))
 
     def test_get_responses_when_no_data_in_files(self):
-        file_id_manager_by = 'file_id_manager_by'
-        file_id_report_by = 'file_id_report_by'
-        file_id_self = 'file_id_self'
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
-        self.sut.set_files_from_folder_response([{
-                'id': file_id_manager_by,
-                'name': 'Manager Evaluation By Team Member',
-            }, {
-                'id': file_id_report_by,
-                'name': 'Report Evaluation by Manager',
-            }, {
-                'id': file_id_self,
-                'name': 'Self Evaluation',
-            },
-        ])
-        self.sut.set_file_rows_by_id(
-            file_id_manager_by,
-            []
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_report_by,
-            []
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_self,
-            []
-        )
+        self.__given_files_within_response_folder()
+        self.sut.set_file_rows_by_id(self.file_id_manager_by, [])
+        self.sut.set_file_rows_by_id(self.file_id_report_by, [])
+        self.sut.set_file_rows_by_id(self.file_id_self, [])
+        self.sut.set_file_rows_by_id(self.file_id_peer, [])
 
         with self.assertRaises(MissingDataException):
             self.sut.get_responses()
 
     def test_get_responses_when_uncompleted_data_in_files(self):
-        file_id_manager_by = 'file_id_manager_by'
-        file_id_report_by = 'file_id_report_by'
-        file_id_self = 'file_id_self'
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
-        self.sut.set_files_from_folder_response([{
-                'id': file_id_manager_by,
-                'name': 'Manager Evaluation By Team Member',
-            }, {
-                'id': file_id_report_by,
-                'name': 'Report Evaluation by Manager',
-            }, {
-                'id': file_id_self,
-                'name': 'Self Evaluation',
-            },
+        self.__given_files_within_response_folder()
+        self.__set_file_responses(self.file_id_manager_by, [['', 'reporternswer1', 'answer2']])
+        self.__set_file_responses(self.file_id_report_by, [['', 'reporternswer1', 'answer2']])
+        self.__set_file_responses(self.file_id_self, [
+            ['', 'reporteswer1', 'answer2'],
+            ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
         ])
-        self.sut.set_file_rows_by_id(
-            file_id_manager_by,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'reporternswer1', 'answer2']
-            ]
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_report_by,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'managernswer1', 'answer2']
-            ]
-        )
-        self.sut.set_file_rows_by_id(
-            file_id_self,
-            [
-                ['', 'reviewer', 'reviewee', 'question1', 'question2'],
-                ['', 'reporteswer1', 'answer2'],
-                ['', 'reporter3', 'reporter3', 'answer1', 'answer2']
-            ]
-        )
 
         with self.assertRaises(MissingDataException):
             self.sut.get_responses()
@@ -225,6 +160,46 @@ class TestGoogleForms(TestCase):
 
         # then:
         self.assertEqual(0, len(evaluations))
+
+    def __given_files_within_assignments_folder(self):
+        self.sut.set_folder_from_folder({'id': 'assignments_folder'})
+        self.sut.set_files_from_folder_response([{
+            'id': self.assignments_manager_1,
+            'name': self.assignments_manager_1,
+        }, {
+            'id': self.assignments_manager_2,
+            'name': self.assignments_manager_2,
+        }, {
+            'id': self.assignments_manager_3,
+            'name': self.assignments_manager_3,
+        }])
+
+    def __given_files_within_response_folder(self):
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([{
+            'id': self.file_id_manager_by,
+            'name': 'Manager Evaluation By Team Member',
+        }, {
+            'id': self.file_id_report_by,
+            'name': 'Report Evaluation by Manager',
+        }, {
+            'id': self.file_id_self,
+            'name': 'Self Evaluation',
+        }, {
+            'id': self.file_id_peer,
+            'name': 'Peer Evaluation',
+        }, {
+            'id': 'NO_ID',
+            'name': 'None evalkind file',
+        }])
+
+    def __set_file_responses(self, file_id, responses):
+        file_response = []
+        file_response.append(['', 'reviewer', 'reviewee', 'question1', 'question2'])
+        for response in responses:
+            file_response.append(response)
+
+        self.sut.set_file_rows_by_id(file_id, file_response)
 
 class TestReviewerResponseKeyDictStrategy(TestCase):
 
