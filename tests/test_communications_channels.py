@@ -10,7 +10,7 @@ from tests.common.mocks import MockGoogleAPI, MockConfig
 class CommunicationChannelFactorySut(CommunicationChannelFactory, MockConfig):
     'Inject a mock into CommunicationChannelFactory dependency'
 
-class GmailChannelSut(GmailChannel, MockGoogleAPI):
+class GmailChannelSut(GmailChannel, MockGoogleAPI, MockConfig):
     'Inject mocks into GmailChannel dependencies'
 
 class TestCommunicationChannelFactory(TestCase):
