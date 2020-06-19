@@ -3,8 +3,10 @@ from unittest import TestCase
 from evalytics.storages import GoogleStorage
 from evalytics.storages import StorageFactory
 from evalytics.exceptions import MissingDataException, NoFormsException
+from evalytics.exceptions import MissingGoogleDriveFolderException
+from evalytics.exceptions import MissingGoogleDriveFileException
 from evalytics.models import EvalKind, ReviewerResponse
-from evalytics.config import Config, ProvidersConfig
+from evalytics.config import ProvidersConfig
 
 from tests.common.mocks import MockGoogleAPI, MockConfig
 
@@ -150,8 +152,8 @@ class TestGoogleStorage(TestCase):
 
     def test_get_forms_correct_when_non_repeated_areas(self):
         self.sut.set_file_rows_response([
-            ['area1', 'form-self', 'form-manager', 'form-peer'],
-            ['area2', 'form-self', 'form-manager', 'form-peer'],
+            ['area1', 'form-self', 'form-manager', 'form-report', 'peer-peer'],
+            ['area2', 'form-self', 'form-manager', 'form-report', 'peer-peer'],
         ])
 
         forms = self.sut.get_forms()
@@ -160,8 +162,8 @@ class TestGoogleStorage(TestCase):
 
     def test_get_forms_correct_when_repeated_areas(self):
         self.sut.set_file_rows_response([
-            ['area1', 'form-self', 'form-manager', 'form-peer'],
-            ['area1', 'last-form-self', 'last-form-manager', 'last-form-peer'],
+            ['area1', 'form-self', 'form-manager', 'form-report', 'peer-peer'],
+            ['area1', 'last-form-self', 'last-form-manager', 'last-form-report', 'last-peer-peer'],
         ])
 
         forms = self.sut.get_forms()
@@ -171,7 +173,7 @@ class TestGoogleStorage(TestCase):
 
     def test_get_forms_when_missing_data(self):
         self.sut.set_file_rows_response([
-            ['area1', 'form-self', 'form-manager', 'form-peer'],
+            ['area1', 'form-self', 'form-manager', 'form-peer', 'peer-peer'],
             ['area2', 'form-self', 'form-manager'],
         ])
 
@@ -205,3 +207,73 @@ class TestGoogleStorage(TestCase):
 
         # then:
         self.assertEqual(2, len(employee_managers_response))
+
+    def test_generate_eval_reports_when_files_and_dry_run(self):
+        # given:
+        dry_run = True
+        eval_process_id = 'anyprocessid'
+        reviewee = 'pepe'
+        reviewee_evaluations = [
+            ReviewerResponse(
+                reviewee=reviewee,
+                reviewer=reviewee,
+                eval_kind=EvalKind.SELF,
+                eval_response=(),
+                filename="filename",
+                line_number=10
+            )
+        ]
+        employee_managers = ['jefe', 'manager']
+
+        # when:
+        employee_managers_response = self.sut.generate_eval_reports(
+            dry_run,
+            eval_process_id,
+            reviewee,
+            reviewee_evaluations,
+            employee_managers)
+
+        # then:
+        self.assertEqual(2, len(employee_managers_response))
+
+    def test_write_peers_assignment_when_no_peers(self):
+        # given:
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'assignments_folder'
+        })
+        self.sut.set_fileid_by_name('assignments_folder', 'assignments_peers_file', 'fileid')
+        no_peers = {}
+
+        # when:
+        self.sut.write_peers_assignment(no_peers)
+
+    def test_write_peers_assignment_when_peers(self):
+        # given:
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'assignments_folder'
+        })
+        self.sut.set_fileid_by_name('assignments_folder', 'assignments_peers_file', 'fileid')
+        peers = {
+            'peer1': ['peer2']
+        }
+
+        # when:
+        self.sut.write_peers_assignment(peers)
+
+    def test_write_peers_assignment_when_no_folder(self):
+        # when:
+        with self.assertRaises(MissingGoogleDriveFolderException):
+            self.sut.write_peers_assignment({})
+
+    def test_write_peers_assignment_when_no_file(self):
+        # given:
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': ''
+        })
+
+        # when:
+        with self.assertRaises(MissingGoogleDriveFileException):
+            self.sut.write_peers_assignment({})

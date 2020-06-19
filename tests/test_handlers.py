@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from evalytics.handlers import SetupHandler, ReviewersHandler
 from evalytics.handlers import EvalDeliveryHandler, ResponseStatusHandler
-from evalytics.handlers import EvalReportsHandler
+from evalytics.handlers import EvalReportsHandler, PeersAssignmentHandler
 
 from tests.common.mocks import RequestHandlerMock
 from tests.common.mocks import MockMapper
@@ -22,6 +22,9 @@ class ResponseStatusHandlerSut(ResponseStatusHandler, RequestHandlerMock):
 
 class EvalReportsHandlerSut(EvalReportsHandler, RequestHandlerMock):
     'Inject mocks into EvalReportHandler dependencies'
+
+class PeersAssignmentHandlerSut(PeersAssignmentHandler, RequestHandlerMock):
+    'Inject mocks into PeersAssignmentHandler dependencies'
 
 class TestSetupHandler(TestCase):
 
@@ -62,3 +65,11 @@ class TestEvalReportsHandler(TestCase):
 
     def test_endpoint(self):
         self.assertEqual('/evalreports', self.sut.path)
+
+class TestPeersAssignmentHandler(TestCase):
+
+    def setUp(self):
+        self.sut = PeersAssignmentHandlerSut()
+
+    def test_endpoint(self):
+        self.assertEqual('/peers', self.sut.path)

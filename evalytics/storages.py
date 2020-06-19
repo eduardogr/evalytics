@@ -4,6 +4,8 @@ from evalytics.models import GoogleSetup, GoogleFile
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
+from evalytics.exceptions import MissingGoogleDriveFolderException
+from evalytics.exceptions import MissingGoogleDriveFileException
 
 class StorageFactory(Config):
 
@@ -16,7 +18,8 @@ class StorageFactory(Config):
 
 class GoogleStorage(GoogleAPI, Config):
 
-    FORM_MAP_RANGE = 'A2:D3'
+    # TODO: should be config
+    FORM_MAP_RANGE = 'A2:D4'
 
     def setup(self):
         folder_name = super().read_google_folder()
@@ -100,14 +103,16 @@ class GoogleStorage(GoogleAPI, Config):
             self_eval = row[1]
             peer_manager_eval = row[2]
             manager_peer_eval = row[3]
+            peer_to_peer_eval = row[4]
 
             forms.update({
                 form_area: {
                     EvalKind.SELF: self_eval,
                     EvalKind.PEER_MANAGER: peer_manager_eval,
                     EvalKind.MANAGER_PEER: manager_peer_eval,
+                    EvalKind.PEER_TO_PEER: peer_to_peer_eval,
                 }
-            })            
+            })
 
         return forms
 
@@ -144,3 +149,37 @@ class GoogleStorage(GoogleAPI, Config):
                 employee_managers
             )
             return employee_managers
+
+    def write_peers_assignment(self, peers_assignment):
+        google_folder = super().read_google_folder()
+        assignments_folder = super().read_assignments_folder()
+        assignments_peers_file = super().read_assignments_peers_file()
+        number_of_employees = int(super().read_company_number_of_employees())
+        assignments_peers_range = 'B2:C' + str(number_of_employees + 1)
+
+        folder = super().get_folder_from_folder(
+            assignments_folder,
+            google_folder)
+
+        if folder is None:
+            raise MissingGoogleDriveFolderException(
+                "Missing folder: {}".format(assignments_folder))
+
+        spreadheet_id = super().get_file_id_from_folder(
+            folder_id=folder.get('id'),
+            filename=assignments_peers_file)
+
+        if spreadheet_id is None:
+            raise MissingGoogleDriveFileException(
+                "Missing file: {}".format(assignments_peers_file))
+
+        values = []
+        value_input_option = 'RAW'
+        for reviewer, peers in peers_assignment.items():
+            values.append([reviewer, ','.join(peers)])
+
+        super().update_file_rows(
+            spreadheet_id,
+            assignments_peers_range,
+            value_input_option,
+            values)

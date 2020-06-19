@@ -8,7 +8,8 @@ from tornado.options import define, options
 from evalytics.handlers import \
     SetupHandler, \
     ReviewersHandler, EvalDeliveryHandler, \
-    ResponseStatusHandler, EvalReportsHandler
+    ResponseStatusHandler, EvalReportsHandler, \
+    PeersAssignmentHandler
 
 define(
     "port", default=8080,
@@ -19,6 +20,7 @@ class GetPathAndHandler:
     def get(self):
         handlers = [
             SetupHandler,
+            PeersAssignmentHandler,
             ReviewersHandler,
             EvalDeliveryHandler,
             ResponseStatusHandler,

@@ -11,6 +11,16 @@ class CustomException(Exception):
         else:
             return '{0} has been raised'.format(class_name)
 
+class MissingGoogleDriveFolderException(CustomException):
+
+    def __str__(self):
+        return super().get_str('MissingGoogleDriveFolderException')
+
+class MissingGoogleDriveFileException(CustomException):
+
+    def __str__(self):
+        return super().get_str('MissingGoogleDriveFileException')
+
 class MissingDataException(CustomException):
 
     def __str__(self):

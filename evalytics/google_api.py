@@ -57,13 +57,21 @@ class GoogleService:
     __credentials = None
 
     def get_service(self, service_id, service_version):
-        if service_id not in self.__services_by_id:
-            self.__services_by_id[service_id] = build(
-                service_id,
-                service_version,
-                credentials=self.__get_credentials(),
-                cache_discovery=False)
-        return self.__services_by_id[service_id]
+        if not service_id in self.__services_by_id:
+            self.__services_by_id.update({
+                service_id: {}
+            })
+
+        if not service_version in self.__services_by_id[service_id]:
+            self.__services_by_id[service_id].update({
+                service_version: build(
+                    service_id,
+                    service_version,
+                    credentials=self.__get_credentials(),
+                    cache_discovery=False)
+            })
+
+        return self.__services_by_id[service_id][service_version]
 
     def __get_credentials(self):
         if self.__credentials is None:
@@ -141,12 +149,12 @@ class DriveService(GoogleService):
 class SheetsService(GoogleService):
 
     SHEETS_SERVICE_ID = 'sheets'
-    SHEETS_SERVICE_VERISON = 'v4'
+    SHEETS_SERVICE_VERSION = 'v4'
 
     def create_spreadsheet(self, file_metadata):
         sheets_service = super().get_service(
             self.SHEETS_SERVICE_ID,
-            self.SHEETS_SERVICE_VERISON
+            self.SHEETS_SERVICE_VERSION
         )
         spreadsheet = sheets_service.spreadsheets().create(
             body=file_metadata,
@@ -156,12 +164,30 @@ class SheetsService(GoogleService):
     def get_file_values(self, spreadsheet_id, rows_range):
         sheets_service = super().get_service(
             self.SHEETS_SERVICE_ID,
-            self.SHEETS_SERVICE_VERISON
+            self.SHEETS_SERVICE_VERSION
         )
         sheet = sheets_service.spreadsheets()
         result = sheet.values().get(
             spreadsheetId=spreadsheet_id,
             range=rows_range
+        ).execute()
+        return result.get('values', [])
+
+    def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
+        sheets_service = super().get_service(
+            self.SHEETS_SERVICE_ID,
+            self.SHEETS_SERVICE_VERSION
+        )
+        sheet = sheets_service.spreadsheets()
+
+        value_range_body = {
+            'values': values
+        }
+        result = sheet.values().update(
+            spreadsheetId=spreadsheet_id,
+            range=rows_range,
+            valueInputOption=value_input_option,
+            body=value_range_body
         ).execute()
         return result.get('values', [])
 
@@ -183,6 +209,16 @@ class DocsService(GoogleService):
 
     DOCS_SERVICE_ID = 'docs'
     DOCS_SERVICE_VERSION = 'v1'
+
+    ELEMENTS = 'elements'
+    START_INDEX = 'startIndex'
+    END_INDEX = 'endIndex'
+
+    PARAGRAPH = 'paragraph'
+    HORIZONTAL_RULE = 'horizontalRule'
+
+    TEXT_RUN = 'textRun'
+    CONTENT = 'content'
 
     def get_document(self, document_id):
         docs_service = super().get_service(
@@ -367,6 +403,20 @@ class FilesAPI(DriveService, SheetsService, DocsService):
 
         return values
 
+    def get_file_rows(self, file_id: str, rows_range: str):
+        return super().get_file_values(
+            file_id,
+            rows_range
+        )
+
+    def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
+        return super().update_file_values(
+            file_id,
+            rows_range,
+            value_input_option,
+            values
+        )
+
     def insert_eval_report_in_document(self,
                                        eval_process_id,
                                        document_id,
@@ -422,6 +472,8 @@ class FilesAPI(DriveService, SheetsService, DocsService):
             return 'Report by direct report'
         elif eval_kind == EvalKind.MANAGER_PEER:
             return 'Report by direct manager'
+        elif eval_kind == EvalKind.PEER_TO_PEER:
+            return 'Report by peer'
         else:
             return ''
 
@@ -465,27 +517,18 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         document = super().get_document(document_id)
         content = document.get('body').get('content')
 
-        START_INDEX = 'startIndex'
-        END_INDEX = 'endIndex'
-
-        ELEMENTS = 'elements'
-        TEXT_RUN = 'textRun'
-        PARAGRAPH = 'paragraph'
-
-        CONTENT = 'content'
-
         style_requests = []
         for item in content:
-            if PARAGRAPH in item:
-                for element in item.get(PARAGRAPH).get(ELEMENTS):
-                    if TEXT_RUN in element and CONTENT in element.get(TEXT_RUN):
-                        content = element.get(TEXT_RUN).get(CONTENT)
+            if DocsService.PARAGRAPH in item:
+                for element in item.get(DocsService.PARAGRAPH).get(DocsService.ELEMENTS):
+                    if DocsService.TEXT_RUN in element and DocsService.CONTENT in element.get(DocsService.TEXT_RUN):
+                        content = element.get(DocsService.TEXT_RUN).get(DocsService.CONTENT)
                         possible_tokens = content.split('%')
 
                         for token_uid, tokens in super().get_eval_report_style_tokens().items():
                             if tokens['start'] in possible_tokens and tokens['end']:
-                                start_index = element.get(START_INDEX)
-                                end_index = element.get(END_INDEX)
+                                start_index = element.get(DocsService.START_INDEX)
+                                end_index = element.get(DocsService.END_INDEX)
                                 style_request = super().get_eval_report_style(token_uid, start_index, end_index)
                                 if style_request is not None:
                                     style_requests.append(style_request)
@@ -494,13 +537,9 @@ class FilesAPI(DriveService, SheetsService, DocsService):
 
     def __delete_tokens_from_document(self, document_id):
         delete_token_requests = super().get_delete_tokens_requests()
-        super().batch_update(document_id=document_id, requests=delete_token_requests)
-
-    def get_file_rows(self, file_id: str, rows_range: str):
-        return super().get_file_values(
-            file_id,
-            rows_range
-        )
+        super().batch_update(
+            document_id=document_id,
+            requests=delete_token_requests)
 
     def __get_file(self, query: str, filename):
         try:
@@ -545,18 +584,13 @@ class FilesAPI(DriveService, SheetsService, DocsService):
             raise err
 
     def __get_indext_after_firt_horizontal_rule(self, content):
-        ELEMENTS = 'elements'
-        END_INDEX = 'endIndex'
-        PARAGRAPH = 'paragraph'
-        HORIZONTAL_RULE = 'horizontalRule'
-
         horizontal_rule_was_seen = False
         for item in content:
-            if PARAGRAPH in item:
-                for element in item.get(PARAGRAPH).get(ELEMENTS):
-                    if HORIZONTAL_RULE in element:
+            if DocsService.PARAGRAPH in item:
+                for element in item.get(DocsService.PARAGRAPH).get(DocsService.ELEMENTS):
+                    if DocsService.HORIZONTAL_RULE in element:
                         horizontal_rule_was_seen = True
-                        next_index_hr = element.get(END_INDEX) + 1
+                        next_index_hr = element.get(DocsService.END_INDEX) + 1
 
                 if horizontal_rule_was_seen:
                     break

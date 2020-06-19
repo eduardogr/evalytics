@@ -7,7 +7,7 @@ from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel
 from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.forms import FormsPlatformFactory, GoogleForms
-from evalytics.google_api import GoogleAPI
+from evalytics.google_api import GoogleAPI, GoogleService
 from evalytics.google_api import GmailService, DriveService
 from evalytics.google_api import SheetsService, DocsService
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
@@ -27,7 +27,7 @@ class MockEmployeeAdapter(EmployeeAdapter):
     def __init__(self):
         self.employees_by_manager = {}
 
-    def build_reviewers(self, employees, forms):
+    def build_reviewers(self, employees, peers_assignment, forms):
         return employees
 
     def build_message(self, message, reviewer: Reviewer):
@@ -46,6 +46,133 @@ class MockReviewerAdapter(ReviewerAdapter):
 
     def get_status_from_responses(self, reviewers, responses):
         return [], [], []
+
+class MockGoogleService(GoogleService):
+
+    __services_by_id = {}
+
+    def get_service(self, service_id, service_version):
+        return self.__services_by_id[service_id][service_version]
+
+    def set_service(self, service_id, service_version, service):
+        if service_id not in self.__services_by_id:
+            self.__services_by_id.update({
+                service_id: {}
+            })
+
+        if service_version not in self.__services_by_id[service_id]:
+            self.__services_by_id[service_id].update({
+                service_version: None
+            })
+
+        self.__services_by_id[service_id][service_version] = service
+
+class RawSheetsServiceMock:
+
+    def spreadsheets(self):
+        class Spreadsheets:
+            def create(self, body, fields):
+                class Create:
+                    def execute(self):
+                        return {}
+                return Create()
+
+            def values(self):
+                class Values:
+                    def get(self, spreadsheetId, range):
+                        class Get:
+                            def execute(self):
+                                return {
+                                    'values': []
+                                }
+                        return Get()
+
+                    def update(
+                            self,
+                            spreadsheetId,
+                            range,
+                            valueInputOption,
+                            body):
+                        class Update:
+                            def execute(self):
+                                return {
+                                    'values': []
+                                }
+                        return Update()
+                return Values()
+
+        return Spreadsheets()
+
+class RawDriveServiceMock:
+
+    def files(self):
+        class Files:
+            def create(self, body, fields):
+                class Create:
+                    def execute(self):
+                        return {}
+                return Create()
+
+            def update(self, fileId, addParents, removeParents):
+                class Update:
+                    def execute(self):
+                        return {}
+                return Update()
+
+            def list(self, q, pageSize, spaces, corpora, fields, pageToken):
+                class List:
+                    def execute(self):
+                        return {}
+                return List()
+
+            def copy(self, fileId, body):
+                class Copy:
+                    def execute(self):
+                        return {}
+                return Copy()
+
+        return Files()
+
+    def permissions(self):
+        class Permissions:
+            def create(self, fileId, body):
+                class Create:
+                    def execute(self):
+                        return {}
+                return Create()
+        return Permissions()
+
+class RawGmailServiceMock:
+
+    def users(self):
+        class Users:
+            def messages(self):
+                class Messages:
+                    def send(self, userId, body):
+                        class Execute:
+                            def execute(self):
+                                return
+                        return Execute()
+                return Messages()
+        return Users()
+
+class RawDocsServiceMock:
+
+    def documents(self):
+        class Documents:
+            def get(self, documentId):
+                class Execute:
+                    def execute(self):
+                        return
+                return Execute()
+
+            def batchUpdate(self, documentId, body):
+                class Execute:
+                    def execute(self):
+                        return
+                return Execute()
+
+        return Documents()
 
 class MockDriveService(DriveService):
 
@@ -135,7 +262,6 @@ class MockDriveService(DriveService):
                     current_call_number: params
                 }
             })
-
 
 class MockSheetsService(SheetsService):
 
@@ -291,6 +417,9 @@ class MockGoogleAPI(GoogleAPI,
     def get_file_rows(self, file_id: str, rows_range: str):
         return self.file_rows_by_id_response.get(file_id, [])
 
+    def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
+        return
+
     def get_files_from_folder(self, folder_id):
         return self.files_from_folder_response
 
@@ -371,7 +500,40 @@ class MockGoogleAPI(GoogleAPI,
             }
         })
 
-class MockConfig(Config):
+class MockConfigReader(ConfigReader):
+
+    def read(self, filename: str = ''):
+        return {
+            'providers': {
+                'storage': 'storage-provider',
+                'communication_channel': 'comm-provider',
+                'forms_platform': 'form-provider',
+            },
+            'gmail_provider': {
+                'mail_subject': 'this is the mail subject',
+                'reminder_mail_subject': 'reminder subject'
+            },
+            'google_drive_provider': {
+                'folder': 'mock_folder',
+                'form_responses_folder': 'mock_tests_folder',
+                'assignments_folder': 'mock_assignments_folder',
+                'assignments_manager_forms_folder': 'mock_man_ssignments_folder',
+                'org_chart': 'mock_orgchart',
+                'form_map': 'mock_formmap',
+                'assignments_peers_file': 'assignments_peers_file',
+                'eval_report_template_id': 'ID',
+                'eval_report_prefix_name': 'Prefix'
+            },
+            'company': {
+                'domain': 'mock_domain.com',
+                'number_of_employees': 20,
+            }
+        }
+
+    def get(self, key, section):
+        return self.read()[key][section]
+
+class MockConfig(Config, MockConfigReader):
 
     def __init__(self):
         super().__init__()
@@ -398,11 +560,20 @@ class MockConfig(Config):
     def read_google_folder(self):
         return "google_folder"
 
+    def read_assignments_folder(self):
+        return "assignments_folder"
+
+    def read_assignments_manager_forms_folder(self):
+        return "assignments_manager_forms_folder("
+
     def read_google_orgchart(self):
         return "google_orgchart"
 
     def read_google_form_map(self):
         return "google_form_map"
+
+    def read_assignments_peers_file(self):
+        return "assignments_peers_file"
 
     def read_needed_spreadsheets(self):
         return self.needed_spreadsheets
@@ -458,6 +629,10 @@ class MockGoogleForms(GoogleForms):
 
     def __init__(self):
         self.evaluations_response = {}
+        self.peers_assignment = {}
+
+    def get_peers_assignment(self):
+        return self.peers_assignment
 
     def get_responses(self):
         return {}
@@ -467,6 +642,9 @@ class MockGoogleForms(GoogleForms):
 
     def set_evaluations_response(self, response):
         self.evaluations_response = response
+
+    def set_peers_assignment_response(self, response):
+        self.peers_assignment = response
 
 class MockGoogleStorage(GoogleStorage):
 
@@ -503,6 +681,9 @@ class MockGoogleStorage(GoogleStorage):
     def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
         self.evaluations_raise_exception_by_reviewee.append(reviewee)
 
+    def write_peers_assignment(self, peers_assignment):
+        return
+
 class MockCommunicationChannelFactory(CommunicationChannelFactory, MockConfig):
 
     impl = None
@@ -521,40 +702,10 @@ class MockGmailChannel(GmailChannel):
     def add_raise_exception_for_reviewer(self, reviewer_uid: str):
         self.raise_exception_for_reviewers.append(reviewer_uid)
 
-    def send_communication(self, reviewer: Reviewer, mail_subject: str, data):
+    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
         if reviewer.uid in self.raise_exception_for_reviewers:
             raise Exception("MockCommunicationsProvider was asked to throw this exception")
         return
-
-class MockConfigReader(ConfigReader):
-
-    def read(self, filename: str = ''):
-        return {
-            'providers': {
-                'storage': 'storage-provider',
-                'communication_channel': 'comm-provider',
-                'forms_platform': 'form-provider',
-            },
-            'gmail_provider': {
-                'mail_subject': 'this is the mail subject',
-                'reminder_mail_subject': 'reminder subject'
-            },
-            'google_drive_provider': {
-                'folder': 'mock_folder',
-                'org_chart': 'mock_orgchart',
-                'form_map': 'mock_formmap',
-                'form_responses_folder': 'mock_tests_folder',
-                'eval_report_template_id': 'ID',
-                'eval_report_prefix_name': 'Prefix'
-            },
-            'company': {
-                'domain': 'mock_domain.com',
-                'number_of_employees': 20,
-            }
-        }
-
-    def get(self, key, section):
-        return self.read()[key][section]
 
 class MockMapper(Mapper):
 
@@ -579,9 +730,7 @@ class MockReviewerResponseFilter(ReviewerResponseFilter):
 
 class SendEvalUseCaseMock(
         SendEvalUseCase,
-        MockCommunicationChannelFactory,
-        MockEmployeeAdapter,
-        MockConfig):
+        MockCommunicationChannelFactory):
 
     def __init__(self):
         self.evals_sent = []
@@ -594,7 +743,11 @@ class SendEvalUseCaseMock(
     def send_eval(self, reviewers, is_reminder=False):
         return self.evals_sent, self.evals_not_sent
 
-class GetReviewersUseCaseMock(GetReviewersUseCase, MockStorageFactory, MockEmployeeAdapter):
+class GetReviewersUseCaseMock(
+        GetReviewersUseCase,
+        MockFormsPlatformFactory,
+        MockStorageFactory,
+        MockEmployeeAdapter):
 
     def __init__(self):
         self.response = {}

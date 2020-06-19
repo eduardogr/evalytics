@@ -1,13 +1,27 @@
 from unittest import TestCase
 
 from evalytics.google_api import GmailAPI, FilesAPI, DocsService, DriveService
+from evalytics.google_api import SheetsService, GmailService
 
-from tests.common.mocks import MockGmailService
+from tests.common.mocks import RawSheetsServiceMock
+from tests.common.mocks import RawGmailServiceMock
+from tests.common.mocks import RawDocsServiceMock
+from tests.common.mocks import RawDriveServiceMock
+from tests.common.mocks import MockGoogleService, MockGmailService
 from tests.common.mocks import MockDriveService, MockSheetsService
 from tests.common.mocks import MockDocsService
 
-class DocServiceSut(DocsService):
+class DocServiceSut(DocsService, MockGoogleService):
     'Inject a mock into the DocsService dependency'
+
+class SheetsServiceSut(SheetsService, MockGoogleService):
+    'Inject a mock into the SheetsService dependency'
+
+class GmailServiceSut(GmailService, MockGoogleService):
+    'Inject a mock into the GmailService dependency'
+
+class DriveServiceSut(DriveService, MockGoogleService):
+    'Inject a mock into the DriveService dependency'
 
 class FilesAPISut(
         FilesAPI,
@@ -19,23 +33,107 @@ class FilesAPISut(
 class GmailAPISut(GmailAPI, MockGmailService):
     'Inject a mock into the GmailAPI dependency'
 
-class TestGmailApi(TestCase):
+class TestDriveService(TestCase):
 
-    def test_send_message(self):
-        user_id = 'any_user_id'
-        message = 'any_message'
-        sut = GmailAPISut()
+    def setUp(self):
+        self.sut = DriveServiceSut()
+        self.sut.set_service(
+            DriveService.DRIVE_SERVICE_ID,
+            DriveService.DRIVE_SERVICE_VERSION,
+            RawDriveServiceMock()
+        )
 
-        sut.send_message(user_id, message)
+    def test_create_drive_folder_ok(self):
+        file_metadata = {}
 
-        calls = sut.get_send_calls()
-        self.assertEqual(1, len(calls))
-        self.assertEqual(user_id, calls[0]['user_id'])
+        self.sut.create_drive_folder(file_metadata)
+
+    def test_update_file_parent_ok(self):
+        file_id = 'ID'
+        current_parent = 'father'
+        new_parent = 'i am your father'
+
+        self.sut.update_file_parent(file_id, current_parent, new_parent)
+
+    def test_list_files_ok(self):
+        page_token = ''
+        query = ''
+
+        self.sut.list_files(page_token, query)
+
+    def test_copy_file_ok(self):
+        file_id = 'EFAWEF'
+        new_filename = 'brand new file'
+
+        self.sut.copy_file(file_id, new_filename)
+
+    def test_create_permission_ok(self):
+        document_id = 'ASDFASDF'
+        role = 'comenter'
+        email_address = 'myemail@email.com'
+
+        self.sut.create_permission(document_id, role, email_address)
+
+class TestSheetsService(TestCase):
+
+    def setUp(self):
+        self.sut = SheetsServiceSut()
+        self.sut.set_service(
+            SheetsService.SHEETS_SERVICE_ID,
+            SheetsService.SHEETS_SERVICE_VERSION,
+            RawSheetsServiceMock()
+        )
+
+    def test_create_spreadsheet_ok(self):
+        file_metadata = {}
+        self.sut.create_spreadsheet(file_metadata)
+
+    def test_get_file_values_ok(self):
+        spreadsheet_id = 'id'
+        self.sut.get_file_values(spreadsheet_id, 'A1:D3')
+
+    def test_update_file_values_ok(self):
+        spreadsheet_id = 'id'
+        rows_range = 'A3:D4'
+        value_input_option = 'RAW'
+        values = []
+        self.sut.update_file_values(spreadsheet_id, rows_range, value_input_option, values)
+
+class TestGmailService(TestCase):
+
+    def setUp(self):
+        self.sut = GmailServiceSut()
+        self.sut.set_service(
+            GmailService.GMAIL_SERVICE_ID,
+            GmailService.GMAIL_SERVICE_VERSION,
+            RawGmailServiceMock()
+        )
+
+    def test_send_email_ok(self):
+        user_id = 'ME'
+        body = 'jeje'
+        self.sut.send_email(user_id, body)
 
 class TestDocsService(TestCase):
 
     def setUp(self):
         self.sut = DocServiceSut()
+        self.sut.set_service(
+            DocsService.DOCS_SERVICE_ID,
+            DocsService.DOCS_SERVICE_VERSION,
+            RawDocsServiceMock()
+        )
+
+    def test_get_document_ok(self):
+        document_id = 'ID'
+
+        self.sut.get_document(document_id)
+
+    def test_batch_update(self):
+        document_id = 'ID'
+        requests = []
+
+        self.sut.batch_update(document_id, requests)
 
     def test_get_eval_report_style_tokens_has_tokens(self):
         style_tokens = self.sut.get_eval_report_style_tokens()
@@ -103,6 +201,19 @@ class TestDocsService(TestCase):
 
         with self.assertRaises(NotImplementedError):
             self.sut.get_eval_report_style(kind, start_index, end_index)
+
+class TestGmailApi(TestCase):
+
+    def test_send_message(self):
+        user_id = 'any_user_id'
+        message = 'any_message'
+        sut = GmailAPISut()
+
+        sut.send_message(user_id, message)
+
+        calls = sut.get_send_calls()
+        self.assertEqual(1, len(calls))
+        self.assertEqual(user_id, calls[0]['user_id'])
 
 class TestFilesAPI(TestCase):
 

@@ -4,6 +4,8 @@ from evalytics.usecases import SetupUseCase
 from evalytics.usecases import GetReviewersUseCase, SendEvalUseCase
 from evalytics.usecases import GetResponseStatusUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
+from evalytics.usecases import GetPeersAssignmentUseCase
+from evalytics.usecases import GeneratePeersAssignmentUseCase
 from evalytics.models import ReviewerResponse
 
 from tests.common.employees import employees_collection
@@ -22,6 +24,7 @@ class SetupUseCaseSut(SetupUseCase, MockStorageFactory):
 class GetReviewersUseCaseSut(
         GetReviewersUseCase,
         MockStorageFactory,
+        MockFormsPlatformFactory,
         MockEmployeeAdapter):
     'Inject mocks into GetReviewersUseCase dependencies'
 
@@ -47,6 +50,18 @@ class GenerateEvalReportsUseCaseSut(
         MockReviewerResponseFilter):
     'Inject mocks into GenerateEvalReportsUseCaseS dependencies'
 
+class GetPeersAssignmentUseCaseSut(
+        GetPeersAssignmentUseCase,
+        MockStorageFactory,
+        MockFormsPlatformFactory,):
+    'Inject mocks into GetPeersAssignmentUseCase dependencies'
+
+class GeneratePeersAssignmentUseCaseSut(
+        GeneratePeersAssignmentUseCase,
+        MockStorageFactory,
+        MockFormsPlatformFactory,):
+    'Inject mocks into GetPeersAssignmentUseCase dependencies'
+
 class TestSetupUseCase(TestCase):
 
     def setUp(self):
@@ -66,6 +81,7 @@ class TestGetReviewersUseCase(TestCase):
     def setUp(self):
         self.sut = GetReviewersUseCaseSut()
         self.sut.set_storage(MockGoogleStorage())
+        self.sut.set_forms_platform(MockGoogleForms())
 
     def test_get_reviewers_usecase(self):
         reviewers = self.sut.get_reviewers()
@@ -180,3 +196,27 @@ class TestGenerateEvalReportsUseCase(TestCase):
 
         self.assertEqual(1, len(not_created))
         self.assertEqual(2, len(created))
+
+class TestGetPeersAssignmentUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GetPeersAssignmentUseCaseSut()
+        self.storage = MockGoogleStorage()
+        self.forms_platform = MockGoogleForms()
+        self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
+
+    def test_usecase(self):
+        self.sut.get_peers()
+
+class TestGeneratePeersAssignmentUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GeneratePeersAssignmentUseCaseSut()
+        self.storage = MockGoogleStorage()
+        self.forms_platform = MockGoogleForms()
+        self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
+
+    def test_usecase(self):
+        self.sut.generate()

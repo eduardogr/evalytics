@@ -31,7 +31,7 @@ class GoogleSetup():
 
 class EvalKind(Enum):
     SELF = 1
-    PEER = 2
+    PEER_TO_PEER = 2
     PEER_MANAGER = 3
     MANAGER_PEER = 4
 
@@ -39,8 +39,8 @@ class EvalKind(Enum):
     def from_str(label):
         if label == 'SELF':
             return EvalKind.SELF
-        elif label == 'PEER':
-            return EvalKind.PEER
+        elif label == 'PEER_TO_PEER':
+            return EvalKind.PEER_TO_PEER
         elif label == 'PEER_MANAGER':
             return EvalKind.PEER_MANAGER
         elif label == 'MANAGER_PEER':

@@ -27,6 +27,11 @@ class TestProvidersConfig(TestCase):
 
         self.assertEqual('form-provider', provider)
 
+class TestGmailProviderConfig(TestCase):
+
+    def setUp(self):
+        self.sut = ConfigSut()
+
     def test_read_mail_subject(self):
         mail_subject = self.sut.read_mail_subject()
 
@@ -37,7 +42,7 @@ class TestProvidersConfig(TestCase):
 
         self.assertEqual('reminder subject', reminder_mail_subject)
 
-class TestConfig(TestCase):
+class TestGoogleDriveProviderConfig(TestCase):
 
     def setUp(self):
         self.sut = ConfigSut()
@@ -46,6 +51,16 @@ class TestConfig(TestCase):
         google_folder = self.sut.read_google_folder()
 
         self.assertEqual('mock_folder', google_folder)
+
+    def test_read_assignments_folder(self):
+        google_folder = self.sut.read_assignments_folder()
+
+        self.assertEqual('mock_assignments_folder', google_folder)
+
+    def test_read_assignments_manager_forms_folder(self):
+        google_folder = self.sut.read_assignments_manager_forms_folder()
+
+        self.assertEqual('mock_man_ssignments_folder', google_folder)
 
     def test_read_google_orgchart(self):
         orgchart = self.sut.read_google_orgchart()
@@ -57,12 +72,10 @@ class TestConfig(TestCase):
 
         self.assertEqual('mock_formmap', formmap)
 
-    def test_read_needed_spreadsheets(self):
-        needed_spreachseets = self.sut.read_needed_spreadsheets()
+    def test_read_assignments_peers_file(self):
+        formmap = self.sut.read_assignments_peers_file()
 
-        self.assertEqual([
-            'mock_orgchart',
-            'mock_formmap'], needed_spreachseets)
+        self.assertEqual('assignments_peers_file', formmap)
 
     def test_read_google_responses_folder(self):
         tests_folder = self.sut.read_google_responses_folder()
@@ -78,6 +91,18 @@ class TestConfig(TestCase):
         prefix = self.sut.read_google_eval_report_prefix_name()
 
         self.assertEqual('Prefix', prefix)
+
+    def test_read_needed_spreadsheets(self):
+        needed_spreachseets = self.sut.read_needed_spreadsheets()
+
+        self.assertEqual([
+            'mock_orgchart',
+            'mock_formmap'], needed_spreachseets)
+
+class TestConfig(TestCase):
+
+    def setUp(self):
+        self.sut = ConfigSut()
 
     def test_read_company_domain(self):
         domain = self.sut.read_company_domain()

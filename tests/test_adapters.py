@@ -20,6 +20,7 @@ class TestEmployeeAdapter(TestCase):
         self.self_form = 'self form'
         self.peer_manager_form = 'peer manager form'
         self.manager_peer_form = 'manager peer form'
+        self.peer_to_peer_form = 'peer to peer form'
         self.area = 'eng'
         self.employees = {
             'ceo': Employee(
@@ -53,19 +54,25 @@ class TestEmployeeAdapter(TestCase):
             'sw2': Employee(
                 mail='sw2@company.com', manager='tl1', area=self.area),
         }
+        self.no_peers = {}
+        self.peers = {
+            'tl1': ['tl2'],
+            'sw1': ['sw2', 'sw3', 'sw4', 'sw5'],
+            'sw2': ['sw1', 'sw3', 'sw4'],
+            'sw3': ['sw1', 'sw3'],
+            'sw4': ['sw1'],
+        }
+        self.no_forms = {}
         self.forms = {
             self.area: {
                 EvalKind.SELF: self.self_form,
                 EvalKind.PEER_MANAGER: self.peer_manager_form,
                 EvalKind.MANAGER_PEER: self.manager_peer_form,
+                EvalKind.PEER_TO_PEER: self.peer_to_peer_form,
             }
         }
         self.forms_with_other_area = {
-            'NO_AREA': {
-                EvalKind.SELF: self.self_form,
-                EvalKind.PEER_MANAGER: self.peer_manager_form,
-                EvalKind.MANAGER_PEER: self.manager_peer_form,
-            }
+            'NO_AREA': {}
         }
 
     def test_get_employee_manager_for_cto(self):
@@ -105,19 +112,10 @@ class TestEmployeeAdapter(TestCase):
         self.assertEqual(employees_by_manager['cto'], ['tl1'])
         self.assertEqual(employees_by_manager['tl1'], ['sw1', 'sw2'])
 
-
     def test_build_reviewers_correct_number_of_evals(self):
-        reviewers = self.sut.build_reviewers(self.employees, self.forms)
+        reviewers = self.sut.build_reviewers(self.employees, self.no_peers, self.forms)
 
-        self.assertIn('ceo', reviewers)
-        self.assertIn('cto', reviewers)
-        self.assertIn('tl1', reviewers)
-        self.assertIn('tl2', reviewers)
-        self.assertIn('sw1', reviewers)
-        self.assertIn('sw2', reviewers)
-        self.assertIn('sw3', reviewers)
-        self.assertIn('sw4', reviewers)
-        self.assertIn('sw5', reviewers)
+        self.__assert_all_employees_in(reviewers)
         self.assertEqual(2, len(reviewers['ceo'].evals))
         self.assertEqual(4, len(reviewers['cto'].evals))
         self.assertEqual(4, len(reviewers['tl1'].evals))
@@ -131,6 +129,7 @@ class TestEmployeeAdapter(TestCase):
     def test_build_reviewers_correct_if_not_an_employee_and_is_manager(self):
         reviewers = self.sut.build_reviewers(
             self.employees_with_blacklisted_reviewers,
+            self.no_peers,
             self.forms)
 
         self.assertIn('ceo', reviewers)
@@ -139,6 +138,7 @@ class TestEmployeeAdapter(TestCase):
     def test_build_reviewers_correct_number_of_evals_when_uncompleted_employees(self):
         reviewers = self.sut.build_reviewers(
             self.employees_with_blacklisted_reviewers,
+            self.no_peers,
             self.forms)
 
         self.assertIn('ceo', reviewers)
@@ -154,7 +154,7 @@ class TestEmployeeAdapter(TestCase):
         self.assertEqual(2, len(reviewers['sw2'].evals))
 
     def test_build_reviewers_correct_evals(self):
-        reviewers = self.sut.build_reviewers(self.employees, self.forms)
+        reviewers = self.sut.build_reviewers(self.employees, self.no_peers, self.forms)
 
         self.assertEqual(reviewers['ceo'].evals, [
             Eval(reviewee='ceo',
@@ -198,31 +198,39 @@ class TestEmployeeAdapter(TestCase):
         ])
 
     def test_build_reviewers_with_no_forms(self):
-        no_forms = {}
-
         with self.assertRaises(MissingDataException):
-            self.sut.build_reviewers(self.employees, no_forms)
+            self.sut.build_reviewers(self.employees, self.no_peers, self.no_forms)
 
     def test_build_reviewers_with_other_area_forms(self):
         form_with_other_area = self.forms_with_other_area
 
         with self.assertRaises(MissingDataException):
-            self.sut.build_reviewers(self.employees, form_with_other_area)
+            self.sut.build_reviewers(self.employees, self.no_peers, form_with_other_area)
 
-    def test_build_message_correct(self):
-        message = 'some message'
-        employee = self.employees['cto']
-        reviewer = Reviewer(
-            employee=employee,
-            evals=[
-                Eval(reviewee=employee.uid, kind=EvalKind.SELF, form="coolform"),
-                Eval(reviewee='another', kind=EvalKind.MANAGER_PEER, form="coolformformanagers"),
-            ]
-        )
+    def test_build_reviewers_with_peers(self):
+        reviewers = self.sut.build_reviewers(self.employees, self.peers, self.forms)
 
-        eval_message = self.sut.build_message(message, reviewer)
+        self.__assert_all_employees_in(reviewers)
+        self.assertEqual(2, len(reviewers['ceo'].evals))
+        self.assertEqual(4, len(reviewers['cto'].evals))
+        self.assertEqual(5, len(reviewers['tl1'].evals))
+        self.assertEqual(5, len(reviewers['tl2'].evals))
+        self.assertEqual(6, len(reviewers['sw1'].evals))
+        self.assertEqual(5, len(reviewers['sw2'].evals))
+        self.assertEqual(4, len(reviewers['sw3'].evals))
+        self.assertEqual(3, len(reviewers['sw4'].evals))
+        self.assertEqual(2, len(reviewers['sw5'].evals))
 
-        self.assertIn(employee.uid, eval_message)
+    def __assert_all_employees_in(self, reviewers):
+        self.assertIn('ceo', reviewers)
+        self.assertIn('cto', reviewers)
+        self.assertIn('tl1', reviewers)
+        self.assertIn('tl2', reviewers)
+        self.assertIn('sw1', reviewers)
+        self.assertIn('sw2', reviewers)
+        self.assertIn('sw3', reviewers)
+        self.assertIn('sw4', reviewers)
+        self.assertIn('sw5', reviewers)
 
 class TestReviewerAdapter(TestCase):
 
