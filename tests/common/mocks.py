@@ -417,6 +417,9 @@ class MockGoogleAPI(GoogleAPI,
     def get_file_rows(self, file_id: str, rows_range: str):
         return self.file_rows_by_id_response.get(file_id, [])
 
+    def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
+        return
+
     def get_files_from_folder(self, folder_id):
         return self.files_from_folder_response
 

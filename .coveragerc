@@ -16,3 +16,4 @@ omit =
     venv/*
     tests/*
     setup.py
+    google_auth.py
