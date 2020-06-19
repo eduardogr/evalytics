@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from evalytics.exceptions import MissingDataException
+from evalytics.exceptions import MissingGoogleDriveFolderException
 from evalytics.forms import ReviewerResponseKeyDictStrategy
 from evalytics.models import ReviewerResponse
 from evalytics.forms import FormsPlatformFactory, GoogleForms
@@ -36,6 +37,49 @@ class TestGoogleForms(TestCase):
 
     def setUp(self):
         self.sut = GoogleFormsSut()
+
+    def test_get_peers_assignment_ok_when_no_files(self):
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([])
+
+        peers_assignment = self.sut.get_peers_assignment()
+
+        self.assertEqual(0, len(peers_assignment))
+
+    def test_get_peers_assignment_missing_folder_when_no_folder(self):
+        with self.assertRaises(MissingGoogleDriveFolderException):
+            self.sut.get_peers_assignment()
+
+    def test_get_peers_assignment_ok_when_files(self):
+        peer_assignment_file = [
+            ['timestamp', 'who will review em1?', 'who will review em2?'],
+            ['111111', 'em2,em3', 'em1,em3']
+        ]
+        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        self.sut.set_files_from_folder_response([{
+                'id': 'assignments from manager1',
+                'name': 'Manager Evaluation By Team Member',
+            }, {
+                'id': 'assignments from manager2',
+                'name': 'Report Evaluation by Manager',
+            }, {
+                'id': 'assignments from manager3',
+                'name': 'Self Evaluation',
+            },
+        ])
+        self.sut.set_file_rows_by_id('assignments from manager1', peer_assignment_file)
+        self.sut.set_file_rows_by_id('assignments from manager2', peer_assignment_file)
+        self.sut.set_file_rows_by_id('assignments from manager3', peer_assignment_file)
+
+        peers_assignment = self.sut.get_peers_assignment()
+
+        self.assertEqual(3, len(peers_assignment))
+        self.assertIn('em1', peers_assignment)
+        self.assertIn('em2', peers_assignment)
+        self.assertIn('em3', peers_assignment)
+        self.assertEqual(peers_assignment['em1'], ['em2'])
+        self.assertEqual(peers_assignment['em2'], ['em1'])
+        self.assertEqual(peers_assignment['em3'], ['em1', 'em2'])
 
     def test_get_responses_when_no_files(self):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})

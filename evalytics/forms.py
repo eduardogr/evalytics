@@ -28,12 +28,14 @@ class ReviewerResponseKeyDictStrategy:
             return reviewer_response.reviewer
 
         else:
-            raise NotImplementedError('ExtractResponseDataStrategy does not implement %s strategy' % data_kind)
+            raise NotImplementedError(
+                'ExtractResponseDataStrategy does not implement {} strategy'.format(data_kind))
 
 class GoogleForms(GoogleAPI, Config):
 
     def get_peers_assignment(self):
-        return self.__read_peers_assignment()
+        files = self.__get_peers_assignment_response_files()
+        return self.__read_peers_assignment(files)
 
     def get_responses(self):
         response_kind = ReviewerResponseKeyDictStrategy.REVIEWER_RESPONSE
@@ -139,7 +141,7 @@ class GoogleForms(GoogleAPI, Config):
 
         return responses_by_file
 
-    def __read_peers_assignment(self):
+    def __get_peers_assignment_response_files(self):
         google_folder = super().read_google_folder()
         assignments_folder = super().read_assignments_folder()
         assignments_manager_forms_folder = super().read_assignments_manager_forms_folder()
@@ -160,8 +162,9 @@ class GoogleForms(GoogleAPI, Config):
             raise MissingGoogleDriveFolderException(
                 "Missing folder: {}".format(assignments_manager_forms_folder))
 
-        files = super().get_files_from_folder(folder.get('id'))
+        return super().get_files_from_folder(folder.get('id'))
 
+    def __read_peers_assignment(self, files):
         number_of_employees = int(super().read_company_number_of_employees())
         responses_range = 'A1:S' + str(number_of_employees + 2)
 
