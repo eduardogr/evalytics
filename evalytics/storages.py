@@ -19,7 +19,7 @@ class StorageFactory(Config):
 class GoogleStorage(GoogleAPI, Config):
 
     # TODO: should be config
-    FORM_MAP_RANGE = 'A2:D4'
+    FORM_MAP_RANGE = 'A2:E4'
 
     def setup(self):
         folder_name = super().read_google_folder()
@@ -96,7 +96,7 @@ class GoogleStorage(GoogleAPI, Config):
         # Creating models
         forms = {}
         for row in values:
-            if len(row) < 4:
+            if len(row) < 5:
                 raise MissingDataException("Missing data in forms, row: %s" % (row))
 
             form_area = row[0].strip()

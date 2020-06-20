@@ -1,10 +1,12 @@
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import base64
+from slack import WebClient
+from slack.errors import SlackApiError
 
-from .google_api import GoogleAPI
-from .models import Reviewer, EvalKind
-from .config import Config, ProvidersConfig
+from evalytics.google_api import GoogleAPI
+from evalytics.models import Reviewer, EvalKind
+from evalytics.config import Config, ProvidersConfig
 
 class CommunicationChannelFactory(Config):
 
@@ -13,7 +15,69 @@ class CommunicationChannelFactory(Config):
         if communication_channel_provider == ProvidersConfig.GMAIL:
             return GmailChannel()
 
+        elif communication_channel_provider == ProvidersConfig.SLACK:
+            return SlackChannel()
+
         raise ValueError(communication_channel_provider)
+
+class SlackChannel(Config):
+
+    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
+        if is_reminder:
+            message = 'You have pending evals:'
+        else:
+            message = 'You have new assignments !'
+
+        token = super().get_slack_token()
+        text_param = super().get_slack_text_param()
+        channel_param = super().get_slack_channel_param()
+        as_user_param = super().slack_message_as_user_param()
+        is_direct_message = super().slack_message_is_direct()
+
+        if is_direct_message:
+            channel = channel_param.format(reviewer.uid)
+
+        client = WebClient(token=token)
+        blocks = self.__build_blocks(text_param.format(message), reviewer)
+
+        try:
+            _ = client.chat_postMessage(
+                channel=channel,
+                blocks=blocks,
+                as_user=as_user_param)
+
+        except SlackApiError as e:
+            assert e.response["ok"] is False
+            assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+            #print(f"Got an error: {e.response['error']}")
+
+    def __build_blocks(self, message, reviewer: Reviewer):
+        list_of_evals = ''
+        for e_eval in reviewer.evals:
+            if e_eval.kind is EvalKind.SELF:
+                reviewee = 'Your self review'
+            else:
+                reviewee = e_eval.reviewee
+
+            list_of_evals = list_of_evals + \
+                    '- <' + e_eval.form + '|*' + reviewee + '*>\n'
+
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Hi {}:\n{}".format(reviewer.uid, message)
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "{}".format(list_of_evals)
+                }
+            }
+        ]
 
 class GmailChannel(GoogleAPI, Config):
 

@@ -19,7 +19,10 @@ class ProvidersConfig(ConfigReader):
     FORMS_PLATFORM = 'forms_platform'
 
     GOOGLE_DRIVE = "google_drive"
+
     GMAIL = "gmail"
+    SLACK = "slack"
+
     GOOGLE_FORMS = "google_forms"
 
     def read_storage_provider(self):
@@ -33,6 +36,38 @@ class ProvidersConfig(ConfigReader):
     def read_forms_platform_provider(self):
         config = super().read()
         return config.get(self.PROVIDERS).get(self.FORMS_PLATFORM)
+
+class SlackProviderConfig(ConfigReader):
+
+    SLACK_PROVIDER = 'slack_provider'
+
+    TOKEN = 'token'
+    IS_DIRECT_MESSAGE = 'is_direct_message'
+    PARAMS = 'params'
+
+    PARAMS_TEXT = 'text'
+    PARAMS_CHANNEL = 'channel'
+    PARAMS_AS_USER = 'as_user'
+
+    def get_slack_token(self):
+        config = super().read()
+        return config.get(self.SLACK_PROVIDER).get(self.TOKEN)
+
+    def get_slack_text_param(self):
+        config = super().read()
+        return config.get(self.SLACK_PROVIDER).get(self.PARAMS).get(self.PARAMS_TEXT)
+
+    def get_slack_channel_param(self):
+        config = super().read()
+        return config.get(self.SLACK_PROVIDER).get(self.PARAMS).get(self.PARAMS_CHANNEL)
+
+    def slack_message_is_direct(self):
+        config = super().read()
+        return config.get(self.SLACK_PROVIDER).get(self.IS_DIRECT_MESSAGE)
+
+    def slack_message_as_user_param(self):
+        config = super().read()
+        return config.get(self.SLACK_PROVIDER).get(self.PARAMS).get(self.PARAMS_AS_USER)
 
 class GmailProviderConfig(ConfigReader):
 
@@ -126,6 +161,7 @@ class CompanyConfig(ConfigReader):
 
 class Config(
         ProvidersConfig,
+        SlackProviderConfig,
         GmailProviderConfig,
         GoogleDriveProviderConfig,
         CompanyConfig):

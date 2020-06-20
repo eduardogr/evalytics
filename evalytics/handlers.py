@@ -70,7 +70,7 @@ class EvalDeliveryHandler(tornado.web.RequestHandler, Mapper):
             reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
             is_reminder_arg = self.get_argument('is_reminder', False, strip=False)
 
-            is_reminder = super().json_to_bool(is_reminder_arg)
+            is_reminder = super().str_to_bool(is_reminder_arg)
             reviewers = super().json_to_reviewers(reviewers_arg)
 
             evals_sent, evals_not_sent = SendEvalUseCase().send_eval(reviewers, is_reminder=is_reminder)
@@ -145,7 +145,7 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
 
             managers = super().json_to_list(managers_arg)
             employee_uids = super().json_to_list(employee_uids_arg)
-            dry_run = super().json_to_bool(dry_run_arg)
+            dry_run = super().str_to_bool(dry_run_arg)
             
             created, not_created = GenerateEvalReportsUseCase().generate(
                 dry_run,

@@ -54,17 +54,17 @@ class TestJsonToReviewer(TestCase):
 
         self.assertEqual(self.reviewer_with_evals, reviewer['mail'])
 
-    def test_json_to_bool_when_true(self):
+    def test_str_to_bool_when_true(self):
         json_bool = "True"
 
-        result = self.sut.json_to_bool(json_bool)
+        result = self.sut.str_to_bool(json_bool)
 
         self.assertEqual(True, result)
 
-    def test_json_to_bool_when_false(self):
+    def test_str_to_bool_when_false(self):
         json_bool = "anything not true"
 
-        result = self.sut.json_to_bool(json_bool)
+        result = self.sut.str_to_bool(json_bool)
 
         self.assertEqual(False, result)
 

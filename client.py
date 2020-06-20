@@ -12,7 +12,6 @@ class FileManager:
     def open(self, filename: str, mode: str):
         return open(filename, mode)
 
-
 class EvalyticsRequests:
 
     BASE_URL = "http://evalytics:8080"
@@ -339,8 +338,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
             else:
                 print("[ERROR] Something failed sending emails")
-                print("  - HTTP code: %s" % response.status_code)
-                print("  - Error response: %s" % response.content)
+                print("  - Error response: {}".format(response['error']))
 
     def help(self, command):
         print("Command '%s' not expected" % command)
