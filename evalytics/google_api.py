@@ -153,6 +153,8 @@ class SheetsService(GoogleService):
     SHEETS_SERVICE_ID = 'sheets'
     SHEETS_SERVICE_VERSION = 'v4'
 
+    cached_file_values = {}
+
     def create_spreadsheet(self, file_metadata):
         sheets_service = super().get_service(
             self.SHEETS_SERVICE_ID,
@@ -168,12 +170,25 @@ class SheetsService(GoogleService):
             self.SHEETS_SERVICE_ID,
             self.SHEETS_SERVICE_VERSION
         )
+
+        if spreadsheet_id in self.cached_file_values:
+            if rows_range in self.cached_file_values[spreadsheet_id]:
+                return self.cached_file_values[spreadsheet_id][rows_range]
+
         sheet = sheets_service.spreadsheets()
         result = sheet.values().get(
             spreadsheetId=spreadsheet_id,
             range=rows_range
         ).execute()
-        return result.get('values', [])
+        values = result.get('values', [])
+
+        if len(values) > 0:
+            self.cached_file_values.update({
+                spreadsheet_id: {
+                    rows_range: values
+                }
+            })
+        return values
 
     def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
         sheets_service = super().get_service(
@@ -414,13 +429,13 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         except HttpError as e:
             error_reason = json.loads(e.content)
             error = error_reason['error']
-            google_api_client_http_error = GoogleApiClientHttpError(
+            http_error = GoogleApiClientHttpError(
                 error['code'],
                 error['message'],
                 error['status'],
                 error['details']
             )
-            raise GoogleApiClientHttpErrorException(google_api_client_http_error)
+            raise GoogleApiClientHttpErrorException(http_error)
 
     def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
         return super().update_file_values(
@@ -573,13 +588,13 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         except HttpError as e:
             error_reason = json.loads(e.content)
             error = error_reason['error']
-            google_api_client_http_error = GoogleApiClientHttpError(
+            http_error = GoogleApiClientHttpError(
                 error['code'],
                 error['message'],
                 error['status'],
                 error['details']
             )
-            raise GoogleApiClientHttpErrorException(google_api_client_http_error)
+            raise GoogleApiClientHttpErrorException(http_error)
 
     def __get_files(self, query: str):
         try:
@@ -600,13 +615,13 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         except HttpError as err:
             error_reason = json.loads(e.content)
             error = error_reason['error']
-            google_api_client_http_error = GoogleApiClientHttpError(
+            http_error = GoogleApiClientHttpError(
                 error['code'],
                 error['message'],
                 error['status'],
                 error['details']
             )
-            raise GoogleApiClientHttpErrorException(google_api_client_http_error)
+            raise GoogleApiClientHttpErrorException(http_error)
 
     def __get_indext_after_firt_horizontal_rule(self, content):
         horizontal_rule_was_seen = False

@@ -21,7 +21,7 @@ class GetReviewersUseCase(
         forms_platform = super().get_forms_platform()
         return super().build_reviewers(
             storage.get_employees(),
-            forms_platform.get_peers_assignment(),
+            forms_platform.get_peers_assignment()['peers'],
             storage.get_forms())
 
 class SendEvalUseCase(CommunicationChannelFactory):
@@ -114,5 +114,5 @@ class GeneratePeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
         storage = super().get_storage()
         forms_platform = super().get_forms_platform()
 
-        peers_assignment = forms_platform.get_peers_assignment()
+        peers_assignment = forms_platform.get_peers_assignment()['peers']
         storage.write_peers_assignment(peers_assignment)

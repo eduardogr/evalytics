@@ -188,7 +188,8 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
             self.finish({
                 'success': True,
                 'response': {
-                    'peers_assignment': peers_assignment
+                    'peers_assignment': peers_assignment['peers'],
+                    'unanswered_forms': peers_assignment['unanswered_forms'],
                 }
             })
         except MissingDataException as e:
