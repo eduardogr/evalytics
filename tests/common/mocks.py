@@ -4,7 +4,7 @@ import tornado.web
 from evalytics.config import Config, ConfigReader
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import CommunicationChannelFactory
-from evalytics.communications_channels import GmailChannel
+from evalytics.communications_channels import GmailChannel, SlackChannel, SlackClient
 from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.google_api import GoogleAPI, GoogleService
@@ -396,6 +396,36 @@ class MockGmailService(GmailService):
     def get_send_calls(self):
         return self.send_calls
 
+class MockSlackClient(SlackClient):
+
+    def __init__(self):
+        self.chat_post_message_calls = {}
+
+    def chat_post_message(
+            self,
+            token,
+            channel,
+            blocks,
+            as_user):
+        current_call_number = 0
+
+        if len(self.chat_post_message_calls) > 0:
+            sorted_keys = sorted(self.chat_post_message_calls.keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+        self.chat_post_message_calls.update({
+            current_call_number: {
+                'token': token,
+                'channel': channel,
+                'blocks': blocks,
+                'as_user': as_user,
+            }
+        })
+
+    def get_chat_post_message_calls(self):
+        return self.chat_post_message_calls
+
 class MockGoogleAPI(GoogleAPI,
                     MockDriveService,
                     MockSheetsService,
@@ -524,6 +554,15 @@ class MockConfigReader(ConfigReader):
                 'eval_report_template_id': 'ID',
                 'eval_report_prefix_name': 'Prefix'
             },
+            'slack_provider': {
+                'token': 'TOKEN::TOKEN',
+                'is_direct_message': True,
+                'params': {
+                    'text': "{}",
+                    'channel': "@{}",
+                    'as_user': True
+                }
+            },
             'company': {
                 'domain': 'mock_domain.com',
                 'number_of_employees': 20,
@@ -541,6 +580,7 @@ class MockConfig(Config, MockConfigReader):
         self.storage_provider = ""
         self.communications_provider = ""
         self.forms_platform_provider = ""
+        self.response_slack_message_is_direct = None
 
     def read_storage_provider(self):
         return self.storage_provider
@@ -593,6 +633,21 @@ class MockConfig(Config, MockConfigReader):
     def read_google_eval_report_prefix_name(self):
         return "PREFIX: "
 
+    def get_slack_token(self):
+        return "TOKEN::TOKEN"
+
+    def get_slack_text_param(self):
+        return "This is an incredible text"
+
+    def get_slack_channel_param(self):
+        return "@{}"
+
+    def slack_message_is_direct(self):
+        return self.response_slack_message_is_direct
+
+    def slack_message_as_user_param(self):
+        return True
+
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
 
@@ -604,6 +659,9 @@ class MockConfig(Config, MockConfigReader):
 
     def set_forms_platform_provider(self, provider):
         self.forms_platform_provider = provider
+
+    def set_slack_message_is_direct(self, slack_message_is_direct):
+        self.response_slack_message_is_direct = slack_message_is_direct
 
 class MockStorageFactory(StorageFactory, MockConfig):
 

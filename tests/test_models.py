@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from evalytics.models import Employee, Eval, EvalKind, Reviewer
 from evalytics.models import ReviewerResponseBuilder
+from evalytics.models import GoogleApiClientHttpError
 
 class TestEval(TestCase):
 
@@ -265,3 +266,42 @@ class TestReviewerResponseBuilder(TestCase):
             [('question1', 'answer1'), ('question2', 'answer2')],
             reviewer_response.eval_response
         )
+
+class TestGoogleApiClientHttpError(TestCase):
+
+    def setUp(self):
+        self.code = 200
+        self.message = "This is your friendly human-based text message"
+        self.status = 201
+        self.details = []
+
+    def test_build_correct_google_api_client_http_error(self):
+        # when:
+        sut = GoogleApiClientHttpError(
+            self.code,
+            self.message,
+            self.status,
+            self.details,
+        )
+
+        # then:
+        self.assertEqual(self.code, sut.code)
+        self.assertEqual(self.message, sut.message)
+        self.assertEqual(self.status, sut.status)
+        self.assertEqual(self.details, sut.details)
+
+    def test_to_json_google_api_client_http_error(self):
+        # when:
+        sut = GoogleApiClientHttpError(
+            self.code,
+            self.message,
+            self.status,
+            self.details,
+        )
+        json_http_error = sut.to_json()
+
+        # then:
+        self.assertIn("code", json_http_error)
+        self.assertIn("message", json_http_error)
+        self.assertIn("status", json_http_error)
+        self.assertIn("details", json_http_error)

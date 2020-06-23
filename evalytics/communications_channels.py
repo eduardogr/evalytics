@@ -7,6 +7,7 @@ from slack.errors import SlackApiError
 from evalytics.google_api import GoogleAPI
 from evalytics.models import Reviewer, EvalKind
 from evalytics.config import Config, ProvidersConfig
+from evalytics.exceptions import CommunicationChannelException
 
 class CommunicationChannelFactory(Config):
 
@@ -50,12 +51,12 @@ class SlackChannel(SlackClient, Config):
 
         token = super().get_slack_token()
         text_param = super().get_slack_text_param()
-        channel_param = super().get_slack_channel_param()
+        channel = super().get_slack_channel_param()
         as_user_param = super().slack_message_as_user_param()
         is_direct_message = super().slack_message_is_direct()
 
         if is_direct_message:
-            channel = channel_param.format(reviewer.uid)
+            channel = channel.format(reviewer.uid)
 
         blocks = self.__build_blocks(text_param.format(message), reviewer)
 
@@ -70,6 +71,7 @@ class SlackChannel(SlackClient, Config):
             assert e.response["ok"] is False
             assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
             #print(f"Got an error: {e.response['error']}")
+            raise CommunicationChannelException()
 
     def __build_blocks(self, message, reviewer: Reviewer):
         list_of_evals = ''

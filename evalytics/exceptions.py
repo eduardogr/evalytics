@@ -20,6 +20,11 @@ class GoogleApiClientHttpErrorException(Exception):
     def get_google_api_client_http_error(self):
         return self.google_api_client_http_error
 
+class CommunicationChannelException(CustomException):
+
+    def __str__(self):
+        return super().get_str('CommunicationChannelException')
+
 class MissingGoogleDriveFolderException(CustomException):
 
     def __str__(self):
