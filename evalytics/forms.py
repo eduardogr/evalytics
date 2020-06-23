@@ -166,7 +166,7 @@ class GoogleForms(GoogleAPI, Config):
 
     def __read_peers_assignment(self, files):
         number_of_employees = int(super().read_company_number_of_employees())
-        responses_range = 'A1:S' + str(number_of_employees + 2)
+        responses_range = 'C1:S' + str(number_of_employees + 2)
 
         peers_assignment = {}
         for file in files:

@@ -4,7 +4,8 @@ from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
 from .usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
 from .usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
 from .mappers import Mapper
-from .exceptions import MissingDataException, NoFormsException
+from evalytics.exceptions import MissingDataException, NoFormsException
+from evalytics.exceptions import GoogleApiClientHttpErrorException
 
 class SetupHandler(tornado.web.RequestHandler):
     path = r"/setup"
@@ -201,6 +202,11 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
                     'error': message,
                 }
             })
+        except GoogleApiClientHttpErrorException as e:
+            self.finish({
+                'success': False,
+                'response': e.get_google_api_client_http_error().to_json()
+            })
 
     async def post(self):
         try:
@@ -221,4 +227,9 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
                 'response': {
                     'error': message,
                 }
+            })
+        except GoogleApiClientHttpErrorException as e:
+            self.finish({
+                'success': False,
+                'response': e.get_google_api_client_http_error().to_json()
             })

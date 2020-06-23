@@ -1,12 +1,14 @@
 import pickle
 import os.path
+import json
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-from evalytics.models import EvalKind
+from evalytics.models import EvalKind, GoogleApiClientHttpError
+from evalytics.exceptions import GoogleApiClientHttpErrorException
 
 class GoogleAuth:
     # If modifying these scopes, delete the file token.pickle.
@@ -404,10 +406,21 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         return values
 
     def get_file_rows(self, file_id: str, rows_range: str):
-        return super().get_file_values(
-            file_id,
-            rows_range
-        )
+        try:
+            return super().get_file_values(
+                file_id,
+                rows_range
+            )
+        except HttpError as e:
+            error_reason = json.loads(e.content)
+            error = error_reason['error']
+            google_api_client_http_error = GoogleApiClientHttpError(
+                error['code'],
+                error['message'],
+                error['status'],
+                error['details']
+            )
+            raise GoogleApiClientHttpErrorException(google_api_client_http_error)
 
     def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
         return super().update_file_values(
@@ -557,10 +570,16 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                 if page_token is None:
                     break
             return None
-        except HttpError as err:
-            # TODO: manage this
-            print(err)
-            raise err
+        except HttpError as e:
+            error_reason = json.loads(e.content)
+            error = error_reason['error']
+            google_api_client_http_error = GoogleApiClientHttpError(
+                error['code'],
+                error['message'],
+                error['status'],
+                error['details']
+            )
+            raise GoogleApiClientHttpErrorException(google_api_client_http_error)
 
     def __get_files(self, query: str):
         try:
@@ -579,9 +598,15 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                     return files
             return None
         except HttpError as err:
-            # TODO: manage this
-            print(err)
-            raise err
+            error_reason = json.loads(e.content)
+            error = error_reason['error']
+            google_api_client_http_error = GoogleApiClientHttpError(
+                error['code'],
+                error['message'],
+                error['status'],
+                error['details']
+            )
+            raise GoogleApiClientHttpErrorException(google_api_client_http_error)
 
     def __get_indext_after_firt_horizontal_rule(self, content):
         horizontal_rule_was_seen = False

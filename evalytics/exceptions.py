@@ -1,3 +1,5 @@
+from evalytics.models import GoogleApiClientHttpError
+
 class CustomException(Exception):
     def __init__(self, *args):
         if args:
@@ -10,6 +12,13 @@ class CustomException(Exception):
             return '{0}, {1} '.format(self.message, class_name)
         else:
             return '{0} has been raised'.format(class_name)
+
+class GoogleApiClientHttpErrorException(Exception):
+    def __init__(self, google_api_client_http_error: GoogleApiClientHttpError):
+        self.google_api_client_http_error = google_api_client_http_error
+
+    def get_google_api_client_http_error(self):
+        return self.google_api_client_http_error
 
 class MissingGoogleDriveFolderException(CustomException):
 
