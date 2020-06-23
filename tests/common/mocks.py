@@ -629,7 +629,10 @@ class MockGoogleForms(GoogleForms):
 
     def __init__(self):
         self.evaluations_response = {}
-        self.peers_assignment = {}
+        self.peers_assignment = {
+            'peers': {},
+            'unanswered_forms': {}
+        }
 
     def get_peers_assignment(self):
         return self.peers_assignment
