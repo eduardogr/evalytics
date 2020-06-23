@@ -20,7 +20,27 @@ class CommunicationChannelFactory(Config):
 
         raise ValueError(communication_channel_provider)
 
-class SlackChannel(Config):
+class SlackClient:
+
+    __client = None
+
+    def chat_post_message(
+            self,
+            token,
+            channel,
+            blocks,
+            as_user):
+        return self.__get_client(token).chat_postMessage(
+            channel=channel,
+            blocks=blocks,
+            as_user=as_user)
+
+    def __get_client(self, token):
+        if self.__client is None:
+            self.__client = WebClient(token=token)
+        return self.__client
+
+class SlackChannel(SlackClient, Config):
 
     def send_communication(self, reviewer: Reviewer, is_reminder: bool):
         if is_reminder:
@@ -37,11 +57,11 @@ class SlackChannel(Config):
         if is_direct_message:
             channel = channel_param.format(reviewer.uid)
 
-        client = WebClient(token=token)
         blocks = self.__build_blocks(text_param.format(message), reviewer)
 
         try:
-            _ = client.chat_postMessage(
+            _ = super().chat_post_message(
+                token=token,
                 channel=channel,
                 blocks=blocks,
                 as_user=as_user_param)
