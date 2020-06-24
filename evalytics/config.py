@@ -48,6 +48,7 @@ class SlackProviderConfig(ConfigReader):
     PARAMS_TEXT = 'text'
     PARAMS_CHANNEL = 'channel'
     PARAMS_AS_USER = 'as_user'
+    USERS_MAP = 'users_map'
 
     def get_slack_token(self):
         config = super().read()
@@ -68,6 +69,10 @@ class SlackProviderConfig(ConfigReader):
     def slack_message_as_user_param(self):
         config = super().read()
         return config.get(self.SLACK_PROVIDER).get(self.PARAMS).get(self.PARAMS_AS_USER)
+
+    def get_slack_users_map(self):
+        config = super().read()
+        return config.get(self.SLACK_PROVIDER).get(self.USERS_MAP)
 
 class GmailProviderConfig(ConfigReader):
 

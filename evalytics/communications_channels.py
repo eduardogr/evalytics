@@ -54,9 +54,13 @@ class SlackChannel(SlackClient, Config):
         channel = super().get_slack_channel_param()
         as_user_param = super().slack_message_as_user_param()
         is_direct_message = super().slack_message_is_direct()
+        users_map = super().get_slack_users_map()
 
         if is_direct_message:
-            channel = channel.format(reviewer.uid)
+            reviewer_uid = reviewer.uid
+            if reviewer_uid in users_map:
+                reviewer_uid = users_map.get(reviewer_uid)
+            channel = channel.format(reviewer_uid)
 
         blocks = self.__build_blocks(text_param.format(message), reviewer)
 
