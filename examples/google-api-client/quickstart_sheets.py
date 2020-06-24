@@ -20,18 +20,5 @@ def main():
         print(v)
         print()
 
-
-    service = build('drive', 'v3', credentials=creds)
-
-    # Call the Drive v3 API
-    result = service.files().get(
-        fileId=SAMPLE_SPREADSHEET_ID,
-        fields='*').execute()
-    for k, v in result.items():
-        print(k)
-        print(v)
-        print()
-
-
 if __name__ == '__main__':
     main()

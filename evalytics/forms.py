@@ -180,7 +180,7 @@ class GoogleForms(GoogleAPI, Config):
             if len(rows) < 1:
                 raise MissingDataException("Missing data in response file: %s" % (file.get('name')))
 
-            questions = rows[0][1:]
+            questions = rows[0]
             reviewees = list(map(self.__get_reviewee_from_question, questions))
 
             answers = rows[1:]
@@ -190,7 +190,7 @@ class GoogleForms(GoogleAPI, Config):
                 )
 
             for answer in answers:
-                assignments = list(zip(reviewees, answer[1:]))
+                assignments = list(zip(reviewees, answer[0:]))
                 for assignment in assignments:
                     reviewee = assignment[0]
                     reviewers_assigned = list(map(str.strip, assignment[1].split(',')))

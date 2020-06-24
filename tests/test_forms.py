@@ -62,8 +62,20 @@ class TestGoogleForms(TestCase):
     def test_get_peers_assignment_ok_when_files(self):
         self.__given_files_within_assignments_folder()
         peer_assignment_file = [
-            ['timestamp', 'who will review em1?', 'who will review em2?'],
-            ['111111', 'em2,em3', 'em1,em3']
+            [
+                'who will review em1?',
+                'who will review em2?',
+                'who will review em3?',
+                'who will review em4?',
+                'who will review em5?',
+            ],
+            [
+                'sre1, em4',
+                'em3',
+                'pmo1, em2',
+                'em1, sre1',
+                'pmo1, se1'
+            ]
         ]
         self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
         self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
@@ -71,19 +83,34 @@ class TestGoogleForms(TestCase):
 
         peers_assignment = self.sut.get_peers_assignment()['peers']
 
-        self.assertEqual(3, len(peers_assignment))
+        self.assertEqual(7, len(peers_assignment))
         self.assertIn('em1', peers_assignment)
         self.assertIn('em2', peers_assignment)
         self.assertIn('em3', peers_assignment)
-        self.assertEqual(peers_assignment['em1'], ['em2'])
-        self.assertEqual(peers_assignment['em2'], ['em1'])
-        self.assertEqual(peers_assignment['em3'], ['em1', 'em2'])
+        self.assertIn('em4', peers_assignment)
+        self.assertIn('sre1', peers_assignment)
+        self.assertIn('se1', peers_assignment)
+        self.assertIn('pmo1', peers_assignment)
+        self.assertEqual(1, len(peers_assignment['em1']))
+        self.assertEqual(1, len(peers_assignment['em2']))
+        self.assertEqual(1, len(peers_assignment['em3']))
+        self.assertEqual(1, len(peers_assignment['em4']))
+        self.assertEqual(2, len(peers_assignment['sre1']))
+        self.assertEqual(1, len(peers_assignment['se1']))
+        self.assertEqual(2, len(peers_assignment['pmo1']))
+        self.assertEqual(peers_assignment['em1'], ['em4'])
+        self.assertEqual(peers_assignment['em2'], ['em3'])
+        self.assertEqual(peers_assignment['em3'], ['em2'])
+        self.assertEqual(peers_assignment['em4'], ['em1'])
+        self.assertEqual(peers_assignment['sre1'], ['em1', 'em4'])
+        self.assertEqual(peers_assignment['se1'], ['em5'])
+        self.assertEqual(peers_assignment['pmo1'], ['em3', 'em5'])
 
     def test_get_peers_assignment_ok_when_repeated_reviewees(self):
         self.__given_files_within_assignments_folder()
         peer_assignment_file = [
-            ['timestamp', 'who will review em1?', 'who will review em2?'],
-            ['111111', 'em3,em3,em3', 'em3,em3']
+            ['who will review em1?', 'who will review em2?'],
+            ['em3,em3,em3', 'em3,em3']
         ]
         self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
         self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
@@ -93,6 +120,7 @@ class TestGoogleForms(TestCase):
 
         self.assertEqual(1, len(peers_assignment))
         self.assertIn('em3', peers_assignment)
+        self.assertEqual(2, len(peers_assignment['em3']))
         self.assertEqual(peers_assignment['em3'], ['em1', 'em2'])
 
     def test_get_responses_when_no_files(self):
