@@ -71,6 +71,7 @@ class TestSlackChannel(TestCase):
                 form='any form')]
         )
         self.any_mail_subject = 'any mail subject'
+        self.sut.set_slack_users_map({})
 
     def test_send_communication_when_reviewer_with_no_evals(self):
         reviewer = self.reviewer_with_no_evals

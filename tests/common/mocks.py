@@ -561,7 +561,8 @@ class MockConfigReader(ConfigReader):
                     'text': "{}",
                     'channel': "@{}",
                     'as_user': True
-                }
+                },
+                'users_map': {}
             },
             'company': {
                 'domain': 'mock_domain.com',
@@ -581,6 +582,7 @@ class MockConfig(Config, MockConfigReader):
         self.communications_provider = ""
         self.forms_platform_provider = ""
         self.response_slack_message_is_direct = None
+        self.slack_users_map = []
 
     def read_storage_provider(self):
         return self.storage_provider
@@ -648,6 +650,9 @@ class MockConfig(Config, MockConfigReader):
     def slack_message_as_user_param(self):
         return True
 
+    def get_slack_users_map(self):
+        return self.slack_users_map
+
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
 
@@ -662,6 +667,9 @@ class MockConfig(Config, MockConfigReader):
 
     def set_slack_message_is_direct(self, slack_message_is_direct):
         self.response_slack_message_is_direct = slack_message_is_direct
+
+    def set_slack_users_map(self, users_map):
+        self.slack_users_map = users_map
 
 class MockStorageFactory(StorageFactory, MockConfig):
 

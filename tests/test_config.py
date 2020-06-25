@@ -52,6 +52,10 @@ class TestSlackProviderConfig(TestCase):
         slack_message_as_user_param = self.sut.slack_message_as_user_param()
         self.assertEqual(True, slack_message_as_user_param)
 
+    def test_get_slack_users_map(self):
+        slack_message_as_user_param = self.sut.get_slack_users_map()
+        self.assertEqual({}, slack_message_as_user_param)
+
 class TestGmailProviderConfig(TestCase):
 
     def setUp(self):
