@@ -56,11 +56,11 @@ class TestEmployeeAdapter(TestCase):
         }
         self.no_peers = {}
         self.peers = {
-            'tl1': ['tl2'],
-            'sw1': ['sw2', 'sw3', 'sw4', 'sw5'],
-            'sw2': ['sw1', 'sw3', 'sw4'],
-            'sw3': ['sw1', 'sw3'],
-            'sw4': ['sw1'],
+            'tl1': ['tl2', 'tl1', 'sw1', 'sw2'],
+            'sw1': ['tl1', 'sw1', 'sw2', 'sw3', 'sw4', 'sw5'],
+            'sw2': ['sw1', 'sw2', 'sw3', 'sw4'],
+            'sw3': ['tl2', 'sw1', 'sw3'],
+            'sw4': ['tl2', 'sw1'],
         }
         self.no_forms = {}
         self.forms = {
@@ -217,7 +217,7 @@ class TestEmployeeAdapter(TestCase):
         self.assertEqual(5, len(reviewers['tl2'].evals))
         self.assertEqual(6, len(reviewers['sw1'].evals))
         self.assertEqual(5, len(reviewers['sw2'].evals))
-        self.assertEqual(4, len(reviewers['sw3'].evals))
+        self.assertEqual(3, len(reviewers['sw3'].evals))
         self.assertEqual(3, len(reviewers['sw4'].evals))
         self.assertEqual(2, len(reviewers['sw5'].evals))
 

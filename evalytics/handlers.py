@@ -4,7 +4,8 @@ from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
 from .usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
 from .usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
 from .mappers import Mapper
-from .exceptions import MissingDataException, NoFormsException
+from evalytics.exceptions import MissingDataException, NoFormsException
+from evalytics.exceptions import GoogleApiClientHttpErrorException
 
 class SetupHandler(tornado.web.RequestHandler):
     path = r"/setup"
@@ -70,7 +71,7 @@ class EvalDeliveryHandler(tornado.web.RequestHandler, Mapper):
             reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
             is_reminder_arg = self.get_argument('is_reminder', False, strip=False)
 
-            is_reminder = super().json_to_bool(is_reminder_arg)
+            is_reminder = super().str_to_bool(is_reminder_arg)
             reviewers = super().json_to_reviewers(reviewers_arg)
 
             evals_sent, evals_not_sent = SendEvalUseCase().send_eval(reviewers, is_reminder=is_reminder)
@@ -145,7 +146,7 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
 
             managers = super().json_to_list(managers_arg)
             employee_uids = super().json_to_list(employee_uids_arg)
-            dry_run = super().json_to_bool(dry_run_arg)
+            dry_run = super().str_to_bool(dry_run_arg)
             
             created, not_created = GenerateEvalReportsUseCase().generate(
                 dry_run,
@@ -187,7 +188,8 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
             self.finish({
                 'success': True,
                 'response': {
-                    'peers_assignment': peers_assignment
+                    'peers_assignment': peers_assignment['peers'],
+                    'unanswered_forms': peers_assignment['unanswered_forms'],
                 }
             })
         except MissingDataException as e:
@@ -200,6 +202,11 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
                 'response': {
                     'error': message,
                 }
+            })
+        except GoogleApiClientHttpErrorException as e:
+            self.finish({
+                'success': False,
+                'response': e.get_google_api_client_http_error().to_json()
             })
 
     async def post(self):
@@ -221,4 +228,9 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
                 'response': {
                     'error': message,
                 }
+            })
+        except GoogleApiClientHttpErrorException as e:
+            self.finish({
+                'success': False,
+                'response': e.get_google_api_client_http_error().to_json()
             })

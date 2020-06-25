@@ -1,10 +1,11 @@
 
 import tornado.web
+from googleapiclient.errors import HttpError
 
 from evalytics.config import Config, ConfigReader
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
 from evalytics.communications_channels import CommunicationChannelFactory
-from evalytics.communications_channels import GmailChannel
+from evalytics.communications_channels import GmailChannel, SlackChannel, SlackClient
 from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.google_api import GoogleAPI, GoogleService
@@ -83,7 +84,7 @@ class RawSheetsServiceMock:
                         class Get:
                             def execute(self):
                                 return {
-                                    'values': []
+                                    'values': ['something']
                                 }
                         return Get()
 
@@ -267,6 +268,7 @@ class MockSheetsService(SheetsService):
 
     def __init__(self):
         self.calls = {}
+        self.__get_file_values_will_raise_exception = []
 
     def create_spreadsheet(self, file_metadata):
         self.__update_calls(
@@ -280,16 +282,37 @@ class MockSheetsService(SheetsService):
         }
 
     def get_file_values(self, spreadsheet_id, rows_range):
+        if spreadsheet_id in self.__get_file_values_will_raise_exception:
+            content = '{"error": {"code": 429,"message": "this is a test error message","status": 429,"details": []}}'
+            raise HttpError(resp='', content=bytes(content, 'utf-8'))
+
         self.__update_calls(
-            'get_file_rows_from_folder',
+            'get_file_values',
             params={
                 'spreadsheet_id': spreadsheet_id,
-                'rows_range': rows_range,   
+                'rows_range': rows_range,
             }
         )
         return {
             'values': ['whatever']
         }
+
+    def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
+        self.__update_calls(
+            'update_file_values',
+            params={
+                'spreadsheet_id': spreadsheet_id,
+                'rows_range': rows_range,
+                'value_input_option': value_input_option,
+                'values': values,
+            }
+        )
+        return {
+            'values': ['whatever']
+        }
+
+    def raise_exception_for_get_file_values_for_ids(self, spreadsheet_collection):
+        self.__get_file_values_will_raise_exception = spreadsheet_collection
 
     def get_calls(self):
         return self.calls
@@ -395,6 +418,36 @@ class MockGmailService(GmailService):
 
     def get_send_calls(self):
         return self.send_calls
+
+class MockSlackClient(SlackClient):
+
+    def __init__(self):
+        self.chat_post_message_calls = {}
+
+    def chat_post_message(
+            self,
+            token,
+            channel,
+            blocks,
+            as_user):
+        current_call_number = 0
+
+        if len(self.chat_post_message_calls) > 0:
+            sorted_keys = sorted(self.chat_post_message_calls.keys())
+            sorted_keys.reverse()
+            current_call_number = sorted_keys[0] + 1
+
+        self.chat_post_message_calls.update({
+            current_call_number: {
+                'token': token,
+                'channel': channel,
+                'blocks': blocks,
+                'as_user': as_user,
+            }
+        })
+
+    def get_chat_post_message_calls(self):
+        return self.chat_post_message_calls
 
 class MockGoogleAPI(GoogleAPI,
                     MockDriveService,
@@ -524,6 +577,16 @@ class MockConfigReader(ConfigReader):
                 'eval_report_template_id': 'ID',
                 'eval_report_prefix_name': 'Prefix'
             },
+            'slack_provider': {
+                'token': 'TOKEN::TOKEN',
+                'is_direct_message': True,
+                'params': {
+                    'text': "{}",
+                    'channel': "@{}",
+                    'as_user': True
+                },
+                'users_map': {}
+            },
             'company': {
                 'domain': 'mock_domain.com',
                 'number_of_employees': 20,
@@ -541,6 +604,8 @@ class MockConfig(Config, MockConfigReader):
         self.storage_provider = ""
         self.communications_provider = ""
         self.forms_platform_provider = ""
+        self.response_slack_message_is_direct = None
+        self.slack_users_map = []
 
     def read_storage_provider(self):
         return self.storage_provider
@@ -593,6 +658,24 @@ class MockConfig(Config, MockConfigReader):
     def read_google_eval_report_prefix_name(self):
         return "PREFIX: "
 
+    def get_slack_token(self):
+        return "TOKEN::TOKEN"
+
+    def get_slack_text_param(self):
+        return "This is an incredible text"
+
+    def get_slack_channel_param(self):
+        return "@{}"
+
+    def slack_message_is_direct(self):
+        return self.response_slack_message_is_direct
+
+    def slack_message_as_user_param(self):
+        return True
+
+    def get_slack_users_map(self):
+        return self.slack_users_map
+
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
 
@@ -604,6 +687,12 @@ class MockConfig(Config, MockConfigReader):
 
     def set_forms_platform_provider(self, provider):
         self.forms_platform_provider = provider
+
+    def set_slack_message_is_direct(self, slack_message_is_direct):
+        self.response_slack_message_is_direct = slack_message_is_direct
+
+    def set_slack_users_map(self, users_map):
+        self.slack_users_map = users_map
 
 class MockStorageFactory(StorageFactory, MockConfig):
 
@@ -629,7 +718,10 @@ class MockGoogleForms(GoogleForms):
 
     def __init__(self):
         self.evaluations_response = {}
-        self.peers_assignment = {}
+        self.peers_assignment = {
+            'peers': {},
+            'unanswered_forms': {}
+        }
 
     def get_peers_assignment(self):
         return self.peers_assignment

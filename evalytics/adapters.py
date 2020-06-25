@@ -50,6 +50,15 @@ class EmployeeAdapter(Config):
                 if peer not in employees:
                     raise MissingDataException("{} peer is not an employee".format(peer))
 
+                if peer == uid:
+                    continue
+
+                if peer == employee.manager:
+                    continue
+
+                if peer in employees_by_manager.get(uid, []):
+                    continue
+
                 peer_employee = employees.get(peer)
 
                 self.__check_area_exists_in_forms(forms, peer_employee.area)

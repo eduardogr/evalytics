@@ -166,9 +166,12 @@ class GoogleForms(GoogleAPI, Config):
 
     def __read_peers_assignment(self, files):
         number_of_employees = int(super().read_company_number_of_employees())
-        responses_range = 'A1:S' + str(number_of_employees + 2)
+        responses_range = 'C1:S' + str(number_of_employees + 2)
 
-        peers_assignment = {}
+        peers_assignment = {
+            'peers': {},
+            'unanswered_forms': []
+        }
         for file in files:
             rows = super().get_file_rows(
                 file.get('id'),
@@ -177,19 +180,26 @@ class GoogleForms(GoogleAPI, Config):
             if len(rows) < 1:
                 raise MissingDataException("Missing data in response file: %s" % (file.get('name')))
 
-            questions = rows[0][1:]
+            questions = rows[0]
             reviewees = list(map(self.__get_reviewee_from_question, questions))
-            for answer in rows[1:]:
-                assignments = list(zip(reviewees, answer[1:]))
+
+            answers = rows[1:]
+            if len(answers) == 0:
+                peers_assignment.get('unanswered_forms').append(
+                    file.get('name')
+                )
+
+            for answer in answers:
+                assignments = list(zip(reviewees, answer[0:]))
                 for assignment in assignments:
                     reviewee = assignment[0]
                     reviewers_assigned = list(map(str.strip, assignment[1].split(',')))
 
                     for reviewer in reviewers_assigned:
-                        reviewees = peers_assignment.get(reviewer, [])
+                        reviewees = peers_assignment.get('peers').get(reviewer, [])
                         if reviewee not in reviewees:
                             reviewees.append(reviewee)
-                            peers_assignment.update({
+                            peers_assignment.get('peers').update({
                                 reviewer: reviewees
                             })
 

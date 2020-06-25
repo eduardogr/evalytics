@@ -178,3 +178,20 @@ class ReviewerResponseBuilder:
     def __get_eval_response_from_response_line(self, line, questions):
         eval_responses = line[3:]
         return list(zip(questions, eval_responses))
+
+@dataclass
+class GoogleApiClientHttpError:
+
+    def __init__(self, code, message, status, details):
+        self.code = code
+        self.message = message
+        self.status = status
+        self.details = details
+
+    def to_json(self):
+        return {
+            "code": self.code,
+            "message": self.message,
+            "status": self.status,
+            "details": self.details,
+        }

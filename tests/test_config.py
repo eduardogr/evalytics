@@ -27,6 +27,35 @@ class TestProvidersConfig(TestCase):
 
         self.assertEqual('form-provider', provider)
 
+class TestSlackProviderConfig(TestCase):
+
+    def setUp(self):
+        self.sut = ConfigSut()
+
+    def test_get_slack_token(self):
+        slack_token = self.sut.get_slack_token()
+        self.assertEqual("TOKEN::TOKEN", slack_token)
+
+    def test_get_slack_text_param(self):
+        slack_text_param = self.sut.get_slack_text_param()
+        self.assertEqual('{}', slack_text_param)
+
+    def test_get_slack_channel_param(self):
+        slack_channel_param = self.sut.get_slack_channel_param()
+        self.assertEqual('@{}', slack_channel_param)
+
+    def test_slack_message_is_direct(self):
+        slack_message_is_direct = self.sut.slack_message_is_direct()
+        self.assertEqual(True, slack_message_is_direct)
+
+    def test_slack_message_as_user_param(self):
+        slack_message_as_user_param = self.sut.slack_message_as_user_param()
+        self.assertEqual(True, slack_message_as_user_param)
+
+    def test_get_slack_users_map(self):
+        slack_message_as_user_param = self.sut.get_slack_users_map()
+        self.assertEqual({}, slack_message_as_user_param)
+
 class TestGmailProviderConfig(TestCase):
 
     def setUp(self):

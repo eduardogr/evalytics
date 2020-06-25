@@ -22,3 +22,11 @@ google_drive_provider:
     assignments_peers_file: "Peers file"
     eval_report_template_id: "ID_OF_GOOGLE_DOCUMENT"
     eval_report_prefix_name: "Prefix Doc: "
+
+slack_provider:
+    token: "asdfñljasdf-asdf-sdaf-asdf"
+    is_direct_message: True
+    params:
+        text: "{}"
+        channel: "@{}"
+        as_user: True
