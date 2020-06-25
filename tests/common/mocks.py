@@ -1,5 +1,6 @@
 
 import tornado.web
+from googleapiclient.errors import HttpError
 
 from evalytics.config import Config, ConfigReader
 from evalytics.models import Reviewer, GoogleSetup, GoogleFile
@@ -83,7 +84,7 @@ class RawSheetsServiceMock:
                         class Get:
                             def execute(self):
                                 return {
-                                    'values': []
+                                    'values': ['something']
                                 }
                         return Get()
 
@@ -267,6 +268,7 @@ class MockSheetsService(SheetsService):
 
     def __init__(self):
         self.calls = {}
+        self.__get_file_values_will_raise_exception = []
 
     def create_spreadsheet(self, file_metadata):
         self.__update_calls(
@@ -280,16 +282,37 @@ class MockSheetsService(SheetsService):
         }
 
     def get_file_values(self, spreadsheet_id, rows_range):
+        if spreadsheet_id in self.__get_file_values_will_raise_exception:
+            content = '{"error": {"code": 429,"message": "this is a test error message","status": 429,"details": []}}'
+            raise HttpError(resp='', content=bytes(content, 'utf-8'))
+
         self.__update_calls(
-            'get_file_rows_from_folder',
+            'get_file_values',
             params={
                 'spreadsheet_id': spreadsheet_id,
-                'rows_range': rows_range,   
+                'rows_range': rows_range,
             }
         )
         return {
             'values': ['whatever']
         }
+
+    def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
+        self.__update_calls(
+            'update_file_values',
+            params={
+                'spreadsheet_id': spreadsheet_id,
+                'rows_range': rows_range,
+                'value_input_option': value_input_option,
+                'values': values,
+            }
+        )
+        return {
+            'values': ['whatever']
+        }
+
+    def raise_exception_for_get_file_values_for_ids(self, spreadsheet_collection):
+        self.__get_file_values_will_raise_exception = spreadsheet_collection
 
     def get_calls(self):
         return self.calls

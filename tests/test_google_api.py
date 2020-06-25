@@ -2,6 +2,8 @@ from unittest import TestCase
 
 from evalytics.google_api import GmailAPI, FilesAPI, DocsService, DriveService
 from evalytics.google_api import SheetsService, GmailService
+from evalytics.models import ReviewerResponse, EvalKind
+from evalytics.exceptions import GoogleApiClientHttpErrorException
 
 from tests.common.mocks import RawSheetsServiceMock
 from tests.common.mocks import RawGmailServiceMock
@@ -91,6 +93,14 @@ class TestSheetsService(TestCase):
     def test_get_file_values_ok(self):
         spreadsheet_id = 'id'
         self.sut.get_file_values(spreadsheet_id, 'A1:D3')
+
+    def test_get_file_values_ok_when_cached(self):
+        spreadsheet_id = 'id'
+
+        self.sut.get_file_values(spreadsheet_id, 'A1:D3')
+        self.sut.get_file_values(spreadsheet_id, 'A1:D3')
+
+        # TODO: do assertion for cache
 
     def test_update_file_values_ok(self):
         spreadsheet_id = 'id'
@@ -219,6 +229,7 @@ class TestFilesAPI(TestCase):
 
     def setUp(self):
         self.sut = FilesAPISut()
+        self.sut.raise_exception_for_get_file_values_for_ids([])
 
     def test_create_drive_folder(self):
         folder_name = 'test folder'
@@ -273,17 +284,21 @@ class TestFilesAPI(TestCase):
             call['new_parent'])
 
     def test_get_folder_when_not_exists(self):
+        # given:
         folder_name = 'name'
         self.sut.set_pages_requested(0)
 
+        # when:
         folder = self.sut.get_folder(folder_name)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
 
         self.assertEqual(None, folder)
 
     def test_correct_number_executions_when_get_folder_and_exists(self):
+        # given:
         folder_name = 'my_folder'
         number_of_requests = 1
         self.sut.set_pages_requested(number_of_requests)
@@ -309,11 +324,14 @@ class TestFilesAPI(TestCase):
         self.assertEqual(folder_name, folder['name'])
 
     def test_correct_query_when_get_folder(self):
+        # given:
         folder_name = 'name'
         self.sut.set_pages_requested(0)
 
+        # when:
         self.sut.get_folder(folder_name)
 
+        # when:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
         calls = self.sut.get_calls()
@@ -323,25 +341,31 @@ class TestFilesAPI(TestCase):
         )
 
     def test_get_file_id_from_folder_when_not_exists(self):
+        # given:
         folder_id = 'id'
         filename = 'name'
         self.sut.set_pages_requested(0)
 
+        # when:
         folder = self.sut.get_file_id_from_folder(folder_id, filename)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
 
         self.assertEqual(None, folder)
 
     def test_correct_query_when_get_file_id_from_folder(self):
+        # given:
         folder_id = 'id'
         filename = 'my_file'
         expected_query = "'%s' in parents" % folder_id
         self.sut.set_pages_requested(0)
 
+        # when:
         self.sut.get_file_id_from_folder(folder_id, filename)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(
@@ -350,6 +374,7 @@ class TestFilesAPI(TestCase):
         )
 
     def test_correct_fileid_when_get_file_id_from_folder_and_exists(self):
+        # given:
         folder_id = 'id'
         filename = 'my_file'
         expected_file_id = 'nice id'
@@ -365,8 +390,10 @@ class TestFilesAPI(TestCase):
             }
         ])
 
+        # when:
         file_id = self.sut.get_file_id_from_folder(folder_id, filename)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(
@@ -375,6 +402,7 @@ class TestFilesAPI(TestCase):
         )
 
     def test_get_file_rows_from_folder(self):
+        # given:
         folder_name = 'my_folder'
         filename = 'filename'
         file_id = 'file_id'
@@ -392,19 +420,63 @@ class TestFilesAPI(TestCase):
         ])
         rows_range = 'A2::F4'
 
+        # when:
         self.sut.get_file_rows_from_folder(folder_name, filename, rows_range)
 
+        # then:
         calls = self.sut.get_calls()
         self.assertEqual(2, len(calls))
         self.assertIn('list_files', calls)
-
         self.assertEqual(2, len(calls['list_files']))
-        self.assertIn('get_file_rows_from_folder', calls)
 
-        call = calls['get_file_rows_from_folder'][0]
+        self.assertIn('get_file_values', calls)
+        call = calls['get_file_values'][0]
         self.assertEqual(file_id, call['spreadsheet_id'])
 
+    def test_get_file_rows_when_ok(self):
+        # given:
+        file_id = 'file_id'
+        rows_range = 'A2::F4'
+
+        # when:
+        self.sut.get_file_rows(file_id, rows_range)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('get_file_values', calls)
+        self.assertEqual(1, len(calls['get_file_values']))
+
+    def test_get_file_rows_when_http_error(self):
+        # given:
+        file_id = 'file_id'
+        rows_range = 'A2::F4'
+        self.sut.raise_exception_for_get_file_values_for_ids([file_id])
+
+        # when:
+        with self.assertRaises(GoogleApiClientHttpErrorException):
+            self.sut.get_file_rows(file_id, rows_range)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(0, len(calls))
+
+    def test_update_file_rows_when_ok(self):
+        # given:
+        file_id = 'file_id'
+        rows_range = 'A2::F4'
+
+        # when:
+        self.sut.update_file_rows(file_id, rows_range, 'RAW', [])
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('update_file_values', calls)
+        self.assertEqual(1, len(calls['update_file_values']))
+
     def test_get_folder_from_folder(self):
+        # given:
         foldername = 'my_folder'
         parent_foldername = 'i am you father'
         number_of_requests = 2
@@ -472,25 +544,6 @@ class TestFilesAPI(TestCase):
         self.assertEqual(number_of_requests + 1, len(calls))
         self.assertEqual(3 * number_of_requests, len(files))
 
-    def test_add_comenter_permission(self):
-        # given:
-        document_id = 'ID'
-        emails = ['email1', 'email2', 'email3']
-
-        # when:
-        self.sut.add_comenter_permission(document_id, emails)
-
-        # then:
-        calls = self.sut.get_calls()
-        self.assertEqual(1, len(calls))
-        self.assertIn('create_permission', calls)
-
-        calls = calls['create_permission']
-        for _, call in calls.items():
-            self.assertEqual(
-                DriveService.PERMISSION_ROLE_COMMENTER,
-                call.get('role'))
-
     def test_insert_eval_report_in_document_when_no_evaluations_then_empty_file(self):
         # given:
         eval_process_id = ''
@@ -512,4 +565,49 @@ class TestFilesAPI(TestCase):
         self.assertIn('get_document', calls)
 
     def test_insert_eval_report_in_document(self):
-        pass
+        # given:
+        eval_process_id = ''
+        document_id = 'ID'
+        reviewee = ''
+        reviewee_evaluations = [
+            ReviewerResponse(
+                reviewee=reviewee,
+                reviewer=reviewee,
+                eval_kind=EvalKind.SELF,
+                eval_response=(),
+                filename="filename",
+                line_number=10
+            )
+        ]
+
+        # when:
+        self.sut.insert_eval_report_in_document(
+            eval_process_id,
+            document_id,
+            reviewee,
+            reviewee_evaluations)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(2, len(calls))
+        self.assertIn('batch_update', calls)
+        self.assertIn('get_document', calls)
+
+    def test_add_comenter_permission(self):
+        # given:
+        document_id = 'ID'
+        emails = ['email1', 'email2', 'email3']
+
+        # when:
+        self.sut.add_comenter_permission(document_id, emails)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('create_permission', calls)
+
+        calls = calls['create_permission']
+        for _, call in calls.items():
+            self.assertEqual(
+                DriveService.PERMISSION_ROLE_COMMENTER,
+                call.get('role'))
