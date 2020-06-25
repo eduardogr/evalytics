@@ -134,6 +134,23 @@ class TestSlackChannel(TestCase):
         self.assertEqual(1, len(calls))
         self.assertIn(reviewer.uid, calls[0]['channel'])
 
+
+    def test_send_communication_when_is_direct_message_and_reviewer_is_in_slack_user_map(self):
+        reviewer = self.reviewer_with_no_evals
+        is_reminder = True
+        self.sut.set_slack_message_is_direct(True)
+        self.sut.set_slack_users_map({
+            reviewer.uid: 'mapped_user'
+        })
+
+        self.sut.send_communication(
+            reviewer=reviewer,
+            is_reminder=is_reminder)
+
+        calls = self.sut.get_chat_post_message_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('mapped_user', calls[0]['channel'])
+
     def test_send_communication_when_is_not_direct_message(self):
         reviewer = self.reviewer_with_no_evals
         is_reminder = True

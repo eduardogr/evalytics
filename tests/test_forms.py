@@ -47,6 +47,10 @@ class TestGoogleForms(TestCase):
         self.assignments_manager_2 = 'assignments for manager2'
         self.assignments_manager_3 = 'assignments for manager3'
 
+    def test_get_peers_assignment_missing_folder_when_no_folder(self):
+        with self.assertRaises(MissingGoogleDriveFolderException):
+            self.sut.get_peers_assignment()
+
     def test_get_peers_assignment_ok_when_no_files(self):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([])
@@ -54,10 +58,6 @@ class TestGoogleForms(TestCase):
         peers_assignment = self.sut.get_peers_assignment()['peers']
 
         self.assertEqual(0, len(peers_assignment))
-
-    def test_get_peers_assignment_missing_folder_when_no_folder(self):
-        with self.assertRaises(MissingGoogleDriveFolderException):
-            self.sut.get_peers_assignment()['peers']
 
     def test_get_peers_assignment_ok_when_files(self):
         self.__given_files_within_assignments_folder()
@@ -122,6 +122,19 @@ class TestGoogleForms(TestCase):
         self.assertIn('em3', peers_assignment)
         self.assertEqual(2, len(peers_assignment['em3']))
         self.assertEqual(peers_assignment['em3'], ['em1', 'em2'])
+
+    def test_get_peers_assignment_ok_when_no_answers(self):
+        self.__given_files_within_assignments_folder()
+        peer_assignment_file = [
+            ['who will review em1?', 'who will review em2?'],
+        ]
+        self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
+        self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
+        self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
+
+        peers_assignment = self.sut.get_peers_assignment()['peers']
+
+        self.assertEqual(0, len(peers_assignment))
 
     def test_get_responses_when_no_files(self):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
