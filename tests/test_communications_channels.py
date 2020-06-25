@@ -3,7 +3,7 @@ from unittest import TestCase
 from evalytics.google_api import GoogleAPI
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackChannel
-from evalytics.models import Reviewer, Employee, Eval, EvalKind
+from evalytics.models import Reviewer, Employee, Eval, EvalKind, CommunicationKind
 from evalytics.config import ProvidersConfig
 
 from tests.common.mocks import MockSlackClient, MockGoogleAPI, MockConfig
@@ -72,14 +72,14 @@ class TestSlackChannel(TestCase):
         )
         self.any_mail_subject = 'any mail subject'
         self.sut.set_slack_users_map({})
+        self.communication_kind = CommunicationKind.PROCESS_STARTED
 
     def test_send_communication_when_reviewer_with_no_evals(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = False
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -87,11 +87,10 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_self_eval(self):
         reviewer = self.reviewer_with_self_eval
-        is_reminder = True
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -99,11 +98,10 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_any_eval(self):
         reviewer = self.reviewer_with_any_eval
-        is_reminder = True
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -111,11 +109,10 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_is_reminder(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -123,21 +120,18 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_is_direct_message(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
         self.sut.set_slack_message_is_direct(True)
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
         self.assertIn(reviewer.uid, calls[0]['channel'])
 
-
     def test_send_communication_when_is_direct_message_and_reviewer_is_in_slack_user_map(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
         self.sut.set_slack_message_is_direct(True)
         self.sut.set_slack_users_map({
             reviewer.uid: 'mapped_user'
@@ -145,7 +139,7 @@ class TestSlackChannel(TestCase):
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -153,12 +147,11 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_is_not_direct_message(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
         self.sut.set_slack_message_is_direct(False)
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -193,50 +186,51 @@ class TestGmailChannel(TestCase):
                 form='any form')]
         )
         self.any_mail_subject = 'any mail subject'
+        self.communication_kind = CommunicationKind.PROCESS_STARTED
 
     def test_send_communication_when_reviewer_with_no_evals(self):
-        is_reminder = False
-
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_no_evals,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
 
     def test_send_communication_when_self_eval(self):
-        is_reminder = True
-
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_self_eval,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
 
     def test_send_communication_when_any_eval(self):
-        is_reminder = True
-
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_any_eval,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
 
     def test_send_communication_when_is_reminder(self):
-        is_reminder = True
-
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_no_evals,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])

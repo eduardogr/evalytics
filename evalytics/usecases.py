@@ -1,3 +1,4 @@
+from evalytics.models import CommunicationKind
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.filters import ReviewerResponseFilter
 from evalytics.storages import StorageFactory
@@ -24,10 +25,32 @@ class GetReviewersUseCase(
             forms_platform.get_peers_assignment()['peers'],
             storage.get_forms())
 
+class SendCommunicationUseCase(CommunicationChannelFactory):
+
+    def send(self, revieweers, kind: CommunicationKind):
+        communication_channel = super().get_communication_channel()
+
+        comm_sent = []
+        comm_not_sent = []
+        for _, reviewer in revieweers.items():
+            try:
+                communication_channel.send_communication(
+                    reviewer=reviewer,
+                    kind=kind)
+                comm_sent.append(reviewer.uid)
+            except:
+                comm_not_sent.append(reviewer.uid)
+
+        return comm_sent, comm_not_sent
+
 class SendEvalUseCase(CommunicationChannelFactory):
 
     def send_eval(self, revieweers, is_reminder: bool = False):
         communication_channel = super().get_communication_channel()
+
+        communication_kind = CommunicationKind.PROCESS_STARTED
+        if is_reminder:
+            communication_kind = CommunicationKind.PENDING_EVALS_REMINDER
 
         evals_sent = []
         evals_not_sent = []
@@ -35,7 +58,7 @@ class SendEvalUseCase(CommunicationChannelFactory):
             try:
                 communication_channel.send_communication(
                     reviewer=reviewer,
-                    is_reminder=is_reminder)
+                    kind=communication_kind)
                 evals_sent.append(reviewer.uid)
             except:
                 evals_not_sent.append(reviewer.uid)

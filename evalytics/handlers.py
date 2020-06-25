@@ -1,9 +1,10 @@
 import tornado.web
 
-from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
-from .usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
-from .usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
-from .mappers import Mapper
+from evalytics.usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
+from evalytics.usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
+from evalytics.usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
+from evalytics.usecases import SendCommunicationUseCase
+from evalytics.mappers import Mapper
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import GoogleApiClientHttpErrorException
 
@@ -49,6 +50,38 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 'success': False,
                 'response': {
                     'error': exception.message,
+                }
+            })
+        except Exception as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
+                }
+            })
+
+class ComunicationHandler(tornado.web.RequestHandler, Mapper):
+    path = r"/comunication"
+
+    async def post(self):
+        try:
+            reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
+            kind_arg = self.get_argument('kind', "None", strip=False)
+
+            reviewers = super().json_to_reviewers(reviewers_arg)
+            kind = super().string_to_communication_kind(kind_arg)
+
+            comm_sent, comm_not_sent = SendCommunicationUseCase().send(reviewers, kind=kind_arg)
+            self.finish({
+                'success': True,
+                'response': {
+                    'kind': kind,
+                    'comm_sent': comm_sent,
+                    'comm_not_sent': comm_not_sent
                 }
             })
         except Exception as e:

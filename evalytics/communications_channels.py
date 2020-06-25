@@ -5,7 +5,7 @@ from slack import WebClient
 from slack.errors import SlackApiError
 
 from evalytics.google_api import GoogleAPI
-from evalytics.models import Reviewer, EvalKind
+from evalytics.models import Reviewer, EvalKind, CommunicationKind
 from evalytics.config import Config, ProvidersConfig
 from evalytics.exceptions import CommunicationChannelException
 
@@ -43,12 +43,32 @@ class SlackClient:
 
 class SlackChannel(SlackClient, Config):
 
-    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
-        if is_reminder:
-            message = 'You have pending evals:'
-        else:
+    def send_communication(self, reviewer, kind: CommunicationKind):
+
+        if kind == CommunicationKind.PEERS_ASSIGNMENT:
+            pass
+
+        elif kind == CommunicationKind.PROCESS_STARTED:
             message = 'You have new assignments !'
 
+        elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
+            pass
+
+        elif kind == CommunicationKind.DUE_DATE_REMINDER:
+            pass
+
+        elif kind == CommunicationKind.PENDING_EVALS_REMINDER:
+            message = 'You have pending evals:'
+
+        elif kind == CommunicationKind.PROCESS_FINISHED:
+            pass
+
+        else:
+            raise NotImplementedError(kind)
+
+        self.__send(reviewer, message)
+
+    def __send(self, reviewer: Reviewer, message):
         token = super().get_slack_token()
         text_param = super().get_slack_text_param()
         channel = super().get_slack_channel_param()
@@ -107,13 +127,34 @@ class SlackChannel(SlackClient, Config):
 
 class GmailChannel(GoogleAPI, Config):
 
-    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
-        if is_reminder:
-            mail_subject = super().read_reminder_mail_subject()
-            message = 'You have pending evals:'
-        else:
+    def send_communication(self, reviewer, kind: CommunicationKind):
+
+        if kind == CommunicationKind.PEERS_ASSIGNMENT:
+            pass
+
+        elif kind == CommunicationKind.PROCESS_STARTED:
             mail_subject = super().read_mail_subject()
             message = 'You have new assignments !'
+
+        elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
+            pass
+
+        elif kind == CommunicationKind.DUE_DATE_REMINDER:
+            pass
+
+        elif kind == CommunicationKind.PENDING_EVALS_REMINDER:
+            mail_subject = super().read_reminder_mail_subject()
+            message = 'You have pending evals:'
+
+        elif kind == CommunicationKind.PROCESS_FINISHED:
+            pass
+
+        else:
+            raise NotImplementedError(kind)
+
+        self.__send(reviewer, mail_subject, message)
+
+    def __send(self, reviewer: Reviewer, mail_subject, message):
 
         destiny = reviewer.mail
         message_text = self.__build_message_text(message, reviewer)

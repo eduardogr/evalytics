@@ -3,7 +3,7 @@ import tornado.web
 from googleapiclient.errors import HttpError
 
 from evalytics.config import Config, ConfigReader
-from evalytics.models import Reviewer, GoogleSetup, GoogleFile
+from evalytics.models import Reviewer, GoogleSetup, GoogleFile, CommunicationKind
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackChannel, SlackClient
 from evalytics.storages import GoogleStorage, StorageFactory
@@ -794,7 +794,7 @@ class MockGmailChannel(GmailChannel):
     def add_raise_exception_for_reviewer(self, reviewer_uid: str):
         self.raise_exception_for_reviewers.append(reviewer_uid)
 
-    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
+    def send_communication(self, reviewer: Reviewer, kind: CommunicationKind):
         if reviewer.uid in self.raise_exception_for_reviewers:
             raise Exception("MockCommunicationsProvider was asked to throw this exception")
         return

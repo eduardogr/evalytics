@@ -195,3 +195,26 @@ class GoogleApiClientHttpError:
             "status": self.status,
             "details": self.details,
         }
+
+class CommunicationKind(Enum):
+    PEERS_ASSIGNMENT = 1
+    PROCESS_STARTED = 2
+    PEERS_FORM_DELIVERY = 3
+    DUE_DATE_REMINDER = 4
+    PENDING_EVALS_REMINDER = 5
+    PROCESS_FINISHED = 6
+
+    @staticmethod
+    def from_str(label: str):
+        if label.lower() == 'peers_assignment':
+            return CommunicationKind.PEERS_ASSIGNMENT
+        elif label.lower() == 'process_started':
+            return CommunicationKind.PROCESS_STARTED
+        elif label.lower() == 'due_date_reminder':
+            return CommunicationKind.DUE_DATE_REMINDER
+        elif label.lower() == 'pending_evals_reminder':
+            return CommunicationKind.PENDING_EVALS_REMINDER
+        elif label == 'process_finished':
+            return CommunicationKind.PROCESS_FINISHED
+        else:
+            raise ValueError(label)

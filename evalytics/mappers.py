@@ -1,6 +1,7 @@
 import json
 
 from evalytics.models import Reviewer, Employee, EvalKind, Eval
+from evalytics.models import CommunicationKind
 
 class JsonToReviewer:
 
@@ -30,9 +31,21 @@ class JsonToReviewer:
             })
         return reviewers
 
+class ReviewerToJson:
+
+    def reviewer_to_json(self, reviewers):
+        return json.dumps(
+            reviewers,
+            default=lambda o:
+            o.__dict__ if type(o) is not EvalKind else str(o.name))
+
+class StrToBool:
+
     def str_to_bool(self, str_bool: str):
         true_strings = ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']
         return str_bool.lower() in true_strings
+
+class JsonToList:
 
     def json_to_list(self, json_list):
         if json_list is None:
@@ -42,20 +55,24 @@ class JsonToReviewer:
             json_list = json.loads(json_list)
 
         return json_list
-    
+
+class ListToJson:
     def list_to_json(self, some_list):
         return json.dumps(
             some_list,
             default=lambda o:
             o.__dict__ if type(o) is not EvalKind else str(o.name))
 
-class ReviewerToJson:
+class StrToCommunicationKind:
 
-    def reviewer_to_json(self, reviewers):
-        return json.dumps(
-            reviewers,
-            default=lambda o:
-            o.__dict__ if type(o) is not EvalKind else str(o.name))
+    def string_to_communication_kind(self, communication_kind: str):
+        return CommunicationKind.from_str(communication_kind)
 
-class Mapper(JsonToReviewer, ReviewerToJson):
+class Mapper(
+        JsonToReviewer,
+        ReviewerToJson,
+        StrToBool,
+        JsonToList,
+        ListToJson,
+        StrToCommunicationKind):
     'Composition of Mappers'

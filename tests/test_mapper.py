@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from evalytics.mappers import JsonToReviewer, ReviewerToJson
+from evalytics.mappers import StrToBool, JsonToList, ListToJson
 from evalytics.models import Reviewer, Employee, Eval, EvalKind
 
 class TestJsonToReviewer(TestCase):
@@ -54,48 +55,6 @@ class TestJsonToReviewer(TestCase):
 
         self.assertEqual(self.reviewer_with_evals, reviewer['mail'])
 
-    def test_str_to_bool_when_true(self):
-        json_bool = "True"
-
-        result = self.sut.str_to_bool(json_bool)
-
-        self.assertEqual(True, result)
-
-    def test_str_to_bool_when_false(self):
-        json_bool = "anything not true"
-
-        result = self.sut.str_to_bool(json_bool)
-
-        self.assertEqual(False, result)
-
-    def test_json_to_list(self):
-        json_list = "[1,2,3,4]"
-
-        result = self.sut.json_to_list(json_list)
-
-        self.assertEqual([1, 2, 3, 4], result)
-
-    def test_json_to_list_when_none(self):
-        json_list = None
-
-        result = self.sut.json_to_list(json_list)
-
-        self.assertEqual(None, result)
-
-    def test_json_to_list_when_is_an_integer(self):
-        json_list = 3
-
-        result = self.sut.json_to_list(json_list)
-
-        self.assertEqual(3, result)
-
-    def test_list_to_json(self):
-        list_to_convert = [1, 2, 3, 4]
-
-        result = self.sut.list_to_json(list_to_convert)
-
-        self.assertEqual('[1, 2, 3, 4]', result)
-
 class TestReviewerToJson(TestCase):
 
     def setUp(self):
@@ -143,3 +102,60 @@ class TestReviewerToJson(TestCase):
         json = self.sut.reviewer_to_json(self.reviewer_with_evals)
 
         self.assertEqual(self.json_reviewer_with_evals, json)
+
+class TestStrToBool(TestCase):
+
+    def setUp(self):
+        self.sut = StrToBool()
+
+    def test_str_to_bool_when_true(self):
+        json_bool = "True"
+
+        result = self.sut.str_to_bool(json_bool)
+
+        self.assertEqual(True, result)
+
+    def test_str_to_bool_when_false(self):
+        json_bool = "anything not true"
+
+        result = self.sut.str_to_bool(json_bool)
+
+        self.assertEqual(False, result)
+
+class TestJsonToList(TestCase):
+
+    def setUp(self):
+        self.sut = JsonToList()
+
+    def test_json_to_list(self):
+        json_list = "[1,2,3,4]"
+
+        result = self.sut.json_to_list(json_list)
+
+        self.assertEqual([1, 2, 3, 4], result)
+
+    def test_json_to_list_when_none(self):
+        json_list = None
+
+        result = self.sut.json_to_list(json_list)
+
+        self.assertEqual(None, result)
+
+    def test_json_to_list_when_is_an_integer(self):
+        json_list = 3
+
+        result = self.sut.json_to_list(json_list)
+
+        self.assertEqual(3, result)
+
+class TestListToJson(TestCase):
+
+    def setUp(self):
+        self.sut = ListToJson()
+
+    def test_list_to_json(self):
+        list_to_convert = [1, 2, 3, 4]
+
+        result = self.sut.list_to_json(list_to_convert)
+
+        self.assertEqual('[1, 2, 3, 4]', result)
