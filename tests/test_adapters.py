@@ -56,7 +56,7 @@ class TestEmployeeAdapter(TestCase):
         }
         self.no_peers = {}
         self.peers = {
-            'tl1': ['tl2', 'tl1'],
+            'tl1': ['tl2', 'tl1', 'sw1', 'sw2'],
             'sw1': ['tl1', 'sw1', 'sw2', 'sw3', 'sw4', 'sw5'],
             'sw2': ['sw1', 'sw2', 'sw3', 'sw4'],
             'sw3': ['tl2', 'sw1', 'sw3'],

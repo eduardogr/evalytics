@@ -72,7 +72,7 @@ class SlackProviderConfig(ConfigReader):
 
     def get_slack_users_map(self):
         config = super().read()
-        return config.get(self.SLACK_PROVIDER).get(self.USERS_MAP)
+        return config.get(self.SLACK_PROVIDER, []).get(self.USERS_MAP, [])
 
 class GmailProviderConfig(ConfigReader):
 
