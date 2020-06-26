@@ -50,15 +50,22 @@ class SlackChannel(SlackClient, Config):
 
         elif kind == CommunicationKind.PROCESS_STARTED:
             message = 'You have new assignments !'
+            blocks = self.__build_blocks(message, reviewer)
 
         elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
             pass
 
         elif kind == CommunicationKind.DUE_DATE_REMINDER:
-            pass
+            eval_process_id = super().read_eval_process_id()
+            due_date = super().read_eval_process_due_date()
+            message = 'This is a reminder to complete your review assignments for the *{}* Evals due by *{}*'.format(
+                eval_process_id, due_date
+            )
+            blocks = self.__build_due_date_reminder_blocks(message, reviewer)
 
         elif kind == CommunicationKind.PENDING_EVALS_REMINDER:
             message = 'You have pending evals:'
+            blocks = self.__build_blocks(message, reviewer)
 
         elif kind == CommunicationKind.PROCESS_FINISHED:
             pass
@@ -66,11 +73,10 @@ class SlackChannel(SlackClient, Config):
         else:
             raise NotImplementedError(kind)
 
-        self.__send(reviewer, message)
+        self.__send(reviewer, blocks)
 
-    def __send(self, reviewer: Reviewer, message):
+    def __send(self, reviewer: Reviewer, blocks):
         token = super().get_slack_token()
-        text_param = super().get_slack_text_param()
         channel = super().get_slack_channel_param()
         as_user_param = super().slack_message_as_user_param()
         is_direct_message = super().slack_message_is_direct()
@@ -82,8 +88,6 @@ class SlackChannel(SlackClient, Config):
                 reviewer_uid = users_map.get(reviewer_uid)
             channel = channel.format(reviewer_uid)
 
-        blocks = self.__build_blocks(text_param.format(message), reviewer)
-
         try:
             _ = super().chat_post_message(
                 token=token,
@@ -94,8 +98,19 @@ class SlackChannel(SlackClient, Config):
         except SlackApiError as e:
             assert e.response["ok"] is False
             assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-            #print(f"Got an error: {e.response['error']}")
+            # print(f"Got an error: {e.response['error']}")
             raise CommunicationChannelException()
+
+    def __build_due_date_reminder_blocks(self, message, reviewer: Reviewer):
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Hi {}:\n{}".format(reviewer.uid, message)
+                }
+            }
+        ]
 
     def __build_blocks(self, message, reviewer: Reviewer):
         list_of_evals = ''
@@ -135,16 +150,24 @@ class GmailChannel(GoogleAPI, Config):
         elif kind == CommunicationKind.PROCESS_STARTED:
             mail_subject = super().read_mail_subject()
             message = 'You have new assignments !'
+            message_text = self.__build_message_text(message, reviewer)
 
         elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
             pass
 
         elif kind == CommunicationKind.DUE_DATE_REMINDER:
-            pass
+            mail_subject = 'Reminder Evalytics: Due date is arriving'
+            eval_process_id = super().read_eval_process_id()
+            due_date = super().read_eval_process_due_date()
+            message = 'This is a reminder to complete your review assignments for the <b>{}</b> Evals due by <b>{}<b/>'.format(
+                eval_process_id, due_date
+            )
+            message_text = self.__build_message_text(message, reviewer)
 
         elif kind == CommunicationKind.PENDING_EVALS_REMINDER:
             mail_subject = super().read_reminder_mail_subject()
             message = 'You have pending evals:'
+            message_text = self.__build_message_text(message, reviewer)
 
         elif kind == CommunicationKind.PROCESS_FINISHED:
             pass
@@ -152,12 +175,10 @@ class GmailChannel(GoogleAPI, Config):
         else:
             raise NotImplementedError(kind)
 
-        self.__send(reviewer, mail_subject, message)
+        self.__send(reviewer, mail_subject, message_text)
 
-    def __send(self, reviewer: Reviewer, mail_subject, message):
-
+    def __send(self, reviewer: Reviewer, mail_subject, message_text):
         destiny = reviewer.mail
-        message_text = self.__build_message_text(message, reviewer)
         super().send_message(
             user_id=GoogleAPI.AUTHENTICATED_USER,
             message=self.__create_message(

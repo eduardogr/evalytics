@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from evalytics.usecases import SetupUseCase
-from evalytics.usecases import GetReviewersUseCase, SendEvalUseCase
+from evalytics.usecases import GetReviewersUseCase, SendCommunicationUseCase
 from evalytics.usecases import GetResponseStatusUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.usecases import GetPeersAssignmentUseCase
@@ -28,8 +28,8 @@ class GetReviewersUseCaseSut(
         MockEmployeeAdapter):
     'Inject mocks into GetReviewersUseCase dependencies'
 
-class SendEvalUseCaseSut(
-        SendEvalUseCase,
+class SendCommunicationUseCaseSut(
+        SendCommunicationUseCase,
         MockCommunicationChannelFactory,
         MockEmployeeAdapter,
         MockConfig):
@@ -90,20 +90,21 @@ class TestGetReviewersUseCase(TestCase):
             employees_collection().get('em_email'),
             reviewers['em_email'])
 
-class TestSendEvalUseCase(TestCase):
+class TestSendCommunicationUseCase(TestCase):
 
     def setUp(self):
-        self.sut = SendEvalUseCaseSut()
+        self.sut = SendCommunicationUseCaseSut()
         self.communication_channel = MockGmailChannel()
         self.reviewers = {
             'em_email': employees_collection().get('em_email'),
             'manager_em': employees_collection().get('manager_em'),
         }
+        self.any_kind = 'process_started'
 
     def test_send_email_usecase(self):
         self.sut.set_communication_channel(self.communication_channel)
 
-        evals_sent, evals_not_sent = self.sut.send_eval(self.reviewers)
+        evals_sent, evals_not_sent = self.sut.send(self.reviewers, self.any_kind)
 
         self.assertIn('em_email', evals_sent)
         self.assertIn('manager_em', evals_sent)
@@ -115,7 +116,7 @@ class TestSendEvalUseCase(TestCase):
         )
         self.sut.set_communication_channel(self.communication_channel)
 
-        evals_sent, evals_not_sent = self.sut.send_eval(self.reviewers)
+        evals_sent, evals_not_sent = self.sut.send(self.reviewers, self.any_kind)
 
         self.assertIn('em_email', evals_sent)
         self.assertEqual(1, len(evals_sent))

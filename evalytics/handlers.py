@@ -1,6 +1,6 @@
 import tornado.web
 
-from evalytics.usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
+from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
 from evalytics.usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
 from evalytics.usecases import SendCommunicationUseCase
@@ -64,56 +64,23 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 }
             })
 
-class ComunicationHandler(tornado.web.RequestHandler, Mapper):
-    path = r"/comunication"
+class CommunicationHandler(tornado.web.RequestHandler, Mapper):
+    path = r"/communications"
 
     async def post(self):
         try:
             reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
-            kind_arg = self.get_argument('kind', "None", strip=False)
+            kind_arg = self.get_argument('kind', "", strip=False)
 
             reviewers = super().json_to_reviewers(reviewers_arg)
             kind = super().string_to_communication_kind(kind_arg)
 
-            comm_sent, comm_not_sent = SendCommunicationUseCase().send(reviewers, kind=kind_arg)
+            comms_sent, comms_not_sent = SendCommunicationUseCase().send(reviewers, kind=kind)
             self.finish({
                 'success': True,
                 'response': {
-                    'kind': kind,
-                    'comm_sent': comm_sent,
-                    'comm_not_sent': comm_not_sent
-                }
-            })
-        except Exception as e:
-            if hasattr(e, 'message'):
-                message = e.message
-            else:
-                message = str(e)
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': message,
-                }
-            })
-
-class EvalDeliveryHandler(tornado.web.RequestHandler, Mapper):
-    path = r"/evaldelivery"
-
-    async def post(self):
-        try:
-            reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
-            is_reminder_arg = self.get_argument('is_reminder', False, strip=False)
-
-            is_reminder = super().str_to_bool(is_reminder_arg)
-            reviewers = super().json_to_reviewers(reviewers_arg)
-
-            evals_sent, evals_not_sent = SendEvalUseCase().send_eval(reviewers, is_reminder=is_reminder)
-            self.finish({
-                'success': True,
-                'response': {
-                    'is_reminder': is_reminder,
-                    'evals_sent': evals_sent,
-                    'evals_not_sent': evals_not_sent
+                    'comms_sent': comms_sent,
+                    'comms_not_sent': comms_not_sent
                 }
             })
         except Exception as e:

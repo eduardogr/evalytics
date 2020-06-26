@@ -433,7 +433,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                 error['code'],
                 error['message'],
                 error['status'],
-                error['details']
+                error['details'] if 'details' in error else []
             )
             raise GoogleApiClientHttpErrorException(http_error)
 
@@ -592,7 +592,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                 error['code'],
                 error['message'],
                 error['status'],
-                error['details']
+                error['details'] if 'details' in error else []
             )
             raise GoogleApiClientHttpErrorException(http_error)
 
@@ -619,7 +619,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                 error['code'],
                 error['message'],
                 error['status'],
-                error['details']
+                error['details'] if 'details' in error else []
             )
             raise GoogleApiClientHttpErrorException(http_error)
 

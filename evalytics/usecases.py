@@ -30,40 +30,18 @@ class SendCommunicationUseCase(CommunicationChannelFactory):
     def send(self, revieweers, kind: CommunicationKind):
         communication_channel = super().get_communication_channel()
 
-        comm_sent = []
-        comm_not_sent = []
+        comms_sent = []
+        comms_not_sent = []
         for _, reviewer in revieweers.items():
             try:
                 communication_channel.send_communication(
                     reviewer=reviewer,
                     kind=kind)
-                comm_sent.append(reviewer.uid)
+                comms_sent.append(reviewer.uid)
             except:
-                comm_not_sent.append(reviewer.uid)
+                comms_not_sent.append(reviewer.uid)
 
-        return comm_sent, comm_not_sent
-
-class SendEvalUseCase(CommunicationChannelFactory):
-
-    def send_eval(self, revieweers, is_reminder: bool = False):
-        communication_channel = super().get_communication_channel()
-
-        communication_kind = CommunicationKind.PROCESS_STARTED
-        if is_reminder:
-            communication_kind = CommunicationKind.PENDING_EVALS_REMINDER
-
-        evals_sent = []
-        evals_not_sent = []
-        for _, reviewer in revieweers.items():
-            try:
-                communication_channel.send_communication(
-                    reviewer=reviewer,
-                    kind=communication_kind)
-                evals_sent.append(reviewer.uid)
-            except:
-                evals_not_sent.append(reviewer.uid)
-
-        return evals_sent, evals_not_sent
+        return comms_sent, comms_not_sent
 
 class GetResponseStatusUseCase(
         GetReviewersUseCase, FormsPlatformFactory, ReviewerAdapter):
