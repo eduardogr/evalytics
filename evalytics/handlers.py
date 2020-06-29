@@ -2,7 +2,7 @@ import tornado.web
 
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
-from evalytics.usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
+from evalytics.usecases import GetPeersAssignmentUseCase, UpdatePeersAssignmentUseCase
 from evalytics.usecases import SendCommunicationUseCase
 from evalytics.mappers import Mapper
 from evalytics.exceptions import MissingDataException, NoFormsException
@@ -188,8 +188,7 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
             self.finish({
                 'success': True,
                 'response': {
-                    'peers_assignment': peers_assignment['peers'],
-                    'unanswered_forms': peers_assignment['unanswered_forms'],
+                    'peers_assignment': peers_assignment
                 }
             })
         except MissingDataException as e:
@@ -212,11 +211,14 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
     async def post(self):
         try:
 
-            GeneratePeersAssignmentUseCase().generate()
+            peers_assignment, unanswered_forms = UpdatePeersAssignmentUseCase().update()
 
             self.finish({
                 'success': True,
-                'response': {}
+                'response': {
+                    'peers_assignment': peers_assignment,
+                    'unanswered_forms': unanswered_forms
+                }
             })
         except MissingDataException as e:
             if hasattr(e, 'message'):

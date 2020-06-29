@@ -3,7 +3,8 @@ from unittest import TestCase
 from evalytics.google_api import GoogleAPI
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackChannel
-from evalytics.models import Reviewer, Employee, Eval, EvalKind, CommunicationKind
+from evalytics.models import Reviewer, Employee, Eval, EvalKind
+from evalytics.models import CommunicationKind
 from evalytics.config import ProvidersConfig
 
 from tests.common.mocks import MockSlackClient, MockGoogleAPI, MockConfig

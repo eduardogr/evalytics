@@ -14,15 +14,13 @@ class SetupUseCase(StorageFactory):
 
 class GetReviewersUseCase(
         StorageFactory,
-        FormsPlatformFactory,
         EmployeeAdapter):
 
     def get_reviewers(self):
         storage = super().get_storage()
-        forms_platform = super().get_forms_platform()
         return super().build_reviewers(
             storage.get_employees(),
-            forms_platform.get_peers_assignment()['peers'],
+            storage.get_peers_assignment(),
             storage.get_forms())
 
 class SendCommunicationUseCase(CommunicationChannelFactory):
@@ -103,17 +101,21 @@ class GenerateEvalReportsUseCase(
 
         return created, not_created
 
-class GetPeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
+class GetPeersAssignmentUseCase(StorageFactory):
 
     def get_peers(self):
-        forms_platform = super().get_forms_platform()
-        return forms_platform.get_peers_assignment()
+        storage = super().get_storage()
+        return storage.get_peers_assignment()
 
-class GeneratePeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
+class UpdatePeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
 
-    def generate(self):
+    def update(self):
         storage = super().get_storage()
         forms_platform = super().get_forms_platform()
 
-        peers_assignment = forms_platform.get_peers_assignment()['peers']
+        peers_assignment = forms_platform.get_peers_assignment()
         storage.write_peers_assignment(peers_assignment)
+
+        unanswered_forms = peers_assignment.pop('unanswered_forms')
+
+        return peers_assignment, unanswered_forms

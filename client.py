@@ -257,7 +257,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 print("[ERROR] Something failed. key: {}".format(key))
                 print("  - HTTP code: %s" % response.status_code)
                 print("  - Error response: %s" % response.content)
-            return []
+            return {}
 
     def __get_list_from(self, filename):
         list_from_file = []

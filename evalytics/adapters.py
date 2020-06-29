@@ -145,6 +145,7 @@ class ReviewerAdapter(EmployeeAdapter):
         employees = {r.uid:r.employee for uid, r in reviewers.items()}
         employees_by_manager = super().get_employees_by_manager(employees)
 
+        # Completed/Inconsistent reviews
         for uid, responses in responses.items():
             completed_responses = {}
             inconsistent_responses = {}
@@ -183,6 +184,7 @@ class ReviewerAdapter(EmployeeAdapter):
                     uid: inconsistent_responses
                 })
 
+        # Pending reviews
         for uid, reviewer in reviewers.items():
             evals = reviewer.evals
             pending_evals = []

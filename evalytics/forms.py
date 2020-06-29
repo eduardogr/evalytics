@@ -169,7 +169,6 @@ class GoogleForms(GoogleAPI, Config):
         responses_range = 'C1:S' + str(number_of_employees + 2)
 
         peers_assignment = {
-            'peers': {},
             'unanswered_forms': []
         }
         for file in files:
@@ -196,10 +195,10 @@ class GoogleForms(GoogleAPI, Config):
                     reviewers_assigned = list(map(str.strip, assignment[1].split(',')))
 
                     for reviewer in reviewers_assigned:
-                        reviewees = peers_assignment.get('peers').get(reviewer, [])
+                        reviewees = peers_assignment.get(reviewer, [])
                         if reviewee not in reviewees:
                             reviewees.append(reviewee)
-                            peers_assignment.get('peers').update({
+                            peers_assignment.update({
                                 reviewer: reviewees
                             })
 
