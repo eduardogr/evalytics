@@ -574,7 +574,7 @@ class TestFilesAPI(TestCase):
                 reviewee=reviewee,
                 reviewer=reviewee,
                 eval_kind=EvalKind.PEER_MANAGER,
-                eval_response=[()],
+                eval_response=[],
                 filename="Self evaluation",
                 line_number=10
             )
