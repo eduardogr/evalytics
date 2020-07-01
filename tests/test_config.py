@@ -27,6 +27,22 @@ class TestProvidersConfig(TestCase):
 
         self.assertEqual('form-provider', provider)
 
+class TestEvalProcessConfig(TestCase):
+
+    def setUp(self):
+        self.sut = ConfigSut()
+
+    def test_read_eval_process_id(self):
+        eval_process_id = self.sut.read_eval_process_id()
+
+        self.assertEqual('eval_process_id', eval_process_id)
+
+    def test_read_eval_process_due_date(self):
+        eval_process_due_date = self.sut.read_eval_process_due_date()
+
+        self.assertEqual('eval_process_due_date', eval_process_due_date)
+
+
 class TestSlackProviderConfig(TestCase):
 
     def setUp(self):
@@ -35,10 +51,6 @@ class TestSlackProviderConfig(TestCase):
     def test_get_slack_token(self):
         slack_token = self.sut.get_slack_token()
         self.assertEqual("TOKEN::TOKEN", slack_token)
-
-    def test_get_slack_text_param(self):
-        slack_text_param = self.sut.get_slack_text_param()
-        self.assertEqual('{}', slack_text_param)
 
     def test_get_slack_channel_param(self):
         slack_channel_param = self.sut.get_slack_channel_param()
@@ -110,6 +122,11 @@ class TestGoogleDriveProviderConfig(TestCase):
         tests_folder = self.sut.read_google_responses_folder()
 
         self.assertEqual('mock_tests_folder', tests_folder)
+
+    def test_read_eval_reports_folder(self):
+        tests_folder = self.sut.read_eval_reports_folder()
+
+        self.assertEqual('eval_reports_folder', tests_folder)
 
     def test_read_google_eval_report_template_id(self):
         template_id = self.sut.read_google_eval_report_template_id()

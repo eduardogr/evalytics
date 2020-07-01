@@ -37,12 +37,12 @@ class EvalyticsRequests:
 
         return self.__get_data_response(response)
 
-    def evaldelivery(self, json_reviewers, is_reminder: bool = False):
+    def communications(self, json_reviewers, kind: str):
         response = requests.post(
-            url="%s/evaldelivery" % self.BASE_URL,
+            url="%s/communications" % self.BASE_URL,
             data={
                 "reviewers": json_reviewers,
-                "is_reminder": is_reminder
+                "kind": kind
             }
         )
 
@@ -50,7 +50,6 @@ class EvalyticsRequests:
 
     def evalreports(
             self,
-            eval_process_id: str,
             uids=None,
             managers=None,
             area=None,
@@ -58,7 +57,6 @@ class EvalyticsRequests:
         response = requests.post(
             url="%s/evalreports" % self.BASE_URL,
             data={
-                "eval_process_id": eval_process_id,
                 "uids": uids,
                 "managers": managers,
                 "area": area,
@@ -86,44 +84,15 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
     def post_setup(self):
         success, response = super().setup()
-        if success:
-            setup = response['setup']
-            print(json.dumps(setup, indent=2))
-            return setup
-        else:
-            if 'error' in response:
-                print("[Controlled Error] %s" % response['error'])
-            else:
-                print("[ERROR] Something failed in get reviewers")
-                print("  - HTTP code: %s" % response.status_code)
-                print("  - Error response: %s" % response.content)
-            return []
+        return self.__get_response(success, response, 'setup')
 
     def get_reviewers(self):
         success, response = super().reviewers()
-        if success:
-            return response['reviewers']
-        else:
-            if 'error' in response:
-                print("[Controlled Error] %s" % response['error'])
-            else:
-                print("[ERROR] Something failed in get reviewers")
-                print("  - HTTP code: %s" % response.status_code)
-                print("  - Error response: %s" % response.content)
-            return []
+        return self.__get_response(success, response, 'reviewers')
 
     def get_status(self):
         success, response = super().status()
-        if success:
-            return response['status']
-        else:
-            if 'error' in response:
-                print("[Controlled Error] %s" % response['error'])
-            else:
-                print("[ERROR] Something failed in get reviewers")
-                print("  - HTTP code: %s" % response.status_code)
-                print("  - Error response: %s" % response.content)
-            return []
+        return self.__get_response(success, response, 'status')
 
     def print_reviewers_stats(self, all_reviewers):
         reviewers_by_evals_numbers = {}
@@ -224,10 +193,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 print('    - (Line %s) %s' % (reason['line'], reason['reason']))
             print()
 
-    def send_eval(self, whitelist=None, dry_run: bool = False):
-        response_reviewers = self.get_reviewers()
-        reviewers = super().json_to_reviewers(response_reviewers)
-
+    def send_communication(self, kind, reviewers, whitelist=None, dry_run: bool = False):
         if whitelist is not None:
             reviewers = [reviewer
                          for r_uid, reviewer in reviewers.items()
@@ -235,60 +201,11 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         else:
             reviewers = [reviewer for r_uid, reviewer in reviewers.items()]
 
-        is_reminder = False
-        self.__eval_delivery(reviewers, is_reminder, dry_run)
+        self.__send_communication(reviewers, kind, dry_run)
 
-    def retry_send_eval(self, dry_run: bool = False):
-        evals_not_sent = []
-        evals_not_sent_file = super().open(self.EVALS_NOT_SENT_CSV, "r")
-        for reviewer in evals_not_sent_file.readlines():
-            evals_not_sent.append(reviewer.strip())
-        evals_not_sent_file.close()
-        self.send_eval(whitelist=evals_not_sent, dry_run=dry_run)
-
-    def whitelist_send_eval(self, dry_run: bool = False):
-        whitelisted_evals = []
-        whitelisted_evals_file = super().open(self.EVALS_WHITELIST, "r")
-        for reviewer in whitelisted_evals_file.readlines():
-            whitelisted_evals.append(reviewer.strip())
-        whitelisted_evals_file.close()
-        self.send_eval(whitelist=whitelisted_evals, dry_run=dry_run)
-
-    def send_reminder(self, whitelist=None, dry_run: bool = False):
-        status = self.get_status()
-        reviewers_with_pending_evals = status.get('pending', '[]')
-        reviewers = super().json_to_reviewers(reviewers_with_pending_evals)
-
-        if whitelist is not None:
-            reviewers = [reviewer
-                         for r_uid, reviewer in reviewers.items()
-                         if r_uid in whitelist]
-        else:
-            reviewers = [reviewer for r_uid, reviewer in reviewers.items()]
-
-        is_reminder = True
-        self.__eval_delivery(reviewers, is_reminder, dry_run)
-
-    def retry_send_reminder(self, dry_run: bool = False):
-        evals_not_sent = []
-        evals_not_sent_file = super().open(self.EVALS_NOT_SENT_CSV, "r")
-        for reviewer in evals_not_sent_file.readlines():
-            evals_not_sent.append(reviewer.strip())
-        evals_not_sent_file.close()
-        self.send_reminder(whitelist=evals_not_sent, dry_run=dry_run)
-
-    def whitelist_send_reminder(self, dry_run: bool = False):
-        whitelisted_evals = []
-        whitelisted_evals_file = super().open(self.EVALS_WHITELIST, "r")
-        for reviewer in whitelisted_evals_file.readlines():
-            whitelisted_evals.append(reviewer.strip())
-        whitelisted_evals_file.close()
-        self.send_reminder(whitelist=whitelisted_evals, dry_run=dry_run)
-
-    def generate_reports(self, eval_process_id, dry_run, employee_uids = None):
-        uids = super().list_to_json(employee_uids)
+    def generate_reports(self, dry_run, whitelist=None):
+        uids = super().list_to_json(whitelist)
         success, response = super().evalreports(
-            eval_process_id=eval_process_id,
             dry_run=dry_run,
             uids=uids)
 
@@ -306,30 +223,64 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
             for uid, reports_not_created in not_created.items():
                 print(' - {} report will be shared with {}'.format(uid, reports_not_created['managers']))
 
-    def whitelist_generate_reports(self, eval_process_id, dry_run):
-        whitelisted_evals = []
-        whitelisted_evals_file = super().open(self.EVALS_WHITELIST, "r")
-        for reviewer in whitelisted_evals_file.readlines():
-            whitelisted_evals.append(reviewer.strip())
-        whitelisted_evals_file.close()
-        self.generate_reports(eval_process_id=eval_process_id, dry_run=dry_run, employee_uids=whitelisted_evals)
+    def get_whitelist(self):
+        return self.__get_list_from(self.EVALS_WHITELIST)
 
-    def __eval_delivery(self, reviewers, is_reminder: bool, dry_run: bool):
+    def get_retry_list(self):
+        return self.__get_list_from(self.EVALS_NOT_SENT_CSV)
+
+    def help(self, command):
+        help_message = {
+            'Message': "Command '{}' not expected".format(command),
+            'Available commands: [OPTIONS]': {
+                'setup': [],
+                'reviewers': ['--stats'],
+                'send_evals': ['--retry', '--whitelist', '--dry-run'],
+                'send_due_date_comm': ['--retry', '--whitelist', '--dry-run'],
+                'send_reminders': ['--retry', '--whitelist', '--dry-run'],
+                'status': ['--inconsisten-files'],
+                'reports': ['--whitelist', '--dry-run'],
+            }
+        }
+        print(json.dumps(help_message))
+
+    def __get_response(self, success, response, key):
+        if success:
+            return response[key]
+        else:
+            if 'error' in response:
+                print("[Controlled Error] %s" % response['error'])
+            else:
+                print("[ERROR] Something failed. key: {}".format(key))
+                print("  - HTTP code: %s" % response.status_code)
+                print("  - Error response: %s" % response.content)
+            return {}
+
+    def __get_list_from(self, filename):
+        list_from_file = []
+        list_file = super().open(filename, "r")
+        for reviewer in list_file.readlines():
+            list_from_file.append(reviewer.strip())
+        list_file.close()
+
+        return list_from_file
+
+    def __send_communication(self, reviewers, kind: str, dry_run: bool):
         json_reviewers = super().reviewer_to_json(reviewers)
 
         if dry_run:
             for reviewer in reviewers:
                 print('[DRY-RUN] Reviewer %s has %d evals' % (reviewer.uid, len(reviewer.evals)))
         else:
-            success, response = super().evaldelivery(json_reviewers, is_reminder)
+            success, response = super().communications(json_reviewers, kind)
             if success:
-                print("Evals sent: %s" % response['evals_sent'])
-                print("Evals NOT sent: %s" % response['evals_not_sent'])
+                print("Evals sent: %s" % response['comms_sent'])
+                print("Evals NOT sent: %s" % response['comms_not_sent'])
 
-                evals_not_sent = response['evals_not_sent']
-                if len(evals_not_sent) > 0:
+                comms_not_sent = response['comms_not_sent']
+                if len(comms_not_sent) > 0:
                     evals_not_sent_file = open(self.EVALS_NOT_SENT_CSV, "w+")
-                    for reviewer in evals_not_sent:
+                    for reviewer in comms_not_sent:
                         evals_not_sent_file.write("%s\n" % reviewer)
                     evals_not_sent_file.close()
                 else:
@@ -340,28 +291,16 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 print("[ERROR] Something failed sending emails")
                 print("  - Error response: {}".format(response['error']))
 
-    def help(self, command):
-        print("Command '%s' not expected" % command)
-        print("Available commands: ")
-        print("  - %s" % 'setup')
-
-        print("  - %s" % 'reviewers')
-        print("  - %s --stats" % 'reviewers')
-
-        print("  - %s" % 'send_evals')
-        print("  - %s --retry" % 'send_evals')
-        print("  - %s --whitelist" % 'send_evals')
-        print("  - %s --dry-run" % 'send_evals')
-
-        print("  - %s" % 'send_reminders')
-        print("  - %s --retry" % 'send_reminders')
-        print("  - %s --whitelist" % 'send_reminders')
-        print("  - %s --dry-run" % 'send_reminders')
-
-        print("  - %s" % 'status')
-        print("  - %s --inconsistent-files" % 'status')
-
 class CommandFactory(EvalyticsClient):
+
+    SETUP = 'setup'
+    REVIEWERS = 'reviewers'
+    SEND_EVALS = 'send_evals'
+    SEND_DUE_DATE_COMM = 'send_due_date_comm'
+    SEND_REMIDERS = 'send_reminders'
+    STATUS = 'status'
+    REPORTS = 'reports'
+
     def execute(self, args):
 
         command = args.pop(0)
@@ -369,62 +308,73 @@ class CommandFactory(EvalyticsClient):
         with_retry = '--retry' in args
         with_whitelist = '--whitelist' in args
 
+        whitelist = None
+        retry_list = None
+
         if dry_run:
             args.remove('--dry-run')
+
         if with_retry:
             args.remove('--retry')
+            retry_list = super().get_retry_list()
+
         if with_whitelist:
             args.remove('--whitelist')
+            whitelist = super().get_whitelist()
 
-        eval_process_id = 'Default eval id'
-        for arg in args:
-            arg_with_value = arg.split('=')
-            if arg_with_value[0] == '--eval-process-id':
-                eval_process_id = arg_with_value[1]
-
-        if command == 'setup':
+        if command == CommandFactory.SETUP:
             super().post_setup()
 
-        elif command == 'reviewers':
+        elif command == CommandFactory.REVIEWERS:
             show_stats = '--stats' in args
             super().print_reviewers(show_stats=show_stats)
 
-        elif command == 'send_evals':
+        elif command in [
+                CommandFactory.SEND_EVALS,
+                CommandFactory.SEND_DUE_DATE_COMM,
+                CommandFactory.SEND_REMIDERS]:
+            command_to_kind = {
+                'send_evals': 'process_started',
+                'send_due_date_comm': 'due_date_reminder',
+                'send_reminders': 'pending_evals_reminder'
+            }
+            kind = command_to_kind.get(command)
+
+            reviewers = self.__get_reviewers(kind)
+            reviewers = super().json_to_reviewers(reviewers)
 
             if with_retry:
-                super().retry_send_eval(dry_run=dry_run)
-            elif with_whitelist:
-                super().whitelist_send_eval(dry_run=dry_run)
-            else:
-                super().send_eval(dry_run=dry_run)
+                whitelist = retry_list
 
-        elif command == 'send_reminders':
+            super().send_communication(
+                    kind=kind,
+                    reviewers=reviewers,
+                    dry_run=dry_run,
+                    whitelist=whitelist)
 
-            if with_retry:
-                super().retry_send_reminder(dry_run=dry_run)
-            elif with_whitelist:
-                super().whitelist_send_reminder(dry_run=dry_run)
-            else:
-                super().send_reminder(dry_run=dry_run)
-
-        elif command == 'status':
+        elif command == CommandFactory.STATUS:
             if '--inconsistent-files' in args:
                 super().print_inconsistent_files_status()
             else:
                 super().print_status()
 
-        elif command == 'reports':
-
-            if with_whitelist:
-                super().whitelist_generate_reports(
-                    eval_process_id=eval_process_id,
-                    dry_run=dry_run)
-            else:
-                super().generate_reports(
-                    eval_process_id=eval_process_id,
-                    dry_run=dry_run)
+        elif command == CommandFactory.REPORTS:
+            super().generate_reports(
+                dry_run=dry_run,
+                whitelist=whitelist)
         else:
             super().help(command)
+
+    def __get_reviewers(self, kind):
+        if kind == 'process_started':
+            reviewers = self.get_reviewers()
+        elif kind in ['due_date_reminder', 'pending_evals_reminder']:
+            status = self.get_status()
+            reviewers = status.get('pending', '[]')
+        else:
+            raise ValueError(kind)
+
+        return reviewers
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

@@ -564,6 +564,35 @@ class TestFilesAPI(TestCase):
         self.assertIn('batch_update', calls)
         self.assertIn('get_document', calls)
 
+    def test_insert_eval_report_in_document_when_no_eval_response(self):
+        # given:
+        eval_process_id = ''
+        document_id = 'ID'
+        reviewee = ''
+        reviewee_evaluations = [
+            ReviewerResponse(
+                reviewee=reviewee,
+                reviewer=reviewee,
+                eval_kind=EvalKind.PEER_MANAGER,
+                eval_response=[],
+                filename="Self evaluation",
+                line_number=10
+            )
+        ]
+
+        # when:
+        self.sut.insert_eval_report_in_document(
+            eval_process_id,
+            document_id,
+            reviewee,
+            reviewee_evaluations)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(2, len(calls))
+        self.assertIn('batch_update', calls)
+        self.assertIn('get_document', calls)
+
     def test_insert_eval_report_in_document(self):
         # given:
         eval_process_id = ''
@@ -574,8 +603,8 @@ class TestFilesAPI(TestCase):
                 reviewee=reviewee,
                 reviewer=reviewee,
                 eval_kind=EvalKind.SELF,
-                eval_response=(),
-                filename="filename",
+                eval_response=[('Do you know hot to dance?', 'Of course!')],
+                filename="Report by direct report",
                 line_number=10
             )
         ]
@@ -611,3 +640,30 @@ class TestFilesAPI(TestCase):
             self.assertEqual(
                 DriveService.PERMISSION_ROLE_COMMENTER,
                 call.get('role'))
+
+    def test_empty_document_when_empty_file(self):
+        # given:
+        document_id = 'ID'
+
+        # when:
+        self.sut.empty_document(document_id)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn('get_document', calls)
+
+    def test_empty_document_when_document_exist(self):
+        # given:
+        document_id = 'ID'
+        self.sut.set_start_index(4)
+        self.sut.set_end_index(0)
+
+        # when:
+        self.sut.empty_document(document_id)
+
+        # then:
+        calls = self.sut.get_calls()
+        self.assertEqual(2, len(calls))
+        self.assertIn('get_document', calls)
+        self.assertIn('batch_update', calls)

@@ -37,6 +37,21 @@ class ProvidersConfig(ConfigReader):
         config = super().read()
         return config.get(self.PROVIDERS).get(self.FORMS_PLATFORM)
 
+class EvalProcessConfig(ConfigReader):
+
+    EVAL_PROCESS = 'eval_process'
+
+    ID = 'id'
+    DUE_DATE = 'due_date'
+
+    def read_eval_process_id(self):
+        config = super().read()
+        return config.get(self.EVAL_PROCESS).get(self.ID)
+
+    def read_eval_process_due_date(self):
+        config = super().read()
+        return config.get(self.EVAL_PROCESS).get(self.DUE_DATE)
+
 class SlackProviderConfig(ConfigReader):
 
     SLACK_PROVIDER = 'slack_provider'
@@ -45,7 +60,6 @@ class SlackProviderConfig(ConfigReader):
     IS_DIRECT_MESSAGE = 'is_direct_message'
     PARAMS = 'params'
 
-    PARAMS_TEXT = 'text'
     PARAMS_CHANNEL = 'channel'
     PARAMS_AS_USER = 'as_user'
     USERS_MAP = 'users_map'
@@ -53,10 +67,6 @@ class SlackProviderConfig(ConfigReader):
     def get_slack_token(self):
         config = super().read()
         return config.get(self.SLACK_PROVIDER).get(self.TOKEN)
-
-    def get_slack_text_param(self):
-        config = super().read()
-        return config.get(self.SLACK_PROVIDER).get(self.PARAMS).get(self.PARAMS_TEXT)
 
     def get_slack_channel_param(self):
         config = super().read()
@@ -102,6 +112,7 @@ class GoogleDriveProviderConfig(ConfigReader):
     FORM_MAP = 'form_map'
     ASSIGNMENTS_PEERS_FILE = 'assignments_peers_file'
 
+    EVAL_REPORTS_FOLDER = 'eval_reports_folder'
     EVAL_REPORT_TEMPLATE_ID = 'eval_report_template_id'
     EVAL_REPORT_PREFIX_NAME = 'eval_report_prefix_name'
 
@@ -132,6 +143,10 @@ class GoogleDriveProviderConfig(ConfigReader):
     def read_google_responses_folder(self):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.FORM_RESPONSES_FOLDER)
+
+    def read_eval_reports_folder(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.EVAL_REPORTS_FOLDER)
 
     def read_google_eval_report_template_id(self):
         config = super().read()
@@ -166,6 +181,7 @@ class CompanyConfig(ConfigReader):
 
 class Config(
         ProvidersConfig,
+        EvalProcessConfig,
         SlackProviderConfig,
         GmailProviderConfig,
         GoogleDriveProviderConfig,

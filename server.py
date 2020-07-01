@@ -7,7 +7,8 @@ from tornado.options import define, options
 
 from evalytics.handlers import \
     SetupHandler, \
-    ReviewersHandler, EvalDeliveryHandler, \
+    ReviewersHandler, \
+    CommunicationHandler, \
     ResponseStatusHandler, EvalReportsHandler, \
     PeersAssignmentHandler
 
@@ -22,7 +23,7 @@ class GetPathAndHandler:
             SetupHandler,
             PeersAssignmentHandler,
             ReviewersHandler,
-            EvalDeliveryHandler,
+            CommunicationHandler,
             ResponseStatusHandler,
             EvalReportsHandler
         ]

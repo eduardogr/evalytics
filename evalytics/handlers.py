@@ -1,9 +1,10 @@
 import tornado.web
 
-from .usecases import SetupUseCase, GetReviewersUseCase, SendEvalUseCase
-from .usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
-from .usecases import GeneratePeersAssignmentUseCase, GetPeersAssignmentUseCase
-from .mappers import Mapper
+from evalytics.usecases import SetupUseCase, GetReviewersUseCase
+from evalytics.usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
+from evalytics.usecases import GetPeersAssignmentUseCase, UpdatePeersAssignmentUseCase
+from evalytics.usecases import SendCommunicationUseCase
+from evalytics.mappers import Mapper
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import GoogleApiClientHttpErrorException
 
@@ -63,24 +64,23 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 }
             })
 
-class EvalDeliveryHandler(tornado.web.RequestHandler, Mapper):
-    path = r"/evaldelivery"
+class CommunicationHandler(tornado.web.RequestHandler, Mapper):
+    path = r"/communications"
 
     async def post(self):
         try:
             reviewers_arg = self.get_argument('reviewers', "[]", strip=False)
-            is_reminder_arg = self.get_argument('is_reminder', False, strip=False)
+            kind_arg = self.get_argument('kind', "", strip=False)
 
-            is_reminder = super().str_to_bool(is_reminder_arg)
             reviewers = super().json_to_reviewers(reviewers_arg)
+            kind = super().string_to_communication_kind(kind_arg)
 
-            evals_sent, evals_not_sent = SendEvalUseCase().send_eval(reviewers, is_reminder=is_reminder)
+            comms_sent, comms_not_sent = SendCommunicationUseCase().send(reviewers, kind=kind)
             self.finish({
                 'success': True,
                 'response': {
-                    'is_reminder': is_reminder,
-                    'evals_sent': evals_sent,
-                    'evals_not_sent': evals_not_sent
+                    'comms_sent': comms_sent,
+                    'comms_not_sent': comms_not_sent
                 }
             })
         except Exception as e:
@@ -136,8 +136,6 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
 
     async def post(self):
         try:
-            eval_process_id = self.get_argument('eval_process_id', 'EVAL_ID', strip=False)
-
             area = self.get_argument('area', None, strip=False)
             managers_arg = self.get_argument('managers', None, strip=False)
             employee_uids_arg = self.get_argument('uids', None, strip=False)
@@ -150,7 +148,6 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
             
             created, not_created = GenerateEvalReportsUseCase().generate(
                 dry_run,
-                eval_process_id,
                 area,
                 managers,
                 employee_uids
@@ -188,8 +185,7 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
             self.finish({
                 'success': True,
                 'response': {
-                    'peers_assignment': peers_assignment['peers'],
-                    'unanswered_forms': peers_assignment['unanswered_forms'],
+                    'peers_assignment': peers_assignment
                 }
             })
         except MissingDataException as e:
@@ -212,11 +208,14 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
     async def post(self):
         try:
 
-            GeneratePeersAssignmentUseCase().generate()
+            peers_assignment = UpdatePeersAssignmentUseCase().update()
 
             self.finish({
                 'success': True,
-                'response': {}
+                'response': {
+                    'peers_assignment': peers_assignment.peers,
+                    'unanswered_forms': peers_assignment.unanswered_forms
+                }
             })
         except MissingDataException as e:
             if hasattr(e, 'message'):

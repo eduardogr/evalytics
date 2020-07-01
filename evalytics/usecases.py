@@ -1,3 +1,4 @@
+from evalytics.models import CommunicationKind
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.filters import ReviewerResponseFilter
 from evalytics.storages import StorageFactory
@@ -13,34 +14,32 @@ class SetupUseCase(StorageFactory):
 
 class GetReviewersUseCase(
         StorageFactory,
-        FormsPlatformFactory,
         EmployeeAdapter):
 
     def get_reviewers(self):
         storage = super().get_storage()
-        forms_platform = super().get_forms_platform()
         return super().build_reviewers(
             storage.get_employees(),
-            forms_platform.get_peers_assignment()['peers'],
+            storage.get_peers_assignment(),
             storage.get_forms())
 
-class SendEvalUseCase(CommunicationChannelFactory):
+class SendCommunicationUseCase(CommunicationChannelFactory):
 
-    def send_eval(self, revieweers, is_reminder: bool = False):
+    def send(self, revieweers, kind: CommunicationKind):
         communication_channel = super().get_communication_channel()
 
-        evals_sent = []
-        evals_not_sent = []
+        comms_sent = []
+        comms_not_sent = []
         for _, reviewer in revieweers.items():
             try:
                 communication_channel.send_communication(
                     reviewer=reviewer,
-                    is_reminder=is_reminder)
-                evals_sent.append(reviewer.uid)
+                    kind=kind)
+                comms_sent.append(reviewer.uid)
             except:
-                evals_not_sent.append(reviewer.uid)
+                comms_not_sent.append(reviewer.uid)
 
-        return evals_sent, evals_not_sent
+        return comms_sent, comms_not_sent
 
 class GetResponseStatusUseCase(
         GetReviewersUseCase, FormsPlatformFactory, ReviewerAdapter):
@@ -57,7 +56,6 @@ class GenerateEvalReportsUseCase(
     def generate(
             self,
             dry_run,
-            eval_process_id,
             area, managers,
             employee_uids):
         storage = super().get_storage()
@@ -81,7 +79,6 @@ class GenerateEvalReportsUseCase(
             try:
                 storage.generate_eval_reports(
                     dry_run,
-                    eval_process_id,
                     uid,
                     reviewee_evaluations,
                     employee_managers)
@@ -102,17 +99,19 @@ class GenerateEvalReportsUseCase(
 
         return created, not_created
 
-class GetPeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
+class GetPeersAssignmentUseCase(StorageFactory):
 
     def get_peers(self):
-        forms_platform = super().get_forms_platform()
-        return forms_platform.get_peers_assignment()
+        storage = super().get_storage()
+        return storage.get_peers_assignment()
 
-class GeneratePeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
+class UpdatePeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
 
-    def generate(self):
+    def update(self):
         storage = super().get_storage()
         forms_platform = super().get_forms_platform()
 
-        peers_assignment = forms_platform.get_peers_assignment()['peers']
-        storage.write_peers_assignment(peers_assignment)
+        peers_assignment = forms_platform.get_peers_assignment()
+        storage.write_peers_assignment(peers_assignment.peers)
+
+        return peers_assignment

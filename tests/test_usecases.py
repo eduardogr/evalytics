@@ -1,11 +1,11 @@
 from unittest import TestCase
 
 from evalytics.usecases import SetupUseCase
-from evalytics.usecases import GetReviewersUseCase, SendEvalUseCase
+from evalytics.usecases import GetReviewersUseCase, SendCommunicationUseCase
 from evalytics.usecases import GetResponseStatusUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.usecases import GetPeersAssignmentUseCase
-from evalytics.usecases import GeneratePeersAssignmentUseCase
+from evalytics.usecases import UpdatePeersAssignmentUseCase
 from evalytics.models import ReviewerResponse
 
 from tests.common.employees import employees_collection
@@ -24,15 +24,12 @@ class SetupUseCaseSut(SetupUseCase, MockStorageFactory):
 class GetReviewersUseCaseSut(
         GetReviewersUseCase,
         MockStorageFactory,
-        MockFormsPlatformFactory,
         MockEmployeeAdapter):
     'Inject mocks into GetReviewersUseCase dependencies'
 
-class SendEvalUseCaseSut(
-        SendEvalUseCase,
-        MockCommunicationChannelFactory,
-        MockEmployeeAdapter,
-        MockConfig):
+class SendCommunicationUseCaseSut(
+        SendCommunicationUseCase,
+        MockCommunicationChannelFactory):
     'Inject mocks into SendEmailUseCase dependencies'
 
 class GetResponseStatusUseCaseSut(
@@ -56,8 +53,8 @@ class GetPeersAssignmentUseCaseSut(
         MockFormsPlatformFactory,):
     'Inject mocks into GetPeersAssignmentUseCase dependencies'
 
-class GeneratePeersAssignmentUseCaseSut(
-        GeneratePeersAssignmentUseCase,
+class UpdatePeersAssignmentUseCaseSut(
+        UpdatePeersAssignmentUseCase,
         MockStorageFactory,
         MockFormsPlatformFactory,):
     'Inject mocks into GetPeersAssignmentUseCase dependencies'
@@ -81,7 +78,6 @@ class TestGetReviewersUseCase(TestCase):
     def setUp(self):
         self.sut = GetReviewersUseCaseSut()
         self.sut.set_storage(MockGoogleStorage())
-        self.sut.set_forms_platform(MockGoogleForms())
 
     def test_get_reviewers_usecase(self):
         reviewers = self.sut.get_reviewers()
@@ -90,20 +86,21 @@ class TestGetReviewersUseCase(TestCase):
             employees_collection().get('em_email'),
             reviewers['em_email'])
 
-class TestSendEvalUseCase(TestCase):
+class TestSendCommunicationUseCase(TestCase):
 
     def setUp(self):
-        self.sut = SendEvalUseCaseSut()
+        self.sut = SendCommunicationUseCaseSut()
         self.communication_channel = MockGmailChannel()
         self.reviewers = {
             'em_email': employees_collection().get('em_email'),
             'manager_em': employees_collection().get('manager_em'),
         }
+        self.any_kind = 'process_started'
 
     def test_send_email_usecase(self):
         self.sut.set_communication_channel(self.communication_channel)
 
-        evals_sent, evals_not_sent = self.sut.send_eval(self.reviewers)
+        evals_sent, evals_not_sent = self.sut.send(self.reviewers, self.any_kind)
 
         self.assertIn('em_email', evals_sent)
         self.assertIn('manager_em', evals_sent)
@@ -115,7 +112,7 @@ class TestSendEvalUseCase(TestCase):
         )
         self.sut.set_communication_channel(self.communication_channel)
 
-        evals_sent, evals_not_sent = self.sut.send_eval(self.reviewers)
+        evals_sent, evals_not_sent = self.sut.send(self.reviewers, self.any_kind)
 
         self.assertIn('em_email', evals_sent)
         self.assertEqual(1, len(evals_sent))
@@ -154,7 +151,6 @@ class TestGenerateEvalReportsUseCase(TestCase):
 
     def test_get_response_status(self):
         dry_run = False
-        eval_process_id = ''
         area = ''
         managers = []
         employee_uids = []
@@ -165,7 +161,6 @@ class TestGenerateEvalReportsUseCase(TestCase):
 
         created, not_created = self.sut.generate(
             dry_run,
-            eval_process_id,
             area,
             managers,
             employee_uids
@@ -176,7 +171,6 @@ class TestGenerateEvalReportsUseCase(TestCase):
 
     def test_get_response_status_when_exceptions_is_raised(self):
         dry_run = False
-        eval_process_id = ''
         area = ''
         managers = []
         employee_uids = []
@@ -188,7 +182,6 @@ class TestGenerateEvalReportsUseCase(TestCase):
 
         created, not_created = self.sut.generate(
             dry_run,
-            eval_process_id,
             area,
             managers,
             employee_uids
@@ -209,14 +202,14 @@ class TestGetPeersAssignmentUseCase(TestCase):
     def test_usecase(self):
         self.sut.get_peers()
 
-class TestGeneratePeersAssignmentUseCase(TestCase):
+class TestUpdatePeersAssignmentUseCaseSut(TestCase):
 
     def setUp(self):
-        self.sut = GeneratePeersAssignmentUseCaseSut()
+        self.sut = UpdatePeersAssignmentUseCaseSut()
         self.storage = MockGoogleStorage()
         self.forms_platform = MockGoogleForms()
         self.sut.set_storage(self.storage)
         self.sut.set_forms_platform(self.forms_platform)
 
     def test_usecase(self):
-        self.sut.generate()
+        self.sut.update()

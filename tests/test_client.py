@@ -20,175 +20,7 @@ class CommandFactorySut(CommandFactory, MockEvalyticsClient):
 
 class TestCommandFactory(TestCase):
 
-    def test_command_factory_post_setup(self):
-        factory = CommandFactorySut()
-        factory.execute(['setup'])
-
-        self.assertIn('post_setup', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['post_setup'])
-
-    def test_command_factory_get_reviewers(self):
-        factory = CommandFactorySut()
-        factory.execute(['reviewers'])
-
-        self.assertIn('print_reviewers', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['print_reviewers'])
-
-    def test_command_factory_get_reviewers_stats(self):
-        factory = CommandFactorySut()
-        factory.execute(['reviewers', '--stats'])
-
-        self.assertIn('print_reviewers', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['print_reviewers'])
-        self.assertTrue(factory.get_show_stats())
-
-    def test_command_factory_send_eval(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_evals'])
-
-        self.assertIn('send_eval', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['send_eval'])
-
-    def test_command_factory_send_eval_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_evals', '--dry-run'])
-
-        self.assertIn('send_eval', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['send_eval'])
-        self.assertTrue(factory.get_dry_run())
-
-    def test_command_factory_retry_send_eval(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_evals', '--retry'])
-
-        self.assertIn('retry_send_eval', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['retry_send_eval'])
-
-    def test_command_factory_retry_send_eval_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_evals', '--retry', '--dry-run'])
-
-        self.assertIn('retry_send_eval', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['retry_send_eval'])
-        self.assertTrue(factory.get_dry_run())
-
-    def test_command_factory_whitelisted_send_eval(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_evals', '--whitelist'])
-
-        self.assertIn('whitelist_send_eval', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['whitelist_send_eval'])
-
-    def test_command_factory_whitelisted_send_eval_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_evals', '--whitelist', '--dry-run'])
-
-        self.assertIn('whitelist_send_eval', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['whitelist_send_eval'])
-        self.assertTrue(factory.get_dry_run())
-
-    def test_command_factory_send_reminder(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_reminders'])
-
-        self.assertIn('send_reminder', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['send_reminder'])
-
-    def test_command_factory_send_reminder_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_reminders', '--dry-run'])
-
-        self.assertIn('send_reminder', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['send_reminder'])
-        self.assertTrue(factory.get_dry_run())
-
-    def test_command_factory_retry_send_reminder(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_reminders', '--retry'])
-
-        self.assertIn('retry_send_reminder', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['retry_send_reminder'])
-
-    def test_command_factory_retry_send_reminder_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_reminders', '--retry', '--dry-run'])
-
-        self.assertIn('retry_send_reminder', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['retry_send_reminder'])
-        self.assertTrue(factory.get_dry_run())
-
-    def test_command_factory_whitelisted_send_reminder(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_reminders', '--whitelist'])
-
-        self.assertIn('whitelist_send_reminder', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['whitelist_send_reminder'])
-
-    def test_command_factory_whitelisted_send_reminder_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['send_reminders', '--whitelist', '--dry-run'])
-
-        self.assertIn('whitelist_send_reminder', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['whitelist_send_reminder'])
-        self.assertTrue(factory.get_dry_run())
-
-    def test_command_factory_help(self):
-        factory = CommandFactorySut()
-        factory.execute(['invented command that is not expected'])
-
-        self.assertIn('help', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['help'])
-
-    def test_command_factory_status(self):
-        factory = CommandFactorySut()
-        factory.execute(['status'])
-
-        self.assertIn('print_status', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['print_status'])
-
-    def test_command_factory_status_inconsistent_files(self):
-        factory = CommandFactorySut()
-        factory.execute(['status', '--inconsistent-files'])
-
-        self.assertIn('print_inconsistent_files_status', factory.get_calls())
-        self.assertEqual(
-            1,
-            factory.get_calls()['print_inconsistent_files_status'])
-
-    def test_command_factory_reports(self):
-        factory = CommandFactorySut()
-        factory.execute(['reports'])
-
-        self.assertIn('generate_reports', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['generate_reports'])
-
-    def test_command_factory_reports_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['reports', '--dry-run'])
-
-        self.assertIn('generate_reports', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['generate_reports'])
-        self.assertTrue(factory.get_dry_run())
-
-    def test_command_factory_whitelisted_reports(self):
-        factory = CommandFactorySut()
-        factory.execute(['reports', '--whitelist'])
-
-        self.assertIn('whitelist_generate_reports', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['whitelist_generate_reports'])
-
-    def test_command_factory_whitelisted_reports_with_dry_run(self):
-        factory = CommandFactorySut()
-        factory.execute(['reports', '--whitelist', '--dry-run'])
-
-        self.assertIn('whitelist_generate_reports', factory.get_calls())
-        self.assertEqual(1, factory.get_calls()['whitelist_generate_reports'])
-        self.assertTrue(factory.get_dry_run())
-
-class TestEvalyticsClient(TestCase):
-
     def setUp(self):
-        self.sut = EvalyticsClientSut()
         self.correct_reviewers_response = {
             'reviewers': [
                 {
@@ -255,7 +87,158 @@ class TestEvalyticsClient(TestCase):
                 ]
             }
         }
-        mapped_reviewers = {
+        self.sut = CommandFactorySut()
+        self.sut.set_reviewers_response(self.correct_reviewers_response)
+        self.sut.set_status_response(self.correct_status_response)
+
+    def test_command_factory_post_setup(self):
+        self.sut.execute(['setup'])
+
+        self.assertIn('post_setup', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['post_setup'])
+
+    def test_command_factory_get_reviewers(self):
+        self.sut.execute(['reviewers'])
+
+        self.assertIn('print_reviewers', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['print_reviewers'])
+
+    def test_command_factory_get_reviewers_stats(self):
+        self.sut.execute(['reviewers', '--stats'])
+
+        self.assertIn('print_reviewers', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['print_reviewers'])
+        self.assertTrue(self.sut.get_show_stats())
+
+    def test_command_factory_send_eval(self):
+        self.sut.execute(['send_evals'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+
+    def test_command_factory_send_eval_with_dry_run(self):
+        self.sut.execute(['send_evals', '--dry-run'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+        self.assertTrue(self.sut.get_dry_run())
+
+    def test_command_factory_retry_send_eval(self):
+        self.sut.execute(['send_evals', '--retry'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+
+    def test_command_factory_retry_send_eval_with_dry_run(self):
+        self.sut.execute(['send_evals', '--retry', '--dry-run'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+        self.assertTrue(self.sut.get_dry_run())
+
+    def test_command_factory_whitelisted_send_communication(self):
+        self.sut.execute(['send_evals', '--whitelist'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+
+    def test_command_factory_whitelisted_send_eval_with_dry_run(self):
+        self.sut.execute(['send_evals', '--whitelist', '--dry-run'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+        self.assertTrue(self.sut.get_dry_run())
+
+    def test_command_factory_send_reminder(self):
+        self.sut.execute(['send_reminders'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+
+    def test_command_factory_send_reminder_with_dry_run(self):
+        self.sut.execute(['send_reminders', '--dry-run'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+        self.assertTrue(self.sut.get_dry_run())
+
+    def test_command_factory_retry_send_reminder(self):
+        self.sut.execute(['send_reminders', '--retry'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+
+    def test_command_factory_retry_send_reminder_with_dry_run(self):
+        self.sut.execute(['send_reminders', '--retry', '--dry-run'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+        self.assertTrue(self.sut.get_dry_run())
+
+    def test_command_factory_whitelisted_send_reminder(self):
+        self.sut.execute(['send_reminders', '--whitelist'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+
+    def test_command_factory_whitelisted_send_reminder_with_dry_run(self):
+        self.sut.execute(['send_reminders', '--whitelist', '--dry-run'])
+
+        self.assertIn('send_communication', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['send_communication'])
+        self.assertTrue(self.sut.get_dry_run())
+
+    def test_command_factory_help(self):
+        self.sut.execute(['invented command that is not expected'])
+
+        self.assertIn('help', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['help'])
+
+    def test_command_factory_status(self):
+        self.sut.execute(['status'])
+
+        self.assertIn('print_status', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['print_status'])
+
+    def test_command_factory_status_inconsistent_files(self):
+        self.sut.execute(['status', '--inconsistent-files'])
+
+        self.assertIn('print_inconsistent_files_status', self.sut.get_calls())
+        self.assertEqual(
+            1,
+            self.sut.get_calls()['print_inconsistent_files_status'])
+
+    def test_command_factory_reports(self):
+        self.sut.execute(['reports'])
+
+        self.assertIn('generate_reports', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['generate_reports'])
+
+    def test_command_factory_reports_with_dry_run(self):
+        self.sut.execute(['reports', '--dry-run'])
+
+        self.assertIn('generate_reports', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['generate_reports'])
+        self.assertTrue(self.sut.get_dry_run())
+
+    def test_command_factory_whitelisted_reports(self):
+        self.sut.execute(['reports', '--whitelist'])
+
+        self.assertIn('generate_reports', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['generate_reports'])
+
+    def test_command_factory_whitelisted_reports_with_dry_run(self):
+        self.sut.execute(['reports', '--whitelist', '--dry-run'])
+
+        self.assertIn('generate_reports', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['generate_reports'])
+        self.assertTrue(self.sut.get_dry_run())
+
+class TestEvalyticsClient(TestCase):
+
+    def setUp(self):
+        self.sut = EvalyticsClientSut()
+        self.reviewers = {
             'uid1': Reviewer(
                 employee=Employee(mail='uid1@', manager='',area='')
             ),
@@ -266,8 +249,11 @@ class TestEvalyticsClient(TestCase):
                 employee=Employee(mail='uid3@', manager='',area='')
             ),
         }
-        self.sut.set_reviewers(mapped_reviewers)
-        self.any_eval_process_id = 'PROCESS_ID'
+        self.sut.set_reviewers(self.reviewers)
+        self.sut.set_communications_response({
+            'comms_sent': ['uid1', 'uid2', 'uid3'],
+            'comms_not_sent': []
+        })
 
     def test_correct_setup(self):
         self.sut.set_setup_response({
@@ -400,110 +386,72 @@ class TestEvalyticsClient(TestCase):
         self.assertEqual(1, self.sut.get_calls()['status'])
 
     def test_correct_send_eval(self):
-        self.sut.set_reviewers_response(self.correct_reviewers_response)
-        self.sut.set_evaldelivery_response({
-            'evals_sent': ['uid1', 'uid2', 'uid3'],
-            'evals_not_sent': []
-        })
+        kind = 'process_started'
         whitelist = ['uid1', 'uid2', 'uid3']
         dry_run = False
 
-        self.sut.send_eval(whitelist=whitelist, dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
-        self.assertIn('evaldelivery', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
+        self.assertIn('communications', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_eval_with_whitelist(self):
-        self.sut.set_reviewers_response(self.correct_reviewers_response)
-        self.sut.set_evaldelivery_response({
-            'evals_sent': ['uid1', 'uid2', 'uid3'],
-            'evals_not_sent': []
-        })
+        kind = 'process_started'
         whitelist = ['uid1']
         dry_run = False
 
-        self.sut.send_eval(whitelist=whitelist, dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
-        self.assertIn('evaldelivery', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
+        self.assertIn('communications', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_eval_with_dry_run(self):
-        self.sut.set_reviewers_response(self.correct_reviewers_response)
+        kind = 'process_started'
         whitelist = ['uid1', 'uid2', 'uid3']
         dry_run = True
 
-        self.sut.send_eval(whitelist=whitelist, dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
-        self.assertNotIn('evaldelivery', self.sut.get_calls())
+        self.assertNotIn('communications', self.sut.get_calls())
 
-    def test_correct_retry_send_eval_with_dry_run(self):
-        self.sut.set_reviewers_response(self.correct_reviewers_response)
-        dry_run = True
-
-        self.sut.retry_send_eval(dry_run=dry_run)
-
-        self.assertNotIn('evaldelivery', self.sut.get_calls())
-
-    def test_correct_whitelist_send_eval_with_dry_run(self):
-        self.sut.set_reviewers_response(self.correct_reviewers_response)
-        dry_run = True
-
-        self.sut.whitelist_send_eval(dry_run=dry_run)
-
-        self.assertNotIn('evaldelivery', self.sut.get_calls())
-
-    def test_correct_send_reminder(self):
-        self.sut.set_status_response(self.correct_status_response)
-        self.sut.set_evaldelivery_response({
-            'evals_sent': ['uid1', 'uid2', 'uid3'],
-            'evals_not_sent': []
-        })
+    def test_correct_send_reminders(self):
+        kind = 'pending_evals_reminder'
         whitelist = ['uid1', 'uid2', 'uid3']
         dry_run = False
 
-        self.sut.send_reminder(whitelist=whitelist, dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
-        self.assertIn('evaldelivery', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
+        self.assertIn('communications', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_reminder_with_whitelist(self):
-        self.sut.set_status_response(self.correct_status_response)
-        self.sut.set_evaldelivery_response({
-            'evals_sent': ['uid1', 'uid2', 'uid3'],
-            'evals_not_sent': []
-        })
+        kind = 'pending_evals_reminder'
         whitelist = ['uid1']
         dry_run = False
 
-        self.sut.send_reminder(whitelist=whitelist, dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
-        self.assertIn('evaldelivery', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['evaldelivery'])
+        self.assertIn('communications', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_reminder_with_dry_run(self):
-        self.sut.set_status_response(self.correct_status_response)
+        kind = 'pending_evals_reminder'
         whitelist = ['uid1', 'uid2', 'uid3']
         dry_run = True
 
-        self.sut.send_reminder(whitelist=whitelist, dry_run=dry_run)
-
-        self.assertNotIn('evaldelivery', self.sut.get_calls())
-
-    def test_correct_retry_send_reminder_with_dry_run(self):
-        self.sut.set_status_response(self.correct_status_response)
-        dry_run = True
-
-        self.sut.retry_send_reminder(dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
         self.assertNotIn('evaldelivery', self.sut.get_calls())
 
     def test_correct_whitelist_send_reminder_with_dry_run(self):
-        self.sut.set_status_response(self.correct_status_response)
+        kind = 'pending_evals_reminder'
+        reviewers = []
         dry_run = True
+        whitelist = ['uid1']
 
-        self.sut.whitelist_send_reminder(dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
-        self.assertNotIn('evaldelivery', self.sut.get_calls())
+        self.assertNotIn('communications', self.sut.get_calls())
 
     def test_correct_generate_reports(self):
         self.sut.set_evalreports_response({
@@ -531,9 +479,8 @@ class TestEvalyticsClient(TestCase):
         dry_run = False
 
         self.sut.generate_reports(
-            eval_process_id=self.any_eval_process_id,
             dry_run=dry_run,
-            employee_uids=whitelist)
+            whitelist=whitelist)
 
         self.assertIn('evalreports', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['evalreports'])
@@ -562,7 +509,7 @@ class TestEvalyticsClient(TestCase):
         })
         dry_run = True
 
-        self.sut.generate_reports(eval_process_id=self.any_eval_process_id, dry_run=dry_run)
+        self.sut.generate_reports(dry_run=dry_run)
 
         self.assertIn('evalreports', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['evalreports'])
@@ -590,8 +537,9 @@ class TestEvalyticsClient(TestCase):
             }
         })
         dry_run = True
+        whitelist = ['uid1']
 
-        self.sut.whitelist_generate_reports(eval_process_id=self.any_eval_process_id, dry_run=dry_run)
+        self.sut.generate_reports(dry_run=dry_run, whitelist=whitelist)
 
         self.assertIn('evalreports', self.sut.get_calls())
 

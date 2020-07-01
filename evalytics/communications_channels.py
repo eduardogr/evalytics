@@ -5,7 +5,7 @@ from slack import WebClient
 from slack.errors import SlackApiError
 
 from evalytics.google_api import GoogleAPI
-from evalytics.models import Reviewer, EvalKind
+from evalytics.models import Reviewer, EvalKind, CommunicationKind
 from evalytics.config import Config, ProvidersConfig
 from evalytics.exceptions import CommunicationChannelException
 
@@ -43,14 +43,40 @@ class SlackClient:
 
 class SlackChannel(SlackClient, Config):
 
-    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
-        if is_reminder:
-            message = 'You have pending evals:'
-        else:
-            message = 'You have new assignments !'
+    def send_communication(self, reviewer, kind: CommunicationKind):
 
+        if kind == CommunicationKind.PEERS_ASSIGNMENT:
+            raise NotImplementedError(kind)
+
+        elif kind == CommunicationKind.PROCESS_STARTED:
+            message = 'You have new assignments !'
+            blocks = self.__build_blocks(message, reviewer)
+
+        elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
+            raise NotImplementedError(kind)
+
+        elif kind == CommunicationKind.DUE_DATE_REMINDER:
+            eval_process_id = super().read_eval_process_id()
+            due_date = super().read_eval_process_due_date()
+            message = 'This is a reminder to complete your review assignments for the *{}* Evals due by *{}*'.format(
+                eval_process_id, due_date
+            )
+            blocks = self.__build_due_date_reminder_blocks(message, reviewer)
+
+        elif kind == CommunicationKind.PENDING_EVALS_REMINDER:
+            message = 'You have pending evals:'
+            blocks = self.__build_blocks(message, reviewer)
+
+        elif kind == CommunicationKind.PROCESS_FINISHED:
+            raise NotImplementedError(kind)
+
+        else:
+            raise NotImplementedError(kind)
+
+        self.__send(reviewer, blocks)
+
+    def __send(self, reviewer: Reviewer, blocks):
         token = super().get_slack_token()
-        text_param = super().get_slack_text_param()
         channel = super().get_slack_channel_param()
         as_user_param = super().slack_message_as_user_param()
         is_direct_message = super().slack_message_is_direct()
@@ -62,8 +88,6 @@ class SlackChannel(SlackClient, Config):
                 reviewer_uid = users_map.get(reviewer_uid)
             channel = channel.format(reviewer_uid)
 
-        blocks = self.__build_blocks(text_param.format(message), reviewer)
-
         try:
             _ = super().chat_post_message(
                 token=token,
@@ -74,8 +98,19 @@ class SlackChannel(SlackClient, Config):
         except SlackApiError as e:
             assert e.response["ok"] is False
             assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-            #print(f"Got an error: {e.response['error']}")
+            # print(f"Got an error: {e.response['error']}")
             raise CommunicationChannelException()
+
+    def __build_due_date_reminder_blocks(self, message, reviewer: Reviewer):
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Hi {}:\n{}".format(reviewer.uid, message)
+                }
+            }
+        ]
 
     def __build_blocks(self, message, reviewer: Reviewer):
         list_of_evals = ''
@@ -107,16 +142,43 @@ class SlackChannel(SlackClient, Config):
 
 class GmailChannel(GoogleAPI, Config):
 
-    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
-        if is_reminder:
-            mail_subject = super().read_reminder_mail_subject()
-            message = 'You have pending evals:'
-        else:
+    def send_communication(self, reviewer, kind: CommunicationKind):
+
+        if kind == CommunicationKind.PEERS_ASSIGNMENT:
+            raise NotImplementedError(kind)
+
+        elif kind == CommunicationKind.PROCESS_STARTED:
             mail_subject = super().read_mail_subject()
             message = 'You have new assignments !'
+            message_text = self.__build_message_text(message, reviewer)
 
+        elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
+            raise NotImplementedError(kind)
+
+        elif kind == CommunicationKind.DUE_DATE_REMINDER:
+            mail_subject = 'Reminder Evalytics: Due date is arriving'
+            eval_process_id = super().read_eval_process_id()
+            due_date = super().read_eval_process_due_date()
+            message = 'This is a reminder to complete your review assignments for the <b>{}</b> Evals due by <b>{}<b/>'.format(
+                eval_process_id, due_date
+            )
+            message_text = self.__build_message_text(message, reviewer)
+
+        elif kind == CommunicationKind.PENDING_EVALS_REMINDER:
+            mail_subject = super().read_reminder_mail_subject()
+            message = 'You have pending evals:'
+            message_text = self.__build_message_text(message, reviewer)
+
+        elif kind == CommunicationKind.PROCESS_FINISHED:
+            raise NotImplementedError(kind)
+
+        else:
+            raise NotImplementedError(kind)
+
+        self.__send(reviewer, mail_subject, message_text)
+
+    def __send(self, reviewer: Reviewer, mail_subject, message_text):
         destiny = reviewer.mail
-        message_text = self.__build_message_text(message, reviewer)
         super().send_message(
             user_id=GoogleAPI.AUTHENTICATED_USER,
             message=self.__create_message(

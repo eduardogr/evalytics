@@ -3,7 +3,7 @@ import tornado.web
 from googleapiclient.errors import HttpError
 
 from evalytics.config import Config, ConfigReader
-from evalytics.models import Reviewer, GoogleSetup, GoogleFile
+from evalytics.models import Reviewer, GoogleSetup, GoogleFile, CommunicationKind, PeersAssignment
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackChannel, SlackClient
 from evalytics.storages import GoogleStorage, StorageFactory
@@ -11,8 +11,7 @@ from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.google_api import GoogleAPI, GoogleService
 from evalytics.google_api import GmailService, DriveService
 from evalytics.google_api import SheetsService, DocsService
-from evalytics.usecases import SetupUseCase, GetReviewersUseCase
-from evalytics.usecases import SendEvalUseCase
+from evalytics.usecases import GetReviewersUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
 from evalytics.filters import ReviewerResponseFilter
@@ -337,8 +336,13 @@ class MockSheetsService(SheetsService):
 
 class MockDocsService(DocsService):
 
+    end_index = 99
+    start_index = 1
+
     def __init__(self):
         self.calls = {}
+        self.end_index = 99
+        self.start_index = 1
 
     def get_document(self, document_id):
         self.__update_calls(
@@ -355,7 +359,16 @@ class MockDocsService(DocsService):
                             'elements': [
                                 {
                                     'horizontalRule': {},
-                                    'endIndex': 99
+                                    'endIndex': self.end_index,
+                                    'startIndex': self.start_index
+                                },
+                                {
+                                    'textRun': {
+                                        'content': 'i am content'
+                                    },
+                                    'horizontalRule': {},
+                                    'endIndex': self.end_index,
+                                    'startIndex': self.start_index
                                 }
                             ]
                         }
@@ -375,6 +388,12 @@ class MockDocsService(DocsService):
 
     def get_calls(self):
         return self.calls
+
+    def set_end_index(self, index):
+        self.end_index = index
+
+    def set_start_index(self, index):
+        self.start_index = index
 
     def __update_calls(self, function, params):
         current_call_number = 0
@@ -526,6 +545,9 @@ class MockGoogleAPI(GoogleAPI,
     def add_comenter_permission(self, document_id, emails):
         return
 
+    def empty_document(self, document_id):
+        return
+
     def get_send_message_calls(self):
         return self.send_message_calls
 
@@ -547,16 +569,22 @@ class MockGoogleAPI(GoogleAPI,
         self.folder = folder
 
     def set_fileid_by_name(self, folder_id: str, filename: str, fileid: str):
-        self.fileid_by_name.update({
-            folder_id: {
-                filename: fileid
-            }
-        })
+        if folder_id not in self.fileid_by_name:
+            self.fileid_by_name.update({
+                folder_id: {}
+            })
+
+        self.fileid_by_name.get(folder_id).update({filename: fileid})
+
 
 class MockConfigReader(ConfigReader):
 
     def read(self, filename: str = ''):
         return {
+            'eval_process': {
+                'id': 'eval_process_id',
+                'due_date': 'eval_process_due_date',
+            },
             'providers': {
                 'storage': 'storage-provider',
                 'communication_channel': 'comm-provider',
@@ -574,6 +602,7 @@ class MockConfigReader(ConfigReader):
                 'org_chart': 'mock_orgchart',
                 'form_map': 'mock_formmap',
                 'assignments_peers_file': 'assignments_peers_file',
+                'eval_reports_folder': 'eval_reports_folder',
                 'eval_report_template_id': 'ID',
                 'eval_report_prefix_name': 'Prefix'
             },
@@ -598,14 +627,23 @@ class MockConfigReader(ConfigReader):
 
 class MockConfig(Config, MockConfigReader):
 
+    company_number_of_employees = 1000
+
     def __init__(self):
         super().__init__()
+        self.company_number_of_employees = 1000
         self.needed_spreadsheets = []
         self.storage_provider = ""
         self.communications_provider = ""
         self.forms_platform_provider = ""
         self.response_slack_message_is_direct = None
         self.slack_users_map = []
+
+    def read_eval_process_id(self):
+        return 'EVAL_PROCESS_ID'
+
+    def read_eval_process_due_date(self):
+        return 'DUE_DATE'
 
     def read_storage_provider(self):
         return self.storage_provider
@@ -650,7 +688,10 @@ class MockConfig(Config, MockConfigReader):
         return "company.com"
 
     def read_company_number_of_employees(self):
-        return 1000
+        return self.company_number_of_employees
+
+    def read_eval_reports_folder(self):
+        return "eval_reports_folder"
 
     def read_google_eval_report_template_id(self):
         return "ID::ADSFASDFRE"
@@ -675,6 +716,9 @@ class MockConfig(Config, MockConfigReader):
 
     def get_slack_users_map(self):
         return self.slack_users_map
+
+    def set_company_number_of_employees(self, company_number_of_employees):
+        self.company_number_of_employees = company_number_of_employees
 
     def set_needed_spreadhseets(self, needed_spreadhseets):
         self.needed_spreadsheets = needed_spreadhseets
@@ -718,10 +762,7 @@ class MockGoogleForms(GoogleForms):
 
     def __init__(self):
         self.evaluations_response = {}
-        self.peers_assignment = {
-            'peers': {},
-            'unanswered_forms': {}
-        }
+        self.peers_assignment = PeersAssignment({}, [])
 
     def get_peers_assignment(self):
         return self.peers_assignment
@@ -761,7 +802,6 @@ class MockGoogleStorage(GoogleStorage):
 
     def generate_eval_reports(self,
                               dry_run,
-                              eval_process_id,
                               reviewee,
                               reviewee_evaluations,
                               employee_managers):
@@ -769,6 +809,9 @@ class MockGoogleStorage(GoogleStorage):
             raise Exception
 
         return []
+
+    def get_peers_assignment(self):
+        return {}
 
     def get_evaluations_will_raise_exception_for_reviewee(self, reviewee):
         self.evaluations_raise_exception_by_reviewee.append(reviewee)
@@ -794,7 +837,7 @@ class MockGmailChannel(GmailChannel):
     def add_raise_exception_for_reviewer(self, reviewer_uid: str):
         self.raise_exception_for_reviewers.append(reviewer_uid)
 
-    def send_communication(self, reviewer: Reviewer, is_reminder: bool):
+    def send_communication(self, reviewer: Reviewer, kind: CommunicationKind):
         if reviewer.uid in self.raise_exception_for_reviewers:
             raise Exception("MockCommunicationsProvider was asked to throw this exception")
         return
@@ -820,24 +863,8 @@ class MockReviewerResponseFilter(ReviewerResponseFilter):
                          allowed_uids):
         return reviewee_evaluations
 
-class SendEvalUseCaseMock(
-        SendEvalUseCase,
-        MockCommunicationChannelFactory):
-
-    def __init__(self):
-        self.evals_sent = []
-        self.evals_not_sent = []
-
-    def set_response(self, evals_sent, evals_not_sent):
-        self.evals_sent = evals_sent
-        self.evals_not_sent = evals_not_sent
-
-    def send_eval(self, reviewers, is_reminder=False):
-        return self.evals_sent, self.evals_not_sent
-
 class GetReviewersUseCaseMock(
         GetReviewersUseCase,
-        MockFormsPlatformFactory,
         MockStorageFactory,
         MockEmployeeAdapter):
 
@@ -849,40 +876,6 @@ class GetReviewersUseCaseMock(
 
     def get_reviewers(self):
         return self.response
-
-class SetupUseCaseMock(SetupUseCase, MockStorageFactory):
-
-    def __init__(self):
-        self.response = {}
-
-    def set_setup(self, setup):
-        self.response = setup
-
-    def setup(self):
-        return self.response
-
-class RequestHandlerMock(tornado.web.RequestHandler):
-    
-    def __init__(self):
-        self.finish_data = {}
-        self.arguments = {}
-
-    def data_received(self):
-        pass
-
-    def set_argument(self, argument: str, value: str):
-        self.arguments.update({
-            argument: value
-        })
-
-    def get_argument(self, argument: str, default: str, strip):
-        return self.arguments.get(argument)
-
-    def finish(self, data):
-        self.finish_data = data
-
-    def get_finish_data(self):
-        return self.finish_data
 
 #
 # client.py mocks
@@ -910,7 +903,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.setup_response = {}
         self.reviewers_response = {}
         self.status_response = {}
-        self.evaldelivery_response = {}
+        self.communications_response = {}
         self.evalreports_response = {}
 
     def set_setup_response(self, response):
@@ -934,17 +927,17 @@ class MockEvalyticsRequests(EvalyticsRequests):
         self.update_calls('status')
         return True, self.status_response
 
-    def set_evaldelivery_response(self, response):
-        self.evaldelivery_response = response
+    def set_communications_response(self, response):
+        self.communications_response = response
 
-    def evaldelivery(self, json_reviewers, is_reminder: bool = False):
-        self.update_calls('evaldelivery')
-        return True, self.evaldelivery_response
+    def communications(self, json_reviewers, kind: str):
+        self.update_calls('communications')
+        return True, self.communications_response
 
     def set_evalreports_response(self, response):
         self.evalreports_response = response
 
-    def evalreports(self, eval_process_id, dry_run, uids):
+    def evalreports(self, dry_run, uids):
         self.update_calls('evalreports')
         return True, self.evalreports_response
 
@@ -962,7 +955,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def get_calls(self):
         return self.calls
 
-class MockEvalyticsClient(EvalyticsClient):
+class MockEvalyticsClient(EvalyticsClient, MockEvalyticsRequests):
 
     def __init__(self):
         self.calls = {}
@@ -982,37 +975,19 @@ class MockEvalyticsClient(EvalyticsClient):
     def post_setup(self):
         self.update_calls('post_setup')
 
-    def send_eval(self, whitelist=None, dry_run: bool = False):
-        self.update_calls('send_eval')
+    def send_communication(self, kind, reviewers, whitelist=None, dry_run: bool = False):
+        self.update_calls('send_communication')
         self.dry_run = dry_run
 
-    def retry_send_eval(self, dry_run: bool = False):
-        self.update_calls('retry_send_eval')
-        self.dry_run = dry_run
-
-    def whitelist_send_eval(self, dry_run: bool = False):
-        self.update_calls('whitelist_send_eval')
-        self.dry_run = dry_run
-
-    def send_reminder(self, whitelist=None, dry_run: bool = False):
-        self.update_calls('send_reminder')
-        self.dry_run = dry_run
-
-    def retry_send_reminder(self, dry_run: bool = False):
-        self.update_calls('retry_send_reminder')
-        self.dry_run = dry_run
-
-    def whitelist_send_reminder(self, dry_run: bool = False):
-        self.update_calls('whitelist_send_reminder')
-        self.dry_run = dry_run
-
-    def generate_reports(self, eval_process_id, whitelist=None, dry_run: bool = False):
+    def generate_reports(self, whitelist=None, dry_run: bool = False):
         self.update_calls('generate_reports')
         self.dry_run = dry_run
 
-    def whitelist_generate_reports(self, eval_process_id, dry_run: bool = False):
-        self.update_calls('whitelist_generate_reports')
-        self.dry_run = dry_run
+    def get_whitelist(self):
+        return []
+
+    def get_retry_list(self):
+        return []
 
     def help(self, command):
         self.update_calls('help')

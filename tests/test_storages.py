@@ -4,7 +4,7 @@ from evalytics.storages import GoogleStorage
 from evalytics.storages import StorageFactory
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import MissingGoogleDriveFolderException
-from evalytics.exceptions import MissingGoogleDriveFileException
+from evalytics.exceptions import MissingGoogleDriveFileException, NoPeersException
 from evalytics.models import EvalKind, ReviewerResponse
 from evalytics.config import ProvidersConfig
 
@@ -40,13 +40,16 @@ class TestGoogleStorage(TestCase):
         self.sut = GoogleStorageSut()
 
     def test_setup_when_setup_files_not_exist(self):
+        # given:
         self.sut.set_needed_spreadhseets([
             "google_orgchart",
             "google_formap"
         ])
 
+        # when:
         setup = self.sut.setup()
 
+        # then:
         self.assertEqual(2, len(setup.files))
 
     def test_setup_when_no_files_needed(self):
@@ -72,6 +75,7 @@ class TestGoogleStorage(TestCase):
         self.assertEqual(2, len(setup.files))
 
     def test_setup_when_setup_files_exist(self):
+        # given:
         self.sut.set_folder({
             'parents': ['folders_parent'],
             'id': 'folder_id'
@@ -89,8 +93,10 @@ class TestGoogleStorage(TestCase):
             filename="google_form_map",
             fileid="google_form_map")
 
+        # when:
         setup = self.sut.setup()
 
+        # then:
         self.assertEqual(2, len(setup.files))
 
     def test_setup_when_just_one_setup_file_exists(self):
@@ -114,6 +120,16 @@ class TestGoogleStorage(TestCase):
     def test_get_employees_correct_when_no_values(self):
         employees = self.sut.get_employees()
 
+        self.assertEqual(0, len(employees))
+
+    def test_get_employees_when_number_of_employees_is_zero(self):
+        # given:
+        self.sut.set_company_number_of_employees(0)
+
+        # when:
+        employees = self.sut.get_employees()
+
+        # then:
         self.assertEqual(0, len(employees))
 
     def test_get_employees_correct_when_non_repeated_mails(self):
@@ -183,7 +199,6 @@ class TestGoogleStorage(TestCase):
     def test_generate_eval_reports_when_files(self):
         # given:
         dry_run = False
-        eval_process_id = 'anyprocessid'
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -196,14 +211,72 @@ class TestGoogleStorage(TestCase):
             )
         ]
         employee_managers = ['jefe', 'manager']
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'eval_reports_folder'
+        })
+        self.sut.set_fileid_by_name('eval_reports_folder', 'PREFIX: pepe', 'fileid')
 
         # when:
         employee_managers_response = self.sut.generate_eval_reports(
             dry_run,
-            eval_process_id,
             reviewee,
             reviewee_evaluations,
             employee_managers)
+
+        # then:
+        self.assertEqual(2, len(employee_managers_response))
+
+    def test_generate_eval_reports_when_no_reports_folder(self):
+            # given:
+            dry_run = False
+            reviewee = 'pepe'
+            reviewee_evaluations = [
+                ReviewerResponse(
+                    reviewee=reviewee,
+                    reviewer=reviewee,
+                    eval_kind=EvalKind.SELF,
+                    eval_response=(),
+                    filename="filename",
+                    line_number=10
+                )
+            ]
+            employee_managers = ['jefe', 'manager']
+
+            # when:
+            with self.assertRaises(MissingGoogleDriveFolderException):
+                self.sut.generate_eval_reports(
+                    dry_run,
+                    reviewee,
+                    reviewee_evaluations,
+                    employee_managers)
+
+    def test_generate_eval_reports_when_no_eval_report_does_not_exist(self):
+        # given:
+        dry_run = False
+        reviewee = 'pepe'
+        reviewee_evaluations = [
+            ReviewerResponse(
+                reviewee=reviewee,
+                reviewer=reviewee,
+                eval_kind=EvalKind.SELF,
+                eval_response=(),
+                filename="filename",
+                line_number=10
+            )
+        ]
+        employee_managers = ['jefe', 'manager']
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'eval_reports_folder'
+        })
+
+        # when:
+        employee_managers_response = self.sut.generate_eval_reports(
+                dry_run,
+                reviewee,
+                reviewee_evaluations,
+                employee_managers)
 
         # then:
         self.assertEqual(2, len(employee_managers_response))
@@ -211,7 +284,6 @@ class TestGoogleStorage(TestCase):
     def test_generate_eval_reports_when_files_and_dry_run(self):
         # given:
         dry_run = True
-        eval_process_id = 'anyprocessid'
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -224,17 +296,69 @@ class TestGoogleStorage(TestCase):
             )
         ]
         employee_managers = ['jefe', 'manager']
+        employee_managers = ['jefe', 'manager']
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'eval_reports_folder'
+        })
+        self.sut.set_fileid_by_name('eval_reports_folder', 'Eval Doc: pepe', 'fileid')
 
         # when:
         employee_managers_response = self.sut.generate_eval_reports(
             dry_run,
-            eval_process_id,
             reviewee,
             reviewee_evaluations,
             employee_managers)
 
         # then:
         self.assertEqual(2, len(employee_managers_response))
+
+    def test_get_peers_assignment(self):
+        # given:
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'assignments_folder'
+        })
+        self.sut.set_fileid_by_name('assignments_folder', 'assignments_peers_file', 'fileid')
+        self.sut.set_file_rows_by_id('fileid', [
+            ['reviewer1', 'peer1,peer2'],
+            ['reviewer2', 'peer1,peer2']
+        ])
+
+        # when:
+        peers = self.sut.get_peers_assignment()
+
+        # then:
+        self.assertEqual(2, len(peers))
+
+    def test_get_peers_assignment_when_no_peers_exception(self):
+        # given:
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'assignments_folder'
+        })
+        self.sut.set_fileid_by_name('assignments_folder', 'assignments_peers_file', 'fileid')
+        self.sut.set_file_rows_by_id('fileid', [])
+
+        # when:
+        with self.assertRaises(NoPeersException):
+            self.sut.get_peers_assignment()
+
+    def test_get_peers_assignment_when_missing_data_exception(self):
+        # given:
+        self.sut.set_folder_from_folder({
+            'parents': ['google_folder'],
+            'id': 'assignments_folder'
+        })
+        self.sut.set_fileid_by_name('assignments_folder', 'assignments_peers_file', 'fileid')
+        self.sut.set_file_rows_by_id('fileid', [
+            ['reviewer1', 'peer1,peer2'],
+            ['reviewer2']
+        ])
+
+        # when:
+        with self.assertRaises(MissingDataException):
+            self.sut.get_peers_assignment()
 
     def test_write_peers_assignment_when_no_peers(self):
         # given:

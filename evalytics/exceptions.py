@@ -45,6 +45,11 @@ class NoFormsException(CustomException):
     def __str__(self):
         return super().get_str('NoFormsException')
 
+class NoPeersException(CustomException):
+
+    def __str__(self):
+        return super().get_str('NoPeersException')
+
 class NotExistentEmployeeException(CustomException):
 
     def __str__(self):

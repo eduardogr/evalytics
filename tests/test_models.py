@@ -1,8 +1,54 @@
 from unittest import TestCase
 
+from evalytics.models import GoogleFile, GoogleSetup
 from evalytics.models import Employee, Eval, EvalKind, Reviewer
 from evalytics.models import ReviewerResponseBuilder
-from evalytics.models import GoogleApiClientHttpError
+from evalytics.models import GoogleApiClientHttpError, PeersAssignment
+from evalytics.models import CommunicationKind
+
+class TestGoogleFile(TestCase):
+
+    def setUp(self):
+        self.any_name = 'name'
+        self.any_id = 'ID'
+        self.sut = GoogleFile(
+            name=self.any_name,
+            id=self.any_id
+        )
+
+    def test_ok_attributes(self):
+        self.assertEqual(self.any_name, self.sut.name)
+        self.assertEqual(self.any_id, self.sut.id)
+
+    def test_to_json(self):
+        expected_json = {
+            'name': self.any_name,
+            'id': self.any_id
+        }
+        self.assertEqual(expected_json, self.sut.to_json())
+
+class TestGoogleSetup(TestCase):
+
+    def setUp(self):
+        self.any_name = 'name'
+        self.any_id = 'ID'
+        self.any_folder = GoogleFile(
+            name=self.any_name,
+            id=self.any_id
+        )
+        self.any_files = [self.any_folder, self.any_folder]
+        self.sut = GoogleSetup(self.any_folder, self.any_files)
+
+    def test_ok_attributes(self):
+        self.assertEqual(self.any_folder, self.sut.folder)
+        self.assertEqual(self.any_files, self.sut.files)
+
+    def test_to_json(self):
+        expected_json = {
+            'folder': self.any_folder.to_json(),
+            'files': [f.to_json() for f in self.any_files]
+        }
+        self.assertEqual(expected_json, self.sut.to_json())
 
 class TestEval(TestCase):
 
@@ -21,6 +67,20 @@ class TestEval(TestCase):
         )
 
         self.assertEqual(self.evaluation, other_evaluation)
+
+    def test_eval_are_not_equals(self):
+        other_evaluation = Eval(
+            reviewee='OTHER',
+            kind=EvalKind.SELF,
+            form='my form'
+        )
+
+        self.assertFalse(self.evaluation == other_evaluation)
+
+    def test_eval_are_not_equals_because_of_type(self):
+        other_type = EvalKind.SELF
+
+        self.assertFalse(self.evaluation == other_type)
 
     def test_eval_to_json(self):
         jsondict = self.evaluation.to_json()
@@ -122,7 +182,7 @@ class TestEmployee(TestCase):
         )
 
         self.assertEqual(employee, other_employee)
-    
+
     def test_employee_are_not_equals_by_uid(self):
         employee = Employee(
             mail='some@employee.com',
@@ -136,6 +196,16 @@ class TestEmployee(TestCase):
         )
 
         self.assertNotEqual(employee, other_employee)
+
+    def test_employee_are_not_equals_by_type(self):
+        employee = Employee(
+            mail='some@employee.com',
+            manager='manager',
+            area='Area'
+        )
+        other_type = EvalKind.SELF
+
+        self.assertNotEqual(employee, other_type)
 
 class TestReviewer(TestCase):
 
@@ -251,6 +321,22 @@ class TestReviewerResponseBuilder(TestCase):
         # then:
         self.assertEqual('reporter1', reviewer_response.reviewee)
 
+    def test_build_correct_reviewee_when_is_email(self):
+        # given:
+        line_response = ['', 'manager1', 'reporter1@company.com', 'answer1', 'answer2']
+
+        # when:
+        reviewer_response = self.sut.build(
+            questions=self.questions,
+            filename=self.filename,
+            eval_kind=self.eval_kind,
+            line=line_response,
+            line_number=self.line_number
+        )
+
+        # then:
+        self.assertEqual('reporter1', reviewer_response.reviewee)
+
     def test_build_correct_eval_response(self):
         # when:
         reviewer_response = self.sut.build(
@@ -305,3 +391,75 @@ class TestGoogleApiClientHttpError(TestCase):
         self.assertIn("message", json_http_error)
         self.assertIn("status", json_http_error)
         self.assertIn("details", json_http_error)
+
+class TestCommunicationKind(TestCase):
+
+    def test_communicationkind_from_str_peers_assignment(self):
+        # given:
+        communication_kind = CommunicationKind.PEERS_ASSIGNMENT
+        communication_kind_str = 'peers_assignment'
+
+        # when:
+        obtained_communication_kind = CommunicationKind.from_str(communication_kind_str)
+
+        # then:
+        self.assertEqual(communication_kind, obtained_communication_kind)
+
+    def test_communicationkind_from_str_process_started(self):
+        # given:
+        communication_kind = CommunicationKind.PROCESS_STARTED
+        communication_kind_str = 'process_started'
+
+        # when:
+        obtained_communication_kind = CommunicationKind.from_str(communication_kind_str)
+
+        # then:
+        self.assertEqual(communication_kind, obtained_communication_kind)
+
+    def test_communicationkind_from_str_due_date_reminder(self):
+        # given:
+        communication_kind = CommunicationKind.DUE_DATE_REMINDER
+        communication_kind_str = 'due_date_reminder'
+
+        # when:
+        obtained_communication_kind = CommunicationKind.from_str(communication_kind_str)
+
+        # then:
+        self.assertEqual(communication_kind, obtained_communication_kind)
+
+    def test_communicationkind_from_str_pending_evals_reminder(self):
+        # given:
+        communication_kind = CommunicationKind.PENDING_EVALS_REMINDER
+        communication_kind_str = 'pending_evals_reminder'
+
+        # when:
+        obtained_communication_kind = CommunicationKind.from_str(communication_kind_str)
+
+        # then:
+        self.assertEqual(communication_kind, obtained_communication_kind)
+
+    def test_communicationkind_from_str_process_finished(self):
+        # given:
+        communication_kind = CommunicationKind.PROCESS_FINISHED
+        communication_kind_str = 'process_finished'
+
+        # when:
+        obtained_communication_kind = CommunicationKind.from_str(communication_kind_str)
+
+        # then:
+        self.assertEqual(communication_kind, obtained_communication_kind)
+
+    def test_communicationkind_from_str_not_implemented(self):
+        with self.assertRaises(ValueError):
+            CommunicationKind.from_str('NOT_EXISTING_COMMUNICATION_KIND')
+
+class TestPeersAssignment(TestCase):
+
+    def setUp(self):
+        self.any_peers = {'reviewer': ['peer1', 'peer2']}
+        self.any_unanswered_forms = ['unanswered form 1']
+        self.sut = PeersAssignment(self.any_peers, self.any_unanswered_forms)
+
+    def test_ok_attributes(self):
+        self.assertEqual(self.any_peers, self.sut.peers)
+        self.assertEqual(self.any_unanswered_forms, self.sut.unanswered_forms)

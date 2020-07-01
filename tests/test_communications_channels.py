@@ -4,6 +4,7 @@ from evalytics.google_api import GoogleAPI
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackChannel
 from evalytics.models import Reviewer, Employee, Eval, EvalKind
+from evalytics.models import CommunicationKind
 from evalytics.config import ProvidersConfig
 
 from tests.common.mocks import MockSlackClient, MockGoogleAPI, MockConfig
@@ -72,14 +73,14 @@ class TestSlackChannel(TestCase):
         )
         self.any_mail_subject = 'any mail subject'
         self.sut.set_slack_users_map({})
+        self.communication_kind = CommunicationKind.PROCESS_STARTED
 
     def test_send_communication_when_reviewer_with_no_evals(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = False
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -87,11 +88,10 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_self_eval(self):
         reviewer = self.reviewer_with_self_eval
-        is_reminder = True
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -99,45 +99,102 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_any_eval(self):
         reviewer = self.reviewer_with_any_eval
-        is_reminder = True
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
+
+        calls = self.sut.get_chat_post_message_calls()
+        self.assertEqual(1, len(calls))
+        self.assertIn(reviewer.uid, calls[0]['channel'])
+
+    def test_send_due_date_reminder_communication_when_any_evall(self):
+        # given:
+        communication_kind = CommunicationKind.DUE_DATE_REMINDER
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        self.sut.send_communication(
+            reviewer=reviewer,
+            kind=communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
         self.assertIn(reviewer.uid, calls[0]['channel'])
 
     def test_send_communication_when_is_reminder(self):
+        # given:
+        communication_kind = CommunicationKind.PENDING_EVALS_REMINDER
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
 
+        # when:
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=communication_kind)
 
+        # then:
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
         self.assertIn(reviewer.uid, calls[0]['channel'])
 
+    def test_send_peers_assignment_communication_is_not_implemented(self):
+        # given:
+        communication_kind = CommunicationKind.PEERS_ASSIGNMENT
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
+    def test_send_peers_form_delivery_communication_is_not_implemented(self):
+        # given:
+        communication_kind = CommunicationKind.PEERS_FORM_DELIVERY
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
+    def test_send_process_finished_communication_is_not_implemented(self):
+        # given:
+        communication_kind = CommunicationKind.PROCESS_FINISHED
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
+    def test_send_not_implemented_communication_raise_an_exception(self):
+        # given:
+        communication_kind = 'UNKNOWN'
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
     def test_send_communication_when_is_direct_message(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
         self.sut.set_slack_message_is_direct(True)
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
         self.assertIn(reviewer.uid, calls[0]['channel'])
 
-
     def test_send_communication_when_is_direct_message_and_reviewer_is_in_slack_user_map(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
         self.sut.set_slack_message_is_direct(True)
         self.sut.set_slack_users_map({
             reviewer.uid: 'mapped_user'
@@ -145,7 +202,7 @@ class TestSlackChannel(TestCase):
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -153,12 +210,11 @@ class TestSlackChannel(TestCase):
 
     def test_send_communication_when_is_not_direct_message(self):
         reviewer = self.reviewer_with_no_evals
-        is_reminder = True
         self.sut.set_slack_message_is_direct(False)
 
         self.sut.send_communication(
             reviewer=reviewer,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
         calls = self.sut.get_chat_post_message_calls()
         self.assertEqual(1, len(calls))
@@ -193,50 +249,114 @@ class TestGmailChannel(TestCase):
                 form='any form')]
         )
         self.any_mail_subject = 'any mail subject'
+        self.communication_kind = CommunicationKind.PROCESS_STARTED
 
     def test_send_communication_when_reviewer_with_no_evals(self):
-        is_reminder = False
-
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_no_evals,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
 
     def test_send_communication_when_self_eval(self):
-        is_reminder = True
-
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_self_eval,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
 
     def test_send_communication_when_any_eval(self):
-        is_reminder = True
-
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_any_eval,
-            is_reminder=is_reminder)
+            kind=self.communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])
         self.assertIn('raw', calls[0]['message'])
 
-    def test_send_communication_when_is_reminder(self):
-        is_reminder = True
+    def test_send_due_date_reminder_communication_when_any_evall(self):
+        # given:
+        communication_kind = CommunicationKind.DUE_DATE_REMINDER
+        reviewer = self.reviewer_with_any_eval
 
+        # when:
+        self.sut.send_communication(
+            reviewer=reviewer,
+            kind=communication_kind)
+
+        # then:
+        calls = self.sut.get_send_message_calls()
+        self.assertEqual(1, len(calls))
+        self.assertEqual(self.expected_user_id, calls[0]['user_id'])
+        self.assertIn('raw', calls[0]['message'])
+
+    def test_send_peers_assignment_communication_is_not_implemented(self):
+        # given:
+        communication_kind = CommunicationKind.PEERS_ASSIGNMENT
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
+    def test_send_peers_form_delivery_communication_is_not_implemented(self):
+        # given:
+        communication_kind = CommunicationKind.PEERS_FORM_DELIVERY
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
+    def test_send_process_finished_communication_is_not_implemented(self):
+        # given:
+        communication_kind = CommunicationKind.PROCESS_FINISHED
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
+    def test_send_not_implemented_communication_raise_an_exception(self):
+        # given:
+        communication_kind = 'UNKNOWN'
+        reviewer = self.reviewer_with_any_eval
+
+        # when:
+        with self.assertRaises(NotImplementedError):
+            self.sut.send_communication(
+                reviewer=reviewer,
+                kind=communication_kind)
+
+    def test_send_communication_when_is_reminder(self):
+        # given:
+        communication_kind = CommunicationKind.PENDING_EVALS_REMINDER
+
+        # when:
         self.sut.send_communication(
             reviewer=self.reviewer_with_no_evals,
-            is_reminder=is_reminder)
+            kind=communication_kind)
 
+        # then:
         calls = self.sut.get_send_message_calls()
         self.assertEqual(1, len(calls))
         self.assertEqual(self.expected_user_id, calls[0]['user_id'])
