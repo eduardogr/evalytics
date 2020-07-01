@@ -46,14 +46,14 @@ class SlackChannel(SlackClient, Config):
     def send_communication(self, reviewer, kind: CommunicationKind):
 
         if kind == CommunicationKind.PEERS_ASSIGNMENT:
-            pass
+            raise NotImplementedError(kind)
 
         elif kind == CommunicationKind.PROCESS_STARTED:
             message = 'You have new assignments !'
             blocks = self.__build_blocks(message, reviewer)
 
         elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
-            pass
+            raise NotImplementedError(kind)
 
         elif kind == CommunicationKind.DUE_DATE_REMINDER:
             eval_process_id = super().read_eval_process_id()
@@ -68,7 +68,7 @@ class SlackChannel(SlackClient, Config):
             blocks = self.__build_blocks(message, reviewer)
 
         elif kind == CommunicationKind.PROCESS_FINISHED:
-            pass
+            raise NotImplementedError(kind)
 
         else:
             raise NotImplementedError(kind)
@@ -145,7 +145,7 @@ class GmailChannel(GoogleAPI, Config):
     def send_communication(self, reviewer, kind: CommunicationKind):
 
         if kind == CommunicationKind.PEERS_ASSIGNMENT:
-            pass
+            raise NotImplementedError(kind)
 
         elif kind == CommunicationKind.PROCESS_STARTED:
             mail_subject = super().read_mail_subject()
@@ -153,7 +153,7 @@ class GmailChannel(GoogleAPI, Config):
             message_text = self.__build_message_text(message, reviewer)
 
         elif kind == CommunicationKind.PEERS_FORM_DELIVERY:
-            pass
+            raise NotImplementedError(kind)
 
         elif kind == CommunicationKind.DUE_DATE_REMINDER:
             mail_subject = 'Reminder Evalytics: Due date is arriving'
@@ -170,7 +170,7 @@ class GmailChannel(GoogleAPI, Config):
             message_text = self.__build_message_text(message, reviewer)
 
         elif kind == CommunicationKind.PROCESS_FINISHED:
-            pass
+            raise NotImplementedError(kind)
 
         else:
             raise NotImplementedError(kind)
