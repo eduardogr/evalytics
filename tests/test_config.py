@@ -123,6 +123,11 @@ class TestGoogleDriveProviderConfig(TestCase):
 
         self.assertEqual('mock_tests_folder', tests_folder)
 
+    def test_read_eval_reports_folder(self):
+        tests_folder = self.sut.read_eval_reports_folder()
+
+        self.assertEqual('eval_reports_folder', tests_folder)
+
     def test_read_google_eval_report_template_id(self):
         template_id = self.sut.read_google_eval_report_template_id()
 

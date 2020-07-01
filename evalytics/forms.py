@@ -1,4 +1,4 @@
-from evalytics.models import EvalKind
+from evalytics.models import EvalKind, PeersAssignment
 from evalytics.models import ReviewerResponse, ReviewerResponseBuilder
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
@@ -110,8 +110,8 @@ class GoogleForms(GoogleAPI, Config):
 
         files = super().get_files_from_folder(folder.get('id'))
 
-        number_of_employees = int(super().read_company_number_of_employees())
-        responses_range = 'A1:S' + str(number_of_employees + 2)
+        # TODO: read responses in batches, read til there's no more responses
+        responses_range = 'A1:V' + str(1000)
 
         responses_by_file = {}
         for file in files:
@@ -168,9 +168,9 @@ class GoogleForms(GoogleAPI, Config):
         number_of_employees = int(super().read_company_number_of_employees())
         responses_range = 'C1:S' + str(number_of_employees + 2)
 
-        peers_assignment = {
-            'unanswered_forms': []
-        }
+        peers_assignment = {}
+        unanswered_forms = []
+
         for file in files:
             rows = super().get_file_rows(
                 file.get('id'),
@@ -184,7 +184,7 @@ class GoogleForms(GoogleAPI, Config):
 
             answers = rows[1:]
             if len(answers) == 0:
-                peers_assignment.get('unanswered_forms').append(
+                unanswered_forms.append(
                     file.get('name')
                 )
 
@@ -202,7 +202,7 @@ class GoogleForms(GoogleAPI, Config):
                                 reviewer: reviewees
                             })
 
-        return peers_assignment
+        return PeersAssignment(peers_assignment, unanswered_forms)
 
     def __get_reviewee_from_question(self, question):
         '''

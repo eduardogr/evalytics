@@ -468,6 +468,30 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                 email_address=email
             )
 
+    def empty_document(self, document_id):
+        document = super().get_document(document_id)
+        content = document.get('body').get('content')
+        insert_index = self.__get_indext_after_firt_horizontal_rule(content)
+        end_index = self.__get_last_end_index(content)
+
+        # Empty file
+        if end_index in range(0, 2) or \
+            insert_index >= end_index:
+            return
+
+        requests = [
+            {
+                'deleteContentRange':{
+                    'range': {
+                        'segmentId': '',
+                        'startIndex': insert_index,
+                        'endIndex': end_index
+                    }
+                }
+            }
+        ]
+        super().batch_update(document_id=document_id, requests=requests)
+
     def ___build_styled_eval_report_element(self, element, content):
         style_tokens = super().get_eval_report_style_tokens()
         element_style = style_tokens.get(element, {'start':'', 'end':''})
@@ -635,6 +659,21 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                 if horizontal_rule_was_seen:
                     break
         return next_index_hr
+
+    def __get_last_end_index(self, content):
+        last_item = content[len(content)-1]
+        end_index = 0
+
+        for element in last_item.get(DocsService.PARAGRAPH).get(DocsService.ELEMENTS):
+            end_index = element.get(DocsService.START_INDEX)
+
+            if DocsService.TEXT_RUN in element:
+                text_run = element.get(DocsService.TEXT_RUN)
+                if DocsService.CONTENT in text_run:
+                    if text_run.get(DocsService.CONTENT) == '\n':
+                        return end_index
+
+        return end_index
 
 class GmailAPI(GmailService):
 

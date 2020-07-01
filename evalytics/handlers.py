@@ -136,8 +136,6 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
 
     async def post(self):
         try:
-            eval_process_id = self.get_argument('eval_process_id', 'EVAL_ID', strip=False)
-
             area = self.get_argument('area', None, strip=False)
             managers_arg = self.get_argument('managers', None, strip=False)
             employee_uids_arg = self.get_argument('uids', None, strip=False)
@@ -150,7 +148,6 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
             
             created, not_created = GenerateEvalReportsUseCase().generate(
                 dry_run,
-                eval_process_id,
                 area,
                 managers,
                 employee_uids
@@ -211,13 +208,13 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
     async def post(self):
         try:
 
-            peers_assignment, unanswered_forms = UpdatePeersAssignmentUseCase().update()
+            peers_assignment = UpdatePeersAssignmentUseCase().update()
 
             self.finish({
                 'success': True,
                 'response': {
-                    'peers_assignment': peers_assignment,
-                    'unanswered_forms': unanswered_forms
+                    'peers_assignment': peers_assignment.peers,
+                    'unanswered_forms': peers_assignment.unanswered_forms
                 }
             })
         except MissingDataException as e:

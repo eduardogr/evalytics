@@ -33,7 +33,7 @@ class GoogleStorage(GoogleAPI, Config):
 
         folder_parent = folder.get('parents')[0]
 
-        # Sheet setup
+        # SpreadhSheets setup
         files = []
         for filename in needed_spreadsheets:
             spreadheet_id = super().get_file_id_from_folder(
@@ -119,13 +119,12 @@ class GoogleStorage(GoogleAPI, Config):
 
     def generate_eval_reports(self,
                               dry_run,
-                              eval_process_id,
                               reviewee,
                               reviewee_evaluations: ReviewerResponse,
                               employee_managers):
-        template_id = super().read_google_eval_report_template_id()
+        eval_process_id = super().read_eval_process_id()
         filename_prefix = super().read_google_eval_report_prefix_name()
-        filename = '{} {}'.format(filename_prefix, reviewee)
+        filename = '{}{}'.format(filename_prefix, reviewee)
 
         company_domain = super().read_company_domain()
         employee_managers = [
@@ -133,7 +132,7 @@ class GoogleStorage(GoogleAPI, Config):
             for m in employee_managers
         ]
 
-        document_id = super().copy_file(template_id, filename)
+        document_id = self.__get_eval_report_id(filename)
 
         super().insert_eval_report_in_document(
             eval_process_id,
@@ -218,3 +217,27 @@ class GoogleStorage(GoogleAPI, Config):
                 "Missing file: {}".format(assignments_peers_file))
 
         return spreadheet_id
+
+    def __get_eval_report_id(self, filename):
+        google_folder = super().read_google_folder()
+        eval_reports_folder = super().read_eval_reports_folder()
+
+        folder = self.get_folder_from_folder(
+            eval_reports_folder,
+            google_folder)
+
+        if folder is None:
+            raise MissingGoogleDriveFolderException(
+                "Missing folder: {}".format(eval_reports_folder))
+
+        document_id = self.get_file_id_from_folder(
+            folder_id=folder.get('id'),
+            filename=filename)
+
+        if document_id is None:
+            template_id = super().read_google_eval_report_template_id()
+            document_id = super().copy_file(template_id, filename)
+        else:
+            super().empty_document(document_id)
+
+        return document_id

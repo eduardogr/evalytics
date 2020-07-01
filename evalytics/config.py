@@ -112,6 +112,7 @@ class GoogleDriveProviderConfig(ConfigReader):
     FORM_MAP = 'form_map'
     ASSIGNMENTS_PEERS_FILE = 'assignments_peers_file'
 
+    EVAL_REPORTS_FOLDER = 'eval_reports_folder'
     EVAL_REPORT_TEMPLATE_ID = 'eval_report_template_id'
     EVAL_REPORT_PREFIX_NAME = 'eval_report_prefix_name'
 
@@ -142,6 +143,10 @@ class GoogleDriveProviderConfig(ConfigReader):
     def read_google_responses_folder(self):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.FORM_RESPONSES_FOLDER)
+
+    def read_eval_reports_folder(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.EVAL_REPORTS_FOLDER)
 
     def read_google_eval_report_template_id(self):
         config = super().read()

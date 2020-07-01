@@ -250,7 +250,6 @@ class TestEvalyticsClient(TestCase):
             ),
         }
         self.sut.set_reviewers(self.reviewers)
-        self.any_eval_process_id = 'PROCESS_ID'
         self.sut.set_communications_response({
             'comms_sent': ['uid1', 'uid2', 'uid3'],
             'comms_not_sent': []
@@ -480,7 +479,6 @@ class TestEvalyticsClient(TestCase):
         dry_run = False
 
         self.sut.generate_reports(
-            eval_process_id=self.any_eval_process_id,
             dry_run=dry_run,
             whitelist=whitelist)
 
@@ -511,7 +509,7 @@ class TestEvalyticsClient(TestCase):
         })
         dry_run = True
 
-        self.sut.generate_reports(eval_process_id=self.any_eval_process_id, dry_run=dry_run)
+        self.sut.generate_reports(dry_run=dry_run)
 
         self.assertIn('evalreports', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['evalreports'])
@@ -541,7 +539,7 @@ class TestEvalyticsClient(TestCase):
         dry_run = True
         whitelist = ['uid1']
 
-        self.sut.generate_reports(eval_process_id=self.any_eval_process_id, dry_run=dry_run, whitelist=whitelist)
+        self.sut.generate_reports(dry_run=dry_run, whitelist=whitelist)
 
         self.assertIn('evalreports', self.sut.get_calls())
 

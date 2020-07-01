@@ -50,7 +50,6 @@ class EvalyticsRequests:
 
     def evalreports(
             self,
-            eval_process_id: str,
             uids=None,
             managers=None,
             area=None,
@@ -58,7 +57,6 @@ class EvalyticsRequests:
         response = requests.post(
             url="%s/evalreports" % self.BASE_URL,
             data={
-                "eval_process_id": eval_process_id,
                 "uids": uids,
                 "managers": managers,
                 "area": area,
@@ -205,10 +203,9 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
         self.__send_communication(reviewers, kind, dry_run)
 
-    def generate_reports(self, eval_process_id, dry_run, whitelist=None):
+    def generate_reports(self, dry_run, whitelist=None):
         uids = super().list_to_json(whitelist)
         success, response = super().evalreports(
-            eval_process_id=eval_process_id,
             dry_run=dry_run,
             uids=uids)
 
@@ -325,12 +322,6 @@ class CommandFactory(EvalyticsClient):
             args.remove('--whitelist')
             whitelist = super().get_whitelist()
 
-        eval_process_id = 'Default eval id'
-        for arg in args:
-            arg_with_value = arg.split('=')
-            if arg_with_value[0] == '--eval-process-id':
-                eval_process_id = arg_with_value[1]
-
         if command == CommandFactory.SETUP:
             super().post_setup()
 
@@ -369,7 +360,6 @@ class CommandFactory(EvalyticsClient):
 
         elif command == CommandFactory.REPORTS:
             super().generate_reports(
-                eval_process_id=eval_process_id,
                 dry_run=dry_run,
                 whitelist=whitelist)
         else:

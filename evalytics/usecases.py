@@ -56,7 +56,6 @@ class GenerateEvalReportsUseCase(
     def generate(
             self,
             dry_run,
-            eval_process_id,
             area, managers,
             employee_uids):
         storage = super().get_storage()
@@ -80,7 +79,6 @@ class GenerateEvalReportsUseCase(
             try:
                 storage.generate_eval_reports(
                     dry_run,
-                    eval_process_id,
                     uid,
                     reviewee_evaluations,
                     employee_managers)
@@ -114,8 +112,6 @@ class UpdatePeersAssignmentUseCase(StorageFactory, FormsPlatformFactory):
         forms_platform = super().get_forms_platform()
 
         peers_assignment = forms_platform.get_peers_assignment()
-        storage.write_peers_assignment(peers_assignment)
+        storage.write_peers_assignment(peers_assignment.peers)
 
-        unanswered_forms = peers_assignment.pop('unanswered_forms')
-
-        return peers_assignment, unanswered_forms
+        return peers_assignment

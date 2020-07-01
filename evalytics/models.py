@@ -8,6 +8,7 @@ class GoogleFile:
         self.name = name
         self.id = id
 
+    # TODO: to mappers.py
     def to_json(self):
         return {
             'name': self.name,
@@ -22,6 +23,7 @@ class GoogleSetup():
         self.folder = folder
         self.files = files
 
+    # TODO: to mappers.py
     def to_json(self):
         return {
             'folder': self.folder.to_json(),
@@ -56,6 +58,7 @@ class Eval:
         self.kind = kind
         self.form = form
 
+    # TODO: to mappers.py
     def to_json(self):
         return {
             "reviewee": self.reviewee,
@@ -92,6 +95,7 @@ class Employee:
     def has_manager(self) -> bool:
         return bool(self.manager)
 
+    # TODO: to mappers.py
     def to_json(self):
         return {
             "mail": self.mail,
@@ -126,6 +130,7 @@ class Reviewer:
     def __str__(self):
         return "%s" % self.to_json()
 
+    # TODO: to mappers.py
     def to_json(self):
         return {
             "employee": self.employee.to_json(),
@@ -173,6 +178,9 @@ class ReviewerResponseBuilder:
         else:
             reviewee = line[2].strip().lower()
 
+            if '@' in reviewee:
+                reviewee = reviewee.split('@')[0]
+
         return reviewee
 
     def __get_eval_response_from_response_line(self, line, questions):
@@ -218,3 +226,10 @@ class CommunicationKind(Enum):
             return CommunicationKind.PROCESS_FINISHED
         else:
             raise ValueError(label)
+
+@dataclass
+class PeersAssignment:
+
+    def __init__(self, peers, unanswered_forms):
+        self.peers = peers
+        self.unanswered_forms = unanswered_forms

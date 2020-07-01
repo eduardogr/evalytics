@@ -55,7 +55,7 @@ class TestGoogleForms(TestCase):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([])
 
-        peers_assignment = self.sut.get_peers_assignment()['peers']
+        peers_assignment = self.sut.get_peers_assignment().peers
 
         self.assertEqual(0, len(peers_assignment))
 
@@ -81,7 +81,7 @@ class TestGoogleForms(TestCase):
         self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
         self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
 
-        peers_assignment = self.sut.get_peers_assignment()['peers']
+        peers_assignment = self.sut.get_peers_assignment().peers
 
         self.assertEqual(7, len(peers_assignment))
         self.assertIn('em1', peers_assignment)
@@ -116,7 +116,7 @@ class TestGoogleForms(TestCase):
         self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
         self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
 
-        peers_assignment = self.sut.get_peers_assignment()['peers']
+        peers_assignment = self.sut.get_peers_assignment().peers
 
         self.assertEqual(1, len(peers_assignment))
         self.assertIn('em3', peers_assignment)
@@ -132,7 +132,7 @@ class TestGoogleForms(TestCase):
         self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
         self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
 
-        peers_assignment = self.sut.get_peers_assignment()['peers']
+        peers_assignment = self.sut.get_peers_assignment().peers
 
         self.assertEqual(0, len(peers_assignment))
 
