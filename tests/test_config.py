@@ -42,7 +42,6 @@ class TestEvalProcessConfig(TestCase):
 
         self.assertEqual('eval_process_due_date', eval_process_due_date)
 
-
 class TestSlackProviderConfig(TestCase):
 
     def setUp(self):
@@ -108,15 +107,45 @@ class TestGoogleDriveProviderConfig(TestCase):
 
         self.assertEqual('mock_orgchart', orgchart)
 
+    def test_read_google_orgchart_range(self):
+        # given:
+        expected_value = 'A1:A1'
+
+        # when:
+        value = self.sut.read_google_orgchart_range()
+
+        # then:
+        self.assertEqual(expected_value, value)
+
     def test_read_google_form_map(self):
         formmap = self.sut.read_google_form_map()
 
         self.assertEqual('mock_formmap', formmap)
 
+    def test_read_google_form_map_range(self):
+        # given:
+        expected_value = 'A1:A1'
+
+        # when:
+        value = self.sut.read_google_form_map_range()
+
+        # then:
+        self.assertEqual(expected_value, value)
+
     def test_read_assignments_peers_file(self):
         formmap = self.sut.read_assignments_peers_file()
 
         self.assertEqual('assignments_peers_file', formmap)
+
+    def test_read_assignments_peers_range(self):
+        # given:
+        expected_value = 'A1:A1'
+
+        # when:
+        value = self.sut.read_assignments_peers_range()
+
+        # then:
+        self.assertEqual(expected_value, value)
 
     def test_read_google_responses_folder(self):
         tests_folder = self.sut.read_google_responses_folder()
@@ -133,10 +162,50 @@ class TestGoogleDriveProviderConfig(TestCase):
 
         self.assertEqual('ID', template_id)
 
-    def test_read_google_eval_report_prefix_name(self):
-        prefix = self.sut.read_google_eval_report_prefix_name()
+    def test_read_google_eval_report_prefix(self):
+        prefix = self.sut.read_google_eval_report_prefix()
 
         self.assertEqual('Prefix', prefix)
+
+    def test_read_google_manager_eval_by_report_prefix(self):
+        # given:
+        expected_value = 'Manager Evaluation By Report'
+
+        # when:
+        value = self.sut.read_google_manager_eval_by_report_prefix()
+
+        # then:
+        self.assertEqual(expected_value, value)
+
+    def test_read_google_report_eval_by_manager_prefix(self):
+        # given:
+        expected_value = 'Report Evaluation By Manager'
+
+        # when:
+        value = self.sut.read_google_report_eval_by_manager_prefix()
+
+        # then:
+        self.assertEqual(expected_value, value)
+
+    def test_read_google_peer_eval_by_peer_prefix(self):
+        # given:
+        expected_value = 'Peer Evaluation By Peer'
+
+        # when:
+        value = self.sut.read_google_peer_eval_by_peer_prefix()
+
+        # then:
+        self.assertEqual(expected_value, value)
+
+    def test_read_google_self_eval_prefix(self):
+        # given:
+        expected_value = 'Self Evaluation'
+
+        # when:
+        value = self.sut.read_google_self_eval_prefix()
+
+        # then:
+        self.assertEqual(expected_value, value)
 
     def test_read_needed_spreadsheets(self):
         needed_spreachseets = self.sut.read_needed_spreadsheets()

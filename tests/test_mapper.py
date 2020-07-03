@@ -1,8 +1,134 @@
 from unittest import TestCase
 
-from evalytics.mappers import JsonToReviewer, ReviewerToJson
+from evalytics.mappers import GoogleFileToJson, GoogleSetupToJson
+from evalytics.mappers import EvalToJson, EmployeeToJson, ReviewerToJson
+from evalytics.mappers import GoogleApiClientHttpErrorToJson
+from evalytics.mappers import JsonToReviewer, ReviewerToJsonObject
 from evalytics.mappers import StrToBool, JsonToList, ListToJson
 from evalytics.models import Reviewer, Employee, Eval, EvalKind
+
+from tests.common.models_mother import Mother
+
+class TestGoogleFileToJson(TestCase):
+
+    def test_to_json(self):
+        # given:
+        google_file = Mother().get_any_google_file_model()
+        expected_json_dict = {
+            'name': google_file.name,
+            'id': google_file.id
+        }
+        sut = GoogleFileToJson()
+
+        # when:
+        json_dict = sut.google_file_to_json(google_file)
+
+        # then:
+        self.assertEqual(expected_json_dict, json_dict)
+
+class TestGoogleSetupToJson(TestCase):
+
+    def test_to_json(self):
+        # given:
+        google_setup = Mother().get_any_google_setup_model(with_files_number=1)
+        expected_json_dict = {
+            'folder': {
+                'name': google_setup.folder.name,
+                'id': google_setup.folder.id
+            },
+            'files': [
+                {
+                    'name': google_setup.files[0].name,
+                    'id': google_setup.files[0].id
+                }
+            ]
+        }
+        sut = GoogleSetupToJson()
+
+        # when:
+        json_dict = sut.google_setup_to_json(google_setup)
+
+        # then:
+        self.assertEqual(expected_json_dict, json_dict)
+
+class TestEvalToJson(TestCase):
+
+    def test_to_json(self):
+        # given:
+        evaluation = Mother().get_any_eval_model()
+        expected_json_dict = {
+            'reviewee': evaluation.reviewee,
+            'kind': evaluation.kind.name,
+            'form': evaluation.form,
+        }
+        sut = EvalToJson()
+
+        # when:
+        json_dict = sut.eval_to_json(evaluation)
+
+        # then:
+        self.assertEqual(expected_json_dict, json_dict)
+
+class TestEmployeeToJson(TestCase):
+
+    def test_to_json(self):
+        # given:
+        employee = Mother().get_any_employee_model()
+        expected_json_dict = {
+            'mail': employee.mail,
+            'uid': employee.uid,
+            'manager': employee.manager,
+            'area': employee.area,
+        }
+        sut = EmployeeToJson()
+
+        # when:
+        json_dict = sut.employee_to_json(employee)
+
+        # then:
+        self.assertEqual(expected_json_dict, json_dict)
+
+class TestReviewerToJson(TestCase):
+
+    def test_to_json(self):
+        # given:
+        reviewer = Mother().get_any_reviewer_model()
+        expected_json_dict = {
+            'employee': {
+                'mail': reviewer.employee.mail,
+                'uid': reviewer.employee.uid,
+                'manager': reviewer.employee.manager,
+                'area': reviewer.employee.area,
+            },
+            'evals': []
+        }
+        sut = ReviewerToJson()
+
+        # when:
+        json_dict = sut.reviewer_to_json(reviewer)
+
+        print(json_dict)
+        # then:
+        self.assertEqual(expected_json_dict, json_dict)
+
+class TestGoogleApiClientHttpErrorToJson(TestCase):
+
+    def test_to_json(self):
+        # given:
+        google_http_error = Mother().get_any_google_api_client_http_error__model()
+        expected_json_dict = {
+            'code': google_http_error.code,
+            'message': google_http_error.message,
+            'status': google_http_error.status,
+            'details': google_http_error.details,
+        }
+        sut = GoogleApiClientHttpErrorToJson()
+
+        # when:
+        json_dict = sut.google_api_client_http_error_to_json(google_http_error)
+
+        # then:
+        self.assertEqual(expected_json_dict, json_dict)
 
 class TestJsonToReviewer(TestCase):
 
@@ -55,10 +181,10 @@ class TestJsonToReviewer(TestCase):
 
         self.assertEqual(self.reviewer_with_evals, reviewer['mail'])
 
-class TestReviewerToJson(TestCase):
+class TestReviewerToJsonObject(TestCase):
 
     def setUp(self):
-        self.sut = ReviewerToJson()
+        self.sut = ReviewerToJsonObject()
         employee = Employee(
             mail='mail@mail',
             manager='manager',
@@ -94,12 +220,12 @@ class TestReviewerToJson(TestCase):
         )
 
     def test_reviewer_to_json_with_no_evals(self):
-        json = self.sut.reviewer_to_json(self.reviewer_with_no_evals)
+        json = self.sut.reviewer_to_json_object(self.reviewer_with_no_evals)
 
         self.assertEqual(self.json_reviewer_with_no_evals, json)
 
     def test_reviewer_to_with_evals(self):
-        json = self.sut.reviewer_to_json(self.reviewer_with_evals)
+        json = self.sut.reviewer_to_json_object(self.reviewer_with_evals)
 
         self.assertEqual(self.json_reviewer_with_evals, json)
 

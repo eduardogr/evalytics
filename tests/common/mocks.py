@@ -600,11 +600,20 @@ class MockConfigReader(ConfigReader):
                 'assignments_folder': 'mock_assignments_folder',
                 'assignments_manager_forms_folder': 'mock_man_ssignments_folder',
                 'org_chart': 'mock_orgchart',
+                'org_chart_range': 'A1:A1',
                 'form_map': 'mock_formmap',
+                'form_map_range': 'A1:A1',
                 'assignments_peers_file': 'assignments_peers_file',
+                'assignments_peers_range': 'A1:A1',
                 'eval_reports_folder': 'eval_reports_folder',
                 'eval_report_template_id': 'ID',
-                'eval_report_prefix_name': 'Prefix'
+                'file_prefixes': {
+                    'manager_eval_by_report': 'Manager Evaluation By Report',
+                    'report_eval_by_manager': 'Report Evaluation By Manager',
+                    'peer_eval_by_peer': 'Peer Evaluation By Peer',
+                    'self_eval': 'Self Evaluation',
+                    'eval_report': 'Prefix'
+                }
             },
             'slack_provider': {
                 'token': 'TOKEN::TOKEN',
@@ -672,11 +681,20 @@ class MockConfig(Config, MockConfigReader):
     def read_google_orgchart(self):
         return "google_orgchart"
 
+    def read_google_orgchart_range(self):
+        return "A1:A1"
+
     def read_google_form_map(self):
         return "google_form_map"
 
+    def read_google_form_map_range(self):
+        return "A1:A1"
+
     def read_assignments_peers_file(self):
         return "assignments_peers_file"
+
+    def read_assignments_peers_range(self):
+        return "A1:A1"
 
     def read_needed_spreadsheets(self):
         return self.needed_spreadsheets
@@ -696,8 +714,20 @@ class MockConfig(Config, MockConfigReader):
     def read_google_eval_report_template_id(self):
         return "ID::ADSFASDFRE"
 
-    def read_google_eval_report_prefix_name(self):
+    def read_google_eval_report_prefix(self):
         return "PREFIX: "
+
+    def read_google_manager_eval_by_report_prefix(self):
+        return "MANAGER EVAL BY REPORT"
+
+    def read_google_report_eval_by_manager_prefix(self):
+        return "REPORT EVAL BY MANAGER"
+
+    def read_google_peer_eval_by_peer_prefix(self):
+        return "PEER EVAL BY PEER"
+
+    def read_google_self_eval_prefix(self):
+        return "SELF EVAL"
 
     def get_slack_token(self):
         return "TOKEN::TOKEN"

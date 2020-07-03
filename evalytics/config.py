@@ -109,12 +109,22 @@ class GoogleDriveProviderConfig(ConfigReader):
     ASSIGNMENTS_MANAGER_FORMS_FOLDER = 'assignments_manager_forms_folder'
 
     ORG_CHART = 'org_chart'
+    ORG_CHART_RANGE = 'org_chart_range'
     FORM_MAP = 'form_map'
+    FORM_MAP_RANGE = 'form_map_range'
     ASSIGNMENTS_PEERS_FILE = 'assignments_peers_file'
+    ASSIGNMENTS_PEERS_RANGE = 'assignments_peers_range'
 
     EVAL_REPORTS_FOLDER = 'eval_reports_folder'
     EVAL_REPORT_TEMPLATE_ID = 'eval_report_template_id'
     EVAL_REPORT_PREFIX_NAME = 'eval_report_prefix_name'
+
+    FILE_PREFIXES = 'file_prefixes'
+    MANAGER_EVAL_BY_REPORT = 'manager_eval_by_report'
+    REPORT_EVAL_BY_MANAGER = 'report_eval_by_manager'
+    PEER_EVAL_BY_PEER = 'peer_eval_by_peer'
+    SELF_EVAL = 'self_eval'
+    EVAL_REPORT = 'eval_report'
 
     def read_google_folder(self):
         config = super().read()
@@ -132,13 +142,25 @@ class GoogleDriveProviderConfig(ConfigReader):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ORG_CHART)
 
+    def read_google_orgchart_range(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ORG_CHART_RANGE)
+
     def read_google_form_map(self):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.FORM_MAP)
 
+    def read_google_form_map_range(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.FORM_MAP_RANGE)
+
     def read_assignments_peers_file(self):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ASSIGNMENTS_PEERS_FILE)
+
+    def read_assignments_peers_range(self):
+        config = super().read()
+        return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.ASSIGNMENTS_PEERS_RANGE)
 
     def read_google_responses_folder(self):
         config = super().read()
@@ -152,10 +174,30 @@ class GoogleDriveProviderConfig(ConfigReader):
         config = super().read()
         return config.get(self.GOOGLE_DRIVE_PROVIDER).get(self.EVAL_REPORT_TEMPLATE_ID)
 
-    def read_google_eval_report_prefix_name(self):
+    def read_google_eval_report_prefix(self):
         config = super().read()
         return config.get(
-            self.GOOGLE_DRIVE_PROVIDER).get(self.EVAL_REPORT_PREFIX_NAME)
+            self.GOOGLE_DRIVE_PROVIDER).get(self.FILE_PREFIXES).get(self.EVAL_REPORT)
+
+    def read_google_manager_eval_by_report_prefix(self):
+        config = super().read()
+        return config.get(
+            self.GOOGLE_DRIVE_PROVIDER).get(self.FILE_PREFIXES).get(self.MANAGER_EVAL_BY_REPORT)
+
+    def read_google_report_eval_by_manager_prefix(self):
+        config = super().read()
+        return config.get(
+            self.GOOGLE_DRIVE_PROVIDER).get(self.FILE_PREFIXES).get(self.REPORT_EVAL_BY_MANAGER)
+
+    def read_google_peer_eval_by_peer_prefix(self):
+        config = super().read()
+        return config.get(
+            self.GOOGLE_DRIVE_PROVIDER).get(self.FILE_PREFIXES).get(self.PEER_EVAL_BY_PEER)
+
+    def read_google_self_eval_prefix(self):
+        config = super().read()
+        return config.get(
+            self.GOOGLE_DRIVE_PROVIDER).get(self.FILE_PREFIXES).get(self.SELF_EVAL)
 
     def read_needed_spreadsheets(self):
         orgchart_filename = self.read_google_orgchart()

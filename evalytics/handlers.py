@@ -1,14 +1,18 @@
 import tornado.web
 
 from evalytics.usecases import SetupUseCase, GetReviewersUseCase
-from evalytics.usecases import GetResponseStatusUseCase, GenerateEvalReportsUseCase
-from evalytics.usecases import GetPeersAssignmentUseCase, UpdatePeersAssignmentUseCase
+from evalytics.usecases import GetResponseStatusUseCase
+from evalytics.usecases import GenerateEvalReportsUseCase
+from evalytics.usecases import GetPeersAssignmentUseCase
+from evalytics.usecases import UpdatePeersAssignmentUseCase
 from evalytics.usecases import SendCommunicationUseCase
 from evalytics.mappers import Mapper
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import GoogleApiClientHttpErrorException
 
-class SetupHandler(tornado.web.RequestHandler):
+class SetupHandler(
+        tornado.web.RequestHandler,
+        Mapper):
     path = r"/setup"
 
     async def post(self):
@@ -17,7 +21,7 @@ class SetupHandler(tornado.web.RequestHandler):
             self.finish({
                 'success': True,
                 'response': {
-                    'setup': setup.to_json()
+                    'setup': super().google_setup_to_json(setup)
                 }
             })
         except Exception as e:
@@ -32,7 +36,9 @@ class SetupHandler(tornado.web.RequestHandler):
                 }
             })
 
-class ReviewersHandler(tornado.web.RequestHandler):
+class ReviewersHandler(
+        tornado.web.RequestHandler,
+        Mapper):
     path = r"/reviewers"
 
     async def get(self):
@@ -42,7 +48,7 @@ class ReviewersHandler(tornado.web.RequestHandler):
             self.finish({
                 'success': True,
                 'response': {
-                    'reviewers': [r.to_json() for uid, r in reviewers.items()]
+                    'reviewers': [super().reviewer_to_json(r) for uid, r in reviewers.items()]
                 }
             })
         except (MissingDataException, NoFormsException) as exception:
@@ -95,7 +101,9 @@ class CommunicationHandler(tornado.web.RequestHandler, Mapper):
                 }
             })
 
-class ResponseStatusHandler(tornado.web.RequestHandler):
+class ResponseStatusHandler(
+        tornado.web.RequestHandler,
+        Mapper):
     path = r"/status"
 
     async def get(self):
@@ -107,7 +115,7 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
                 'response': {
                     'status': {
                         'completed': completed,
-                        'pending': [r.to_json() for uid, r in pending.items()],
+                        'pending': [super().reviewer_to_json(r) for uid, r in pending.items()],
                         'inconsistent': inconsistent
                     }
                 }
@@ -174,7 +182,9 @@ class EvalReportsHandler(tornado.web.RequestHandler, Mapper):
                 }
             })
 
-class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
+class PeersAssignmentHandler(
+        tornado.web.RequestHandler,
+        Mapper):
     path = r"/peers"
 
     async def get(self):
@@ -200,9 +210,10 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
                 }
             })
         except GoogleApiClientHttpErrorException as e:
+            error = e.get_google_api_client_http_error()
             self.finish({
                 'success': False,
-                'response': e.get_google_api_client_http_error().to_json()
+                'response': super().google_api_client_http_error_to_json(error)
             })
 
     async def post(self):
@@ -229,7 +240,8 @@ class PeersAssignmentHandler(tornado.web.RequestHandler, Mapper):
                 }
             })
         except GoogleApiClientHttpErrorException as e:
+            error = e.get_google_api_client_http_error()
             self.finish({
                 'success': False,
-                'response': e.get_google_api_client_http_error().to_json()
+                'response': super().google_api_client_http_error_to_json(error)
             })

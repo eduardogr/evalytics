@@ -1,54 +1,9 @@
 from unittest import TestCase
 
-from evalytics.models import GoogleFile, GoogleSetup
 from evalytics.models import Employee, Eval, EvalKind, Reviewer
 from evalytics.models import ReviewerResponseBuilder
-from evalytics.models import GoogleApiClientHttpError, PeersAssignment
+from evalytics.models import PeersAssignment
 from evalytics.models import CommunicationKind
-
-class TestGoogleFile(TestCase):
-
-    def setUp(self):
-        self.any_name = 'name'
-        self.any_id = 'ID'
-        self.sut = GoogleFile(
-            name=self.any_name,
-            id=self.any_id
-        )
-
-    def test_ok_attributes(self):
-        self.assertEqual(self.any_name, self.sut.name)
-        self.assertEqual(self.any_id, self.sut.id)
-
-    def test_to_json(self):
-        expected_json = {
-            'name': self.any_name,
-            'id': self.any_id
-        }
-        self.assertEqual(expected_json, self.sut.to_json())
-
-class TestGoogleSetup(TestCase):
-
-    def setUp(self):
-        self.any_name = 'name'
-        self.any_id = 'ID'
-        self.any_folder = GoogleFile(
-            name=self.any_name,
-            id=self.any_id
-        )
-        self.any_files = [self.any_folder, self.any_folder]
-        self.sut = GoogleSetup(self.any_folder, self.any_files)
-
-    def test_ok_attributes(self):
-        self.assertEqual(self.any_folder, self.sut.folder)
-        self.assertEqual(self.any_files, self.sut.files)
-
-    def test_to_json(self):
-        expected_json = {
-            'folder': self.any_folder.to_json(),
-            'files': [f.to_json() for f in self.any_files]
-        }
-        self.assertEqual(expected_json, self.sut.to_json())
 
 class TestEval(TestCase):
 
@@ -60,13 +15,7 @@ class TestEval(TestCase):
         )
 
     def test_eval_are_equals_by_all_fields(self):
-        other_evaluation = Eval(
-            reviewee='employee_uid',
-            kind=EvalKind.SELF,
-            form='my form'
-        )
-
-        self.assertEqual(self.evaluation, other_evaluation)
+        self.assertEqual(self.evaluation, self.evaluation)
 
     def test_eval_are_not_equals(self):
         other_evaluation = Eval(
@@ -81,14 +30,6 @@ class TestEval(TestCase):
         other_type = EvalKind.SELF
 
         self.assertFalse(self.evaluation == other_type)
-
-    def test_eval_to_json(self):
-        jsondict = self.evaluation.to_json()
-
-        self.assertEqual('employee_uid', jsondict['reviewee'])
-        self.assertEqual(EvalKind.SELF.name, jsondict['kind'])
-        self.assertEqual('my form', jsondict['form'])
-        self.assertEqual(3, len(jsondict))
 
 class TestEvalKind(TestCase):
 
@@ -160,15 +101,6 @@ class TestEmployee(TestCase):
 
         self.assertEqual('will', employee.manager)
 
-    def test_employee_to_json(self):
-        jsondict = self.employee.to_json()
-
-        self.assertEqual('some', jsondict['uid'])
-        self.assertEqual('some@employee.com', jsondict['mail'])
-        self.assertEqual('manager', jsondict['manager'])
-        self.assertEqual('Area', jsondict['area'])
-        self.assertEqual(4, len(jsondict))
-    
     def test_employee_are_equals_by_uid(self):
         employee = Employee(
             mail='some@employee.com',
@@ -253,38 +185,6 @@ class TestReviewer(TestCase):
 
         self.assertEqual(1, len(reviewer.evals))
 
-    def test_reviewer_to_json(self):
-        employee = Employee(
-            mail='some@employee.com',
-            manager='manager',
-            area='Area'
-        )
-        reviewer = Reviewer(
-            employee=employee,
-            evals=[]
-        )
-
-        jsondict = reviewer.to_json()
-
-        self.assertEqual('some@employee.com', jsondict['employee']['mail'])
-        self.assertEqual([], jsondict['evals'])
-
-    def test_reviewer_str(self):
-        employee = Employee(
-            mail='some@employee.com',
-            manager='manager',
-            area='Area'
-        )
-        reviewer = Reviewer(
-            employee=employee,
-            evals=[]
-        )
-        expected_str = "{'employee': {'mail': 'some@employee.com', 'uid': 'some', 'manager': 'manager', 'area': 'Area'}, 'evals': []}"
-
-        reviewer_str = str(reviewer)
-
-        self.assertEqual(expected_str, reviewer_str)
-
 class TestReviewerResponseBuilder(TestCase):
 
     def setUp(self):
@@ -352,45 +252,6 @@ class TestReviewerResponseBuilder(TestCase):
             [('question1', 'answer1'), ('question2', 'answer2')],
             reviewer_response.eval_response
         )
-
-class TestGoogleApiClientHttpError(TestCase):
-
-    def setUp(self):
-        self.code = 200
-        self.message = "This is your friendly human-based text message"
-        self.status = 201
-        self.details = []
-
-    def test_build_correct_google_api_client_http_error(self):
-        # when:
-        sut = GoogleApiClientHttpError(
-            self.code,
-            self.message,
-            self.status,
-            self.details,
-        )
-
-        # then:
-        self.assertEqual(self.code, sut.code)
-        self.assertEqual(self.message, sut.message)
-        self.assertEqual(self.status, sut.status)
-        self.assertEqual(self.details, sut.details)
-
-    def test_to_json_google_api_client_http_error(self):
-        # when:
-        sut = GoogleApiClientHttpError(
-            self.code,
-            self.message,
-            self.status,
-            self.details,
-        )
-        json_http_error = sut.to_json()
-
-        # then:
-        self.assertIn("code", json_http_error)
-        self.assertIn("message", json_http_error)
-        self.assertIn("status", json_http_error)
-        self.assertIn("details", json_http_error)
 
 class TestCommunicationKind(TestCase):
 

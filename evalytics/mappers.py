@@ -1,7 +1,66 @@
 import json
 
-from evalytics.models import Reviewer, Employee, EvalKind, Eval
+from evalytics.models import GoogleFile, GoogleSetup
+from evalytics.models import EvalKind, Eval, Employee, Reviewer
 from evalytics.models import CommunicationKind
+from evalytics.models import GoogleApiClientHttpError
+
+class GoogleFileToJson:
+
+    def google_file_to_json(self, google_file: GoogleFile):
+        return {
+            'name': google_file.name,
+            'id': google_file.id
+        }
+
+class GoogleSetupToJson(GoogleFileToJson):
+
+    def google_setup_to_json(self, google_setup: GoogleSetup):
+        return {
+            'folder': super().google_file_to_json(google_setup.folder),
+            'files': list(map(
+                super().google_file_to_json,
+                google_setup.files))
+        }
+
+class EvalToJson:
+
+    def eval_to_json(self, evaluation: Eval):
+        return {
+            "reviewee": evaluation.reviewee,
+            "kind": evaluation.kind.name,
+            "form": evaluation.form
+        }
+
+class EmployeeToJson:
+
+    def employee_to_json(self, employee: Employee):
+        return {
+            "mail": employee.mail,
+            "uid": employee.uid,
+            "manager": employee.manager,
+            "area": employee.area,
+        }
+
+class ReviewerToJson(EmployeeToJson, EvalToJson):
+
+    def reviewer_to_json(self, reviewer: Reviewer):
+        return {
+            "employee": super().employee_to_json(reviewer.employee),
+            "evals": list(map(super().eval_to_json, reviewer.evals))
+        }
+
+class GoogleApiClientHttpErrorToJson:
+
+    def google_api_client_http_error_to_json(
+            self,
+            error: GoogleApiClientHttpError):
+        return {
+            "code": error.code,
+            "message": error.message,
+            "status": error.status,
+            "details": error.details,
+        }
 
 class JsonToReviewer:
 
@@ -31,9 +90,9 @@ class JsonToReviewer:
             })
         return reviewers
 
-class ReviewerToJson:
+class ReviewerToJsonObject:
 
-    def reviewer_to_json(self, reviewers):
+    def reviewer_to_json_object(self, reviewers):
         return json.dumps(
             reviewers,
             default=lambda o:
@@ -69,10 +128,13 @@ class StrToCommunicationKind:
         return CommunicationKind.from_str(communication_kind)
 
 class Mapper(
-        JsonToReviewer,
-        ReviewerToJson,
-        StrToBool,
-        JsonToList,
-        ListToJson,
-        StrToCommunicationKind):
+    GoogleSetupToJson,
+    GoogleApiClientHttpErrorToJson,
+    ReviewerToJson,
+    JsonToReviewer,
+    ReviewerToJsonObject,
+    StrToBool,
+    JsonToList,
+    ListToJson,
+    StrToCommunicationKind):
     'Composition of Mappers'
