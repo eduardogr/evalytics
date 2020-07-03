@@ -219,16 +219,16 @@ class TestGoogleForms(TestCase):
         self.sut.set_folder_from_folder({'id': 'responses_folder'})
         self.sut.set_files_from_folder_response([{
             'id': self.file_id_manager_by,
-            'name': 'Manager Evaluation By Team Member',
+            'name': 'MANAGER EVAL BY REPORT',
         }, {
             'id': self.file_id_report_by,
-            'name': 'Report Evaluation by Manager',
+            'name': 'REPORT EVAL BY MANAGER',
         }, {
             'id': self.file_id_self,
-            'name': 'Self Evaluation',
+            'name': 'SELF EVAL',
         }, {
             'id': self.file_id_peer,
-            'name': 'Peer Evaluation',
+            'name': 'PEER EVAL BY PEER',
         }, {
             'id': 'NO_ID',
             'name': 'None evalkind file',

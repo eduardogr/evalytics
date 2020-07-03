@@ -216,14 +216,18 @@ class GoogleForms(GoogleAPI, Config):
         return reviewee
 
     def __get_eval_kind(self, filename):
-        # TODO: config this
-        if filename.startswith('Manager Evaluation By Team Member'):
+        # TODO: make this more explicit, too important to hide it like this
+        if filename.startswith(super().read_google_manager_eval_by_report_prefix()):
             return EvalKind.PEER_MANAGER
-        elif filename.startswith('Report Evaluation by Manager'):
+
+        elif filename.startswith(super().read_google_report_eval_by_manager_prefix()):
             return EvalKind.MANAGER_PEER
-        elif filename.startswith('Peer Evaluation'):
+
+        elif filename.startswith(super().read_google_peer_eval_by_peer_prefix()):
             return EvalKind.PEER_TO_PEER
-        elif filename.startswith('Self Evaluation'):
+
+        elif filename.startswith(super().read_google_self_eval_prefix()):
             return EvalKind.SELF
+
         else:
             return None

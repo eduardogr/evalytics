@@ -7,6 +7,7 @@ from client import EvalyticsClient
 
 from tests.common.mocks import MockFileManager, MockMapper
 from tests.common.mocks import MockEvalyticsRequests, MockEvalyticsClient
+from tests.common.fixture import Fixture
 
 class EvalyticsClientSut(
         EvalyticsClient,
@@ -238,24 +239,15 @@ class TestEvalyticsClient(TestCase):
 
     def setUp(self):
         self.sut = EvalyticsClientSut()
-        self.reviewers = {
-            'uid1': Reviewer(
-                employee=Employee(mail='uid1@', manager='',area='')
-            ),
-            'uid2': Reviewer(
-                employee=Employee(mail='uid2@', manager='',area='')
-            ),
-            'uid3': Reviewer(
-                employee=Employee(mail='uid3@', manager='',area='')
-            ),
-        }
+        self.reviewers = Fixture().get_organization_reviewers()
         self.sut.set_reviewers(self.reviewers)
         self.sut.set_communications_response({
-            'comms_sent': ['uid1', 'uid2', 'uid3'],
+            'comms_sent': ['cto', 'tl1', 'tl2', 'sw1', 'sw2', 'sw3', 'sw4', 'sw5'],
             'comms_not_sent': []
         })
 
     def test_correct_setup(self):
+        # given:
         self.sut.set_setup_response({
             'setup': {
                 'file': 'filename',
@@ -263,26 +255,32 @@ class TestEvalyticsClient(TestCase):
             }
         })
 
+        # when:
         self.sut.post_setup()
 
+        # then:
         self.assertIn('setup', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['setup'])
 
     def test_correct_reviewers(self):
+        # given:
         self.sut.set_reviewers_response({
             'reviewers': [
-                'uid1',
-                'uid2',
-                'uid3'
+                'cto',
+                'tl1', 'tl2',
+                'sw1', 'sw2', 'sw3', 'sw4', 'sw5'
             ]
         })
 
+        # when:
         self.sut.get_reviewers()
 
+        # then:
         self.assertIn('reviewers', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['reviewers'])
 
     def test_correct_print_reviewers(self):
+        # given:
         reviewers_response = {
             'reviewers': [
                 {
@@ -304,16 +302,19 @@ class TestEvalyticsClient(TestCase):
         }
         self.sut.set_reviewers_response(reviewers_response)
 
+        # when:
         self.sut.print_reviewers()
 
+        # then:
         self.assertIn('reviewers', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['reviewers'])
 
     def test_correct_print_status(self):
+        # given:
         status_response = {
             'status': {
                 "completed": {
-                    "uid1": {
+                    "tl1": {
                         "reviewee": {
                             "kind": 'MANAGER_PEER',
                             "form": 'some form'
@@ -321,7 +322,7 @@ class TestEvalyticsClient(TestCase):
                     }
                 },
                 "pending": {
-                    "uid2": {
+                    "tl2": {
                         "reviewee": {
                             "kind": 'MANAGER_PEER',
                             "form": 'some form'
@@ -329,9 +330,9 @@ class TestEvalyticsClient(TestCase):
                     }
                 },
                 "inconsistent": {
-                    "uid3":  {
+                    "sw1":  {
                         "reviewee": {
-                            "kind": 'MANAGER_PEER',
+                            "kind": 'PEER_MANAGER',
                             "form": 'some form'
                         }
                     }
@@ -340,12 +341,15 @@ class TestEvalyticsClient(TestCase):
         }
         self.sut.set_status_response(status_response)
 
+        # when:
         self.sut.print_status()
 
+        # then:
         self.assertIn('status', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['status'])
 
     def test_correct_print_status_when_no_responses(self):
+        # given:
         status_response = {
             'status': {
                 "completed": {},
@@ -355,18 +359,21 @@ class TestEvalyticsClient(TestCase):
         }
         self.sut.set_status_response(status_response)
 
+        # when:
         self.sut.print_status()
 
+        # then:
         self.assertIn('status', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['status'])
 
     def test_correct_print_inconsistent_files_status(self):
+        # given:
         status_response = {
             'status': {
                 "completed": {},
                 "pending": {},
                 "inconsistent": {
-                    "uid3":  {
+                    "tl1":  {
                         "reviewee": {
                             "kind": 'MANAGER_PEER',
                             "form": 'some form',
@@ -380,127 +387,151 @@ class TestEvalyticsClient(TestCase):
         }
         self.sut.set_status_response(status_response)
 
+        # when:
         self.sut.print_inconsistent_files_status()
 
+        # then:
         self.assertIn('status', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['status'])
 
     def test_correct_send_eval(self):
+        # given:
         kind = 'process_started'
-        whitelist = ['uid1', 'uid2', 'uid3']
+        whitelist = ['cto', 'tl1', 'tl2']
         dry_run = False
 
+        # when:
         self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
+        # then:
         self.assertIn('communications', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_eval_with_whitelist(self):
+        # given:
         kind = 'process_started'
-        whitelist = ['uid1']
+        whitelist = ['tl1']
         dry_run = False
 
+        # when:
         self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
+        # then:
         self.assertIn('communications', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_eval_with_dry_run(self):
+        # given:
         kind = 'process_started'
         whitelist = ['uid1', 'uid2', 'uid3']
         dry_run = True
 
+        # when:
         self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
+        # then:
         self.assertNotIn('communications', self.sut.get_calls())
 
     def test_correct_send_reminders(self):
+        # given:
         kind = 'pending_evals_reminder'
-        whitelist = ['uid1', 'uid2', 'uid3']
+        whitelist = ['tl1', 'tl2', 'sw1']
         dry_run = False
 
+        # when:
         self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
+        # then:
         self.assertIn('communications', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_reminder_with_whitelist(self):
+        # given:
         kind = 'pending_evals_reminder'
-        whitelist = ['uid1']
+        whitelist = ['tl1']
         dry_run = False
 
+        # when:
         self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
+        # then:
         self.assertIn('communications', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['communications'])
 
     def test_correct_send_reminder_with_dry_run(self):
+        # given:
         kind = 'pending_evals_reminder'
-        whitelist = ['uid1', 'uid2', 'uid3']
+        whitelist = ['cto', 'tl2', 'sw3']
         dry_run = True
 
+        # when:
         self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
+        # then:
         self.assertNotIn('evaldelivery', self.sut.get_calls())
 
     def test_correct_whitelist_send_reminder_with_dry_run(self):
+        # given:
         kind = 'pending_evals_reminder'
         reviewers = []
         dry_run = True
-        whitelist = ['uid1']
+        whitelist = ['tl1']
 
+        # when:
         self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
 
+        # then:
         self.assertNotIn('communications', self.sut.get_calls())
 
     def test_correct_generate_reports(self):
+        # given:
         self.sut.set_evalreports_response({
             'evals_reports': {
                 'created': {
-                    'uid1': {
-                        'employee': 'uid1',
+                    'tl1': {
+                        'employee': 'tl1',
                         'managers': [
-                            'uid2',
-                            'uid3'
+                            'cto',
                         ]
                     },
-                    'uid2': {
-                        'employee': 'uid2',
+                    'sw1': {
+                        'employee': 'sw1',
                         'managers': [
-                            'uid2', 
-                            'uid3'
+                            'tl1',
+                            'cto'
                         ]
                     },
                 },
                 'not_created': {}
             }
         })
-        whitelist = ['uid1', 'uid2', 'uid3']
+        whitelist = ['tl1', 'sw1']
         dry_run = False
 
+        # when:
         self.sut.generate_reports(
             dry_run=dry_run,
             whitelist=whitelist)
 
+        # then:
         self.assertIn('evalreports', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['evalreports'])
 
     def test_correct_generate_reports_with_dry_run(self):
+        # given:
         self.sut.set_evalreports_response({
             'evals_reports': {
                 'created': {
-                    'uid1': {
-                        'employee': 'uid1',
+                    'tl1': {
+                        'employee': 'tl1',
                         'managers': [
-                            'uid2',
-                            'uid3'
+                            'cto',
                         ]
                     },
-                    'uid2': {
-                        'employee': 'uid2',
+                    'tl2': {
+                        'employee': 'tl2',
                         'managers': [
-                            'uid2', 
-                            'uid3'
+                            'cto',
                         ]
                     },
                 },
@@ -509,27 +540,29 @@ class TestEvalyticsClient(TestCase):
         })
         dry_run = True
 
+        # when:
         self.sut.generate_reports(dry_run=dry_run)
 
+        # then:
         self.assertIn('evalreports', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['evalreports'])
 
     def test_correct_whitelist_generate_reports_with_dry_run(self):
+        # given:
         self.sut.set_evalreports_response({
             'evals_reports': {
                 'created': {
-                    'uid1': {
-                        'employee': 'uid1',
+                    'tl1': {
+                        'employee': 'tl1',
                         'managers': [
-                            'uid2',
-                            'uid3'
+                            'cto',
                         ]
                     },
-                    'uid2': {
-                        'employee': 'uid2',
+                    'sw2': {
+                        'employee': 'sw2',
                         'managers': [
-                            'uid2', 
-                            'uid3'
+                            'tl1',
+                            'cto'
                         ]
                     },
                 },
@@ -537,13 +570,18 @@ class TestEvalyticsClient(TestCase):
             }
         })
         dry_run = True
-        whitelist = ['uid1']
+        whitelist = ['tl1']
 
+        # when:
         self.sut.generate_reports(dry_run=dry_run, whitelist=whitelist)
 
+        # then:
         self.assertIn('evalreports', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['evalreports'])
 
     def test_correct_help(self):
+        # when
         self.sut.help("some command")
 
+        # then:
         self.assertEqual(0, len(self.sut.get_calls()))

@@ -19,9 +19,6 @@ class StorageFactory(Config):
 
 class GoogleStorage(GoogleAPI, Config):
 
-    # TODO: should be config
-    FORM_MAP_RANGE = 'A2:E4'
-
     def setup(self):
         folder_name = super().read_google_folder()
         needed_spreadsheets = super().read_needed_spreadsheets()
@@ -60,7 +57,7 @@ class GoogleStorage(GoogleAPI, Config):
         if number_of_employees == 0:
             return employees
 
-        org_chart_range = 'A2:C' + str(number_of_employees + 1)
+        org_chart_range = super().read_google_orgchart_range()
         values = super().get_file_rows_from_folder(
             foldername=super().read_google_folder(),
             filename=super().read_google_orgchart(),
@@ -89,7 +86,7 @@ class GoogleStorage(GoogleAPI, Config):
         values = super().get_file_rows_from_folder(
             foldername=super().read_google_folder(),
             filename=super().read_google_form_map(),
-            rows_range=self.FORM_MAP_RANGE)
+            rows_range=super().read_google_form_map_range())
 
         if len(values) == 0:
             raise NoFormsException("Missing forms in google")
@@ -123,7 +120,7 @@ class GoogleStorage(GoogleAPI, Config):
                               reviewee_evaluations: ReviewerResponse,
                               employee_managers):
         eval_process_id = super().read_eval_process_id()
-        filename_prefix = super().read_google_eval_report_prefix_name()
+        filename_prefix = super().read_google_eval_report_prefix()
         filename = '{}{}'.format(filename_prefix, reviewee)
 
         company_domain = super().read_company_domain()
@@ -151,8 +148,7 @@ class GoogleStorage(GoogleAPI, Config):
             return employee_managers
 
     def get_peers_assignment(self):
-        number_of_employees = int(super().read_company_number_of_employees())
-        assignments_peers_range = 'B2:C' + str(number_of_employees + 1)
+        assignments_peers_range = super().read_assignments_peers_range()
 
         spreadheet_id = self.__get_assignments_peers_file()
 
@@ -179,8 +175,7 @@ class GoogleStorage(GoogleAPI, Config):
         return peers
 
     def write_peers_assignment(self, peers_assignment):
-        number_of_employees = int(super().read_company_number_of_employees())
-        assignments_peers_range = 'B2:C' + str(number_of_employees + 1)
+        assignments_peers_range = super().read_assignments_peers_range()
 
         spreadheet_id = self.__get_assignments_peers_file()
 

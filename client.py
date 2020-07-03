@@ -266,7 +266,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         return list_from_file
 
     def __send_communication(self, reviewers, kind: str, dry_run: bool):
-        json_reviewers = super().reviewer_to_json(reviewers)
+        json_reviewers = super().reviewer_to_json_object(reviewers)
 
         if dry_run:
             for reviewer in reviewers:

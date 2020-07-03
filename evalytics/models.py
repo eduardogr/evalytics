@@ -8,28 +8,12 @@ class GoogleFile:
         self.name = name
         self.id = id
 
-    # TODO: to mappers.py
-    def to_json(self):
-        return {
-            'name': self.name,
-            'id': self.id
-        }
-
-
 @dataclass
 class GoogleSetup():
 
     def __init__(self, folder: GoogleFile, files: [GoogleFile]):
         self.folder = folder
         self.files = files
-
-    # TODO: to mappers.py
-    def to_json(self):
-        return {
-            'folder': self.folder.to_json(),
-            'files': [f.to_json() for f in self.files]
-        }
-
 
 class EvalKind(Enum):
     SELF = 1
@@ -58,14 +42,6 @@ class Eval:
         self.kind = kind
         self.form = form
 
-    # TODO: to mappers.py
-    def to_json(self):
-        return {
-            "reviewee": self.reviewee,
-            "kind": self.kind.name,
-            "form": self.form
-        }
-
     def __eq__(self, other):
         if type(other) is type(self):
             return self.reviewee == other.reviewee and \
@@ -76,7 +52,6 @@ class Eval:
 
     def __hash__(self):
         return hash("%s-%s-%s " %(self.reviewee, self.kind, self.form))
-
 
 @dataclass
 class Employee:
@@ -94,15 +69,6 @@ class Employee:
     @property
     def has_manager(self) -> bool:
         return bool(self.manager)
-
-    # TODO: to mappers.py
-    def to_json(self):
-        return {
-            "mail": self.mail,
-            "uid": self.uid,
-            "manager": self.manager,
-            "area": self.area,
-        }
 
     def __eq__(self, other):
         if type(other) is type(self):
@@ -126,16 +92,6 @@ class Reviewer:
     @property
     def mail(self) -> str:
         return self.employee.mail
-
-    def __str__(self):
-        return "%s" % self.to_json()
-
-    # TODO: to mappers.py
-    def to_json(self):
-        return {
-            "employee": self.employee.to_json(),
-            "evals": [e.to_json() for e in self.evals]
-        }
 
 @dataclass
 class ReviewerResponse:
@@ -195,14 +151,6 @@ class GoogleApiClientHttpError:
         self.message = message
         self.status = status
         self.details = details
-
-    def to_json(self):
-        return {
-            "code": self.code,
-            "message": self.message,
-            "status": self.status,
-            "details": self.details,
-        }
 
 class CommunicationKind(Enum):
     PEERS_ASSIGNMENT = 1
