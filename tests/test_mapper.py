@@ -7,13 +7,13 @@ from evalytics.mappers import JsonToReviewer, ReviewerToJsonObject
 from evalytics.mappers import StrToBool, JsonToList, ListToJson
 from evalytics.models import Reviewer, Employee, Eval, EvalKind
 
-from tests.common.models_mother import Mother
+from tests.common.fixture import Fixture
 
 class TestGoogleFileToJson(TestCase):
 
     def test_to_json(self):
         # given:
-        google_file = Mother().get_any_google_file_model()
+        google_file = Fixture().get_any_google_file_model()
         expected_json_dict = {
             'name': google_file.name,
             'id': google_file.id
@@ -30,7 +30,7 @@ class TestGoogleSetupToJson(TestCase):
 
     def test_to_json(self):
         # given:
-        google_setup = Mother().get_any_google_setup_model(with_files_number=1)
+        google_setup = Fixture().get_any_google_setup_model(with_files_number=1)
         expected_json_dict = {
             'folder': {
                 'name': google_setup.folder.name,
@@ -55,7 +55,7 @@ class TestEvalToJson(TestCase):
 
     def test_to_json(self):
         # given:
-        evaluation = Mother().get_any_eval_model()
+        evaluation = Fixture().get_any_eval_model()
         expected_json_dict = {
             'reviewee': evaluation.reviewee,
             'kind': evaluation.kind.name,
@@ -73,7 +73,7 @@ class TestEmployeeToJson(TestCase):
 
     def test_to_json(self):
         # given:
-        employee = Mother().get_any_employee_model()
+        employee = Fixture().get_any_employee_model()
         expected_json_dict = {
             'mail': employee.mail,
             'uid': employee.uid,
@@ -92,7 +92,7 @@ class TestReviewerToJson(TestCase):
 
     def test_to_json(self):
         # given:
-        reviewer = Mother().get_any_reviewer_model()
+        reviewer = Fixture().get_any_reviewer_model()
         expected_json_dict = {
             'employee': {
                 'mail': reviewer.employee.mail,
@@ -115,7 +115,7 @@ class TestGoogleApiClientHttpErrorToJson(TestCase):
 
     def test_to_json(self):
         # given:
-        google_http_error = Mother().get_any_google_api_client_http_error__model()
+        google_http_error = Fixture().get_any_google_api_client_http_error__model()
         expected_json_dict = {
             'code': google_http_error.code,
             'message': google_http_error.message,
