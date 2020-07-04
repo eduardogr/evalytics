@@ -105,10 +105,10 @@ class GoogleStorage(GoogleAPI, Config):
 
             forms.update({
                 form_area: {
-                    EvalKind.SELF: self_eval,
-                    EvalKind.PEER_MANAGER: peer_manager_eval,
-                    EvalKind.MANAGER_PEER: manager_peer_eval,
-                    EvalKind.PEER_TO_PEER: peer_to_peer_eval,
+                    EvalKind.SELF.name: self_eval,
+                    EvalKind.PEER_MANAGER.name: peer_manager_eval,
+                    EvalKind.MANAGER_PEER.name: manager_peer_eval,
+                    EvalKind.PEER_TO_PEER.name: peer_to_peer_eval,
                 }
             })
 

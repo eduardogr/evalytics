@@ -12,6 +12,18 @@ class SetupUseCase(StorageFactory):
         setup = storage.setup()
         return setup
 
+class GetEmployeesUseCase(StorageFactory):
+
+    def get_employees(self):
+        storage = super().get_storage()
+        return storage.get_employees()
+
+class GetSurveysUseCase(StorageFactory):
+
+    def get_surveys(self):
+        storage = super().get_storage()
+        return storage.get_forms()
+
 class GetReviewersUseCase(
         StorageFactory,
         EmployeeAdapter):

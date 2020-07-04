@@ -185,7 +185,7 @@ class TestGoogleStorage(TestCase):
         forms = self.sut.get_forms()
 
         self.assertEqual(1, len(forms))
-        self.assertEqual('last-form-self', forms['area1'][EvalKind.SELF])
+        self.assertEqual('last-form-self', forms['area1'][EvalKind.SELF.name])
 
     def test_get_forms_when_missing_data(self):
         self.sut.set_file_rows_response([

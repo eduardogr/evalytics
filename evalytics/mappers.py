@@ -128,13 +128,13 @@ class StrToCommunicationKind:
         return CommunicationKind.from_str(communication_kind)
 
 class Mapper(
-    GoogleSetupToJson,
-    GoogleApiClientHttpErrorToJson,
-    ReviewerToJson,
-    JsonToReviewer,
-    ReviewerToJsonObject,
-    StrToBool,
-    JsonToList,
-    ListToJson,
-    StrToCommunicationKind):
+        GoogleSetupToJson,
+        GoogleApiClientHttpErrorToJson,
+        ReviewerToJson,
+        JsonToReviewer,
+        ReviewerToJsonObject,
+        StrToBool,
+        JsonToList,
+        ListToJson,
+        StrToCommunicationKind):
     'Composition of Mappers'
