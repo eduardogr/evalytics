@@ -584,6 +584,9 @@ class MockConfigReader(ConfigReader):
             'eval_process': {
                 'id': 'eval_process_id',
                 'due_date': 'eval_process_due_date',
+                'feature_disabling': {
+                    'add_comenter_to_eval_reports': False
+                }
             },
             'providers': {
                 'storage': 'storage-provider',
@@ -654,6 +657,9 @@ class MockConfig(Config, MockConfigReader):
     def read_eval_process_due_date(self):
         return 'DUE_DATE'
 
+    def read_is_add_comenter_to_eval_reports_enabled(self):
+        return False
+
     def read_storage_provider(self):
         return self.storage_provider
 
@@ -695,9 +701,6 @@ class MockConfig(Config, MockConfigReader):
 
     def read_assignments_peers_range(self):
         return "A1:A1"
-
-    def read_needed_spreadsheets(self):
-        return self.needed_spreadsheets
 
     def read_google_responses_folder(self):
         return "form_responses_folder"
@@ -828,10 +831,9 @@ class MockGoogleStorage(GoogleStorage):
         }
 
     def get_forms(self):
-        return {}
+        return {'SELF': 'first form'}
 
     def generate_eval_reports(self,
-                              dry_run,
                               reviewee,
                               reviewee_evaluations,
                               employee_managers):
@@ -967,7 +969,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def set_evalreports_response(self, response):
         self.evalreports_response = response
 
-    def evalreports(self, dry_run, uids):
+    def evalreports(self, uids):
         self.update_calls('evalreports')
         return True, self.evalreports_response
 

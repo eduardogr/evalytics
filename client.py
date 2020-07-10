@@ -52,15 +52,13 @@ class EvalyticsRequests:
             self,
             uids=None,
             managers=None,
-            area=None,
-            dry_run: bool = False):
+            area=None):
         response = requests.post(
             url="%s/evalreports" % self.BASE_URL,
             data={
                 "uids": uids,
                 "managers": managers,
                 "area": area,
-                "dry_run": dry_run
             }
         )
 
@@ -203,18 +201,15 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
         self.__send_communication(reviewers, kind, dry_run)
 
-    def generate_reports(self, dry_run, whitelist=None):
+    def generate_reports(self, whitelist=None):
         uids = super().list_to_json(whitelist)
-        success, response = super().evalreports(
-            dry_run=dry_run,
-            uids=uids)
+        success, response = super().evalreports(uids=uids)
 
         if success:
             evals_reports = response['evals_reports']
             created = evals_reports['created']
             not_created = evals_reports['not_created']
 
-            print('[DRY-RUN] %s' % dry_run)
             print("Reports created:")
             for uid, reports_created in created.items():
                 print(' - {} report will be shared with {}'.format(uid, reports_created['managers']))
@@ -359,9 +354,7 @@ class CommandFactory(EvalyticsClient):
                 super().print_status()
 
         elif command == CommandFactory.REPORTS:
-            super().generate_reports(
-                dry_run=dry_run,
-                whitelist=whitelist)
+            super().generate_reports(whitelist=whitelist)
         else:
             super().help(command)
 

@@ -215,25 +215,11 @@ class TestCommandFactory(TestCase):
         self.assertIn('generate_reports', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['generate_reports'])
 
-    def test_command_factory_reports_with_dry_run(self):
-        self.sut.execute(['reports', '--dry-run'])
-
-        self.assertIn('generate_reports', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['generate_reports'])
-        self.assertTrue(self.sut.get_dry_run())
-
     def test_command_factory_whitelisted_reports(self):
         self.sut.execute(['reports', '--whitelist'])
 
         self.assertIn('generate_reports', self.sut.get_calls())
         self.assertEqual(1, self.sut.get_calls()['generate_reports'])
-
-    def test_command_factory_whitelisted_reports_with_dry_run(self):
-        self.sut.execute(['reports', '--whitelist', '--dry-run'])
-
-        self.assertIn('generate_reports', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['generate_reports'])
-        self.assertTrue(self.sut.get_dry_run())
 
 class TestEvalyticsClient(TestCase):
 
@@ -473,12 +459,12 @@ class TestEvalyticsClient(TestCase):
     def test_correct_whitelist_send_reminder_with_dry_run(self):
         # given:
         kind = 'pending_evals_reminder'
-        reviewers = []
+        reviewers = {}
         dry_run = True
         whitelist = ['tl1']
 
         # when:
-        self.sut.send_communication(kind=kind, reviewers=self.reviewers, whitelist=whitelist, dry_run=dry_run)
+        self.sut.send_communication(kind=kind, reviewers=reviewers, whitelist=whitelist, dry_run=dry_run)
 
         # then:
         self.assertNotIn('communications', self.sut.get_calls())
@@ -506,11 +492,9 @@ class TestEvalyticsClient(TestCase):
             }
         })
         whitelist = ['tl1', 'sw1']
-        dry_run = False
 
         # when:
         self.sut.generate_reports(
-            dry_run=dry_run,
             whitelist=whitelist)
 
         # then:
@@ -538,10 +522,9 @@ class TestEvalyticsClient(TestCase):
                 'not_created': {}
             }
         })
-        dry_run = True
 
         # when:
-        self.sut.generate_reports(dry_run=dry_run)
+        self.sut.generate_reports()
 
         # then:
         self.assertIn('evalreports', self.sut.get_calls())
@@ -569,11 +552,10 @@ class TestEvalyticsClient(TestCase):
                 'not_created': {}
             }
         })
-        dry_run = True
         whitelist = ['tl1']
 
         # when:
-        self.sut.generate_reports(dry_run=dry_run, whitelist=whitelist)
+        self.sut.generate_reports(whitelist=whitelist)
 
         # then:
         self.assertIn('evalreports', self.sut.get_calls())

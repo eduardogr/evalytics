@@ -1,7 +1,7 @@
 import tornado.web
 
-from evalytics.usecases import SetupUseCase, GetReviewersUseCase
 from evalytics.usecases import GetEmployeesUseCase, GetSurveysUseCase
+from evalytics.usecases import GetReviewersUseCase
 from evalytics.usecases import GetResponseStatusUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.usecases import GetPeersAssignmentUseCase
@@ -10,30 +10,8 @@ from evalytics.usecases import SendCommunicationUseCase
 from evalytics.mappers import Mapper
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import GoogleApiClientHttpErrorException
-
-class SetupHandler(tornado.web.RequestHandler):
-    path = r"/setup"
-
-    async def post(self):
-        try:
-            setup = SetupUseCase().setup()
-            self.finish({
-                'success': True,
-                'response': {
-                    'setup': Mapper().google_setup_to_json(setup)
-                }
-            })
-        except Exception as e:
-            if hasattr(e, 'message'):
-                message = e.message
-            else:
-                message = str(e)
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': message,
-                }
-            })
+from evalytics.exceptions import MissingGoogleDriveFolderException
+from evalytics.exceptions import MissingGoogleDriveFileException
 
 class EmployeesHandler(tornado.web.RequestHandler):
     path = r"/employees"
@@ -48,6 +26,14 @@ class EmployeesHandler(tornado.web.RequestHandler):
                     'employees': [Mapper().employee_to_json(e) for uid, e in employees.items()]
                 }
             })
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': e.message,
+                }
+            })
         except (MissingDataException, NoFormsException) as exception:
             self.finish({
                 'success': False,
@@ -55,17 +41,7 @@ class EmployeesHandler(tornado.web.RequestHandler):
                     'error': exception.message,
                 }
             })
-        except Exception as e:
-            if hasattr(e, 'message'):
-                message = e.message
-            else:
-                message = str(e)
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': message,
-                }
-            })
+
 
 class SurveysHandler(tornado.web.RequestHandler):
     path = r"/surveys"
@@ -80,22 +56,19 @@ class SurveysHandler(tornado.web.RequestHandler):
                     'surveys': surveys
                 }
             })
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': e.message,
+                }
+            })
         except (MissingDataException, NoFormsException) as exception:
             self.finish({
                 'success': False,
                 'response': {
                     'error': exception.message,
-                }
-            })
-        except Exception as e:
-            if hasattr(e, 'message'):
-                message = e.message
-            else:
-                message = str(e)
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': message,
                 }
             })
 
@@ -111,6 +84,14 @@ class PeersAssignmentHandler(tornado.web.RequestHandler):
                 'success': True,
                 'response': {
                     'peers_assignment': peers_assignment
+                }
+            })
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': e.message,
                 }
             })
         except MissingDataException as e:
@@ -143,6 +124,14 @@ class PeersAssignmentHandler(tornado.web.RequestHandler):
                     'unanswered_forms': peers_assignment.unanswered_forms
                 }
             })
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': e.message,
+                }
+            })
         except MissingDataException as e:
             if hasattr(e, 'message'):
                 message = e.message
@@ -167,11 +156,22 @@ class ReviewersHandler(tornado.web.RequestHandler):
     async def get(self):
         try:
             reviewers = GetReviewersUseCase().get_reviewers()
+            reviewers = [
+                Mapper().reviewer_to_json(r)
+                for uid, r in reviewers.items()]
 
             self.finish({
                 'success': True,
                 'response': {
-                    'reviewers': [Mapper().reviewer_to_json(r) for uid, r in reviewers.items()]
+                    'reviewers': reviewers
+                }
+            })
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': e.message,
                 }
             })
         except (MissingDataException, NoFormsException) as exception:
@@ -179,17 +179,6 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 'success': False,
                 'response': {
                     'error': exception.message,
-                }
-            })
-        except Exception as e:
-            if hasattr(e, 'message'):
-                message = e.message
-            else:
-                message = str(e)
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': message,
                 }
             })
 
@@ -241,22 +230,19 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
                     }
                 }
             })
-        except (MissingDataException) as exception:
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
             self.finish({
                 'success': False,
                 'response': {
-                    'error': exception.message,
+                    'error': e.message,
                 }
             })
-        except Exception as e:
-            if hasattr(e, 'message'):
-                message = e.message
-            else:
-                message = str(e)
+        except (MissingDataException) as e:
             self.finish({
                 'success': False,
                 'response': {
-                    'error': message,
+                    'error': e.message,
                 }
             })
 
@@ -269,14 +255,10 @@ class EvalReportsHandler(tornado.web.RequestHandler):
             managers_arg = self.get_argument('managers', None, strip=False)
             employee_uids_arg = self.get_argument('uids', None, strip=False)
 
-            dry_run_arg = self.get_argument('dry_run', 'False', strip=False)
-
             managers = Mapper().json_to_list(managers_arg)
             employee_uids = Mapper().json_to_list(employee_uids_arg)
-            dry_run = Mapper().str_to_bool(dry_run_arg)
 
             created, not_created = GenerateEvalReportsUseCase().generate(
-                dry_run,
                 area,
                 managers,
                 employee_uids
@@ -289,6 +271,14 @@ class EvalReportsHandler(tornado.web.RequestHandler):
                         'created': created,
                         'not_created': not_created,
                     }
+                }
+            })
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': e.message,
                 }
             })
         except MissingDataException as e:

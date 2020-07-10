@@ -17,3 +17,5 @@ omit =
     tests/*
     setup.py
     google_auth.py
+    server.py
+    evalytics/handlers.py

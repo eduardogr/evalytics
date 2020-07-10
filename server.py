@@ -6,7 +6,6 @@ from tornado.web import Application
 from tornado.options import define, options
 
 from evalytics.handlers import \
-    SetupHandler, \
     EmployeesHandler, \
     SurveysHandler, \
     ReviewersHandler, \
@@ -22,7 +21,6 @@ class GetPathAndHandler:
 
     def get(self):
         handlers = [
-            SetupHandler,
             PeersAssignmentHandler,
             EmployeesHandler,
             SurveysHandler,

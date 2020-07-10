@@ -9,6 +9,8 @@ from google.auth.transport.requests import Request
 
 from evalytics.models import EvalKind, GoogleApiClientHttpError
 from evalytics.exceptions import GoogleApiClientHttpErrorException
+from evalytics.exceptions import MissingGoogleDriveFolderException
+from evalytics.exceptions import MissingGoogleDriveFileException
 
 class GoogleAuth:
     # If modifying these scopes, delete the file token.pickle.
@@ -410,9 +412,16 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                                   filename: str,
                                   rows_range: str):
         folder = self.get_folder(name=foldername)
+
+        if folder is None:
+            raise MissingGoogleDriveFolderException('Missing folder: {}'.format(foldername))
+
         spreadsheet_id = self.get_file_id_from_folder(
             folder_id=folder.get('id'),
             filename=filename)
+
+        if spreadsheet_id is None:
+            raise MissingGoogleDriveFileException('Missing file: {}'.format(filename))
 
         values = super().get_file_values(
             spreadsheet_id,

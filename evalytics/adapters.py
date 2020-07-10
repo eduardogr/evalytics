@@ -119,7 +119,7 @@ class EmployeeAdapter(Config):
 
     def __check_area_exists_in_forms(self, forms, area):
         if area not in forms:
-                raise MissingDataException("Missing area '{}' in forms".format(area))
+            raise MissingDataException("Missing area '{}' in forms".format(area))
 
 class ReviewerAdapter(EmployeeAdapter):
 

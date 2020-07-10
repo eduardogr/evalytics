@@ -5,13 +5,6 @@ from evalytics.storages import StorageFactory
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.forms import FormsPlatformFactory
 
-class SetupUseCase(StorageFactory):
-
-    def setup(self):
-        storage = super().get_storage()
-        setup = storage.setup()
-        return setup
-
 class GetEmployeesUseCase(StorageFactory):
 
     def get_employees(self):
@@ -48,6 +41,7 @@ class SendCommunicationUseCase(CommunicationChannelFactory):
                     reviewer=reviewer,
                     kind=kind)
                 comms_sent.append(reviewer.uid)
+            # TODO: we need more info here to know why a communication was not sent
             except:
                 comms_not_sent.append(reviewer.uid)
 
@@ -67,7 +61,6 @@ class GenerateEvalReportsUseCase(
 
     def generate(
             self,
-            dry_run,
             area, managers,
             employee_uids):
         storage = super().get_storage()
@@ -90,7 +83,6 @@ class GenerateEvalReportsUseCase(
 
             try:
                 storage.generate_eval_reports(
-                    dry_run,
                     uid,
                     reviewee_evaluations,
                     employee_managers)
@@ -101,6 +93,7 @@ class GenerateEvalReportsUseCase(
                         'managers': employee_managers
                     }
                 })
+            # TODO: we need more info here to know why a communication was not sent
             except:
                 not_created.update({
                     uid: {

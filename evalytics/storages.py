@@ -21,7 +21,6 @@ class GoogleStorage(GoogleAPI, Config):
 
     def setup(self):
         folder_name = super().read_google_folder()
-        needed_spreadsheets = super().read_needed_spreadsheets()
 
         # Folder setup
         folder = super().get_folder(name=folder_name)
@@ -32,7 +31,7 @@ class GoogleStorage(GoogleAPI, Config):
 
         # SpreadhSheets setup
         files = []
-        for filename in needed_spreadsheets:
+        for filename in []:
             spreadheet_id = super().get_file_id_from_folder(
                 folder_id=folder.get('id'),
                 filename=filename)
@@ -51,16 +50,14 @@ class GoogleStorage(GoogleAPI, Config):
             files=files)
 
     def get_employees(self):
-        employees = {}
-        number_of_employees = int(super().read_company_number_of_employees())
-
-        if number_of_employees == 0:
-            return employees
-
+        google_folder = super().read_google_folder()
+        org_chart = super().read_google_orgchart()
         org_chart_range = super().read_google_orgchart_range()
+        employees = {}
+
         values = super().get_file_rows_from_folder(
-            foldername=super().read_google_folder(),
-            filename=super().read_google_orgchart(),
+            foldername=google_folder,
+            filename=org_chart,
             rows_range=org_chart_range)
         company_domain = super().read_company_domain()
 
@@ -83,13 +80,17 @@ class GoogleStorage(GoogleAPI, Config):
         return employees
 
     def get_forms(self):
+        google_folder = super().read_google_folder()
+        google_form_map = super().read_google_form_map()
+        google_form_map_range = super().read_google_form_map_range()
+
         values = super().get_file_rows_from_folder(
-            foldername=super().read_google_folder(),
-            filename=super().read_google_form_map(),
-            rows_range=super().read_google_form_map_range())
+            foldername=google_folder,
+            filename=google_form_map,
+            rows_range=google_form_map_range)
 
         if len(values) == 0:
-            raise NoFormsException("Missing forms in google")
+            raise NoFormsException('File <{}> is empty'.format(google_form_map))
 
         # Creating models
         forms = {}
@@ -115,10 +116,10 @@ class GoogleStorage(GoogleAPI, Config):
         return forms
 
     def generate_eval_reports(self,
-                              dry_run,
                               reviewee,
                               reviewee_evaluations: ReviewerResponse,
                               employee_managers):
+        is_add_comenter_to_eval_reports_enabled = super().read_is_add_comenter_to_eval_reports_enabled()
         eval_process_id = super().read_eval_process_id()
         filename_prefix = super().read_google_eval_report_prefix()
         filename = '{}{}'.format(filename_prefix, reviewee)
@@ -137,15 +138,13 @@ class GoogleStorage(GoogleAPI, Config):
             reviewee,
             reviewee_evaluations)
 
-        if dry_run:
-            return employee_managers
-
-        else:
+        if is_add_comenter_to_eval_reports_enabled:
             super().add_comenter_permission(
                 document_id,
                 employee_managers
             )
-            return employee_managers
+
+        return employee_managers
 
     def get_peers_assignment(self):
         assignments_peers_range = super().read_assignments_peers_range()
