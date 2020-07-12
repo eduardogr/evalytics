@@ -55,6 +55,29 @@ class GetResponseStatusUseCase(
         responses = super().get_forms_platform().get_responses()
         return super().get_status_from_responses(reviewers, responses)
 
+class GetEvalReportsUseCase(
+        StorageFactory, FormsPlatformFactory,
+        EmployeeAdapter, ReviewerResponseFilter):
+
+    def get(
+            self,
+            area, managers,
+            employee_uids):
+        storage = super().get_storage()
+        forms_platform = super().get_forms_platform()
+
+        reviewee_evaluations = forms_platform.get_evaluations()
+        employees = storage.get_employees()
+
+        reviewee_evaluations = super().filter_reviewees(
+            reviewee_evaluations,
+            employees,
+            area,
+            managers,
+            employee_uids)
+
+        return reviewee_evaluations
+
 class GenerateEvalReportsUseCase(
         StorageFactory, FormsPlatformFactory,
         EmployeeAdapter, ReviewerResponseFilter):

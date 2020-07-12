@@ -3,6 +3,7 @@ import tornado.web
 from evalytics.usecases import GetEmployeesUseCase, GetSurveysUseCase
 from evalytics.usecases import GetReviewersUseCase
 from evalytics.usecases import GetResponseStatusUseCase
+from evalytics.usecases import GetEvalReportsUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.usecases import GetPeersAssignmentUseCase
 from evalytics.usecases import UpdatePeersAssignmentUseCase
@@ -248,6 +249,58 @@ class ResponseStatusHandler(tornado.web.RequestHandler):
 
 class EvalReportsHandler(tornado.web.RequestHandler):
     path = r"/evalreports"
+
+    async def get(self):
+        try:
+            area = self.get_argument('area', None, strip=False)
+            managers_arg = self.get_argument('managers', None, strip=False)
+            employee_uids_arg = self.get_argument('uids', None, strip=False)
+
+            managers = Mapper().json_to_list(managers_arg)
+            employee_uids = Mapper().json_to_list(employee_uids_arg)
+
+            reviewees_evaluations = GetEvalReportsUseCase().get_eval_reports(
+                area,
+                managers,
+                employee_uids
+            )
+
+            reviewees_evaluations_json = {}
+            for uid, evaluations in reviewees_evaluations.items():
+                evaluations_json = []
+                for evaluation in evaluations:
+                    evaluations_json.append(Mapper().reviewer_response_to_json(evaluation))
+                reviewees_evaluations_json.update({
+                    uid: evaluations_json
+                })
+
+            self.finish({
+                'success': True,
+                'response': {
+                    'evals_reports': {
+                        'reviewees_evaluations': reviewees_evaluations_json
+                    }
+                }
+            })
+        except (MissingGoogleDriveFolderException,
+                MissingGoogleDriveFileException) as e:
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': e.message,
+                }
+            })
+        except MissingDataException as e:
+            if hasattr(e, 'message'):
+                message = e.message
+            else:
+                message = str(e)
+            self.finish({
+                'success': False,
+                'response': {
+                    'error': message,
+                }
+            })
 
     async def post(self):
         try:

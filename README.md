@@ -258,6 +258,10 @@ Retrieves the status of the current eval process
 }
 ```
 
+### GET /evalreports
+
+Retrieve eval reports
+
 ### POST /evalreports
 
 Generate eval reports
