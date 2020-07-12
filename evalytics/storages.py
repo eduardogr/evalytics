@@ -19,36 +19,6 @@ class StorageFactory(Config):
 
 class GoogleStorage(GoogleAPI, Config):
 
-    def setup(self):
-        folder_name = super().read_google_folder()
-
-        # Folder setup
-        folder = super().get_folder(name=folder_name)
-        if folder is None:
-            folder = super().create_folder(name=folder_name)
-
-        folder_parent = folder.get('parents')[0]
-
-        # SpreadhSheets setup
-        files = []
-        for filename in []:
-            spreadheet_id = super().get_file_id_from_folder(
-                folder_id=folder.get('id'),
-                filename=filename)
-
-            if spreadheet_id is None:
-                spreadheet_id = super().create_sheet(
-                    folder=folder,
-                    folder_parent=folder_parent,
-                    filename=filename
-                )
-            files.append(GoogleFile(name=filename, id=spreadheet_id))
-
-        folder = GoogleFile(name=folder_name, id=folder.get('id'))
-        return GoogleSetup(
-            folder=folder,
-            files=files)
-
     def get_employees(self):
         google_folder = super().read_google_folder()
         org_chart = super().read_google_orgchart()
