@@ -92,12 +92,6 @@ class TestCommandFactory(TestCase):
         self.sut.set_reviewers_response(self.correct_reviewers_response)
         self.sut.set_status_response(self.correct_status_response)
 
-    def test_command_factory_post_setup(self):
-        self.sut.execute(['setup'])
-
-        self.assertIn('post_setup', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['post_setup'])
-
     def test_command_factory_get_reviewers(self):
         self.sut.execute(['reviewers'])
 
@@ -231,22 +225,6 @@ class TestEvalyticsClient(TestCase):
             'comms_sent': ['cto', 'tl1', 'tl2', 'sw1', 'sw2', 'sw3', 'sw4', 'sw5'],
             'comms_not_sent': []
         })
-
-    def test_correct_setup(self):
-        # given:
-        self.sut.set_setup_response({
-            'setup': {
-                'file': 'filename',
-                'folder': 'foldername'
-            }
-        })
-
-        # when:
-        self.sut.post_setup()
-
-        # then:
-        self.assertIn('setup', self.sut.get_calls())
-        self.assertEqual(1, self.sut.get_calls()['setup'])
 
     def test_correct_reviewers(self):
         # given:
