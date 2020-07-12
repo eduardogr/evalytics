@@ -3,6 +3,7 @@ from unittest import TestCase
 from evalytics.usecases import GetEmployeesUseCase, GetSurveysUseCase
 from evalytics.usecases import GetReviewersUseCase, SendCommunicationUseCase
 from evalytics.usecases import GetResponseStatusUseCase
+from evalytics.usecases import GetEvalReportsUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.usecases import GetPeersAssignmentUseCase
 from evalytics.usecases import UpdatePeersAssignmentUseCase
@@ -41,6 +42,14 @@ class GetResponseStatusUseCaseSut(
         MockFormsPlatformFactory,
         MockReviewerAdapter):
     'Inject mocks into GetResponseStatusUseCase dependencies'
+
+class GetEvalReportsUseCaseSut(
+        GetEvalReportsUseCase,
+        MockStorageFactory,
+        MockFormsPlatformFactory,
+        MockEmployeeAdapter,
+        MockReviewerResponseFilter):
+    'Inject mocks into GetEvalReportsUseCaseSut dependencies'
 
 class GenerateEvalReportsUseCaseSut(
         GenerateEvalReportsUseCase,
@@ -140,6 +149,43 @@ class TestGetResponseStatusUseCase(TestCase):
     def test_get_response_status(self):
         _ = self.sut.get_response_status()
 
+class TestGetEvalReportsUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GetEvalReportsUseCaseSut()
+        self.storage = MockGoogleStorage()
+        self.forms_platform = MockGoogleForms()
+        self.any_reviewer_response = ReviewerResponse(
+            'reviewee',
+            'reviewer',
+            'eval_kind',
+            [],
+            'filename',
+            0
+        )
+        self.evaluations_response = {
+            'uid1': self.any_reviewer_response,
+            'uid2': self.any_reviewer_response,
+            'uid3': self.any_reviewer_response,
+        }
+
+    def test_get_evalreports_status(self):
+        area = ''
+        managers = []
+        employee_uids = []
+
+        self.forms_platform.set_evaluations_response(self.evaluations_response)
+        self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
+
+        evaluations = self.sut.get(
+            area,
+            managers,
+            employee_uids
+        )
+
+        self.assertEqual(3, len(evaluations))
+
 class TestGenerateEvalReportsUseCase(TestCase):
 
     def setUp(self):
@@ -160,7 +206,7 @@ class TestGenerateEvalReportsUseCase(TestCase):
             'uid3': self.any_reviewer_response,
         }
 
-    def test_get_response_status(self):
+    def test_get_evalreports_status(self):
         area = ''
         managers = []
         employee_uids = []
@@ -178,7 +224,7 @@ class TestGenerateEvalReportsUseCase(TestCase):
         self.assertEqual(0, len(not_created))
         self.assertEqual(3, len(created))
 
-    def test_get_response_status_when_exceptions_is_raised(self):
+    def test_generate_evalreports_when_exceptions_is_raised(self):
         area = ''
         managers = []
         employee_uids = []
