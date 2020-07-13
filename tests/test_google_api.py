@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from evalytics.google_api import GmailAPI, FilesAPI, DocsService, DriveService
 from evalytics.google_api import SheetsService, GmailService
-from evalytics.models import ReviewerResponse, EvalKind
+from evalytics.models import GoogleFile, ReviewerResponse, EvalKind
 from evalytics.exceptions import MissingGoogleDriveFolderException
 from evalytics.exceptions import MissingGoogleDriveFileException
 from evalytics.exceptions import GoogleApiClientHttpErrorException
@@ -268,8 +268,8 @@ class TestFilesAPI(TestCase):
 
     def test_create_spreadsheet(self):
         folder_parent = 'parent'
-        folder = {'id': 'new_parent_id'}
         filename = 'filename'
+        folder = GoogleFile(id='new_parent_id', name='folder', parents=[])
 
         # when:
         self.sut.create_sheet(folder_parent, folder, filename)
@@ -320,10 +320,7 @@ class TestFilesAPI(TestCase):
         folder_name = 'my_folder'
         self.sut.set_get_file_response(
             folder_name,
-            {
-                'name': folder_name,
-                'id': 'some id'
-            })
+            GoogleFile(id='some id', name=folder_name, parents=[]))
 
         # when:
         folder = self.sut.get_folder(folder_name)
@@ -333,7 +330,7 @@ class TestFilesAPI(TestCase):
         self.assertEqual(1, len(calls))
         self.assertIn('get_file', calls)
 
-        self.assertEqual(folder_name, folder['name'])
+        self.assertEqual(folder_name, folder.name)
 
     def test_correct_query_when_get_folder(self):
         # given:
@@ -372,10 +369,7 @@ class TestFilesAPI(TestCase):
         expected_query = "'%s' in parents" % folder_id
         self.sut.set_get_file_response(
             filename,
-            {
-                'name': filename,
-                'id': 'some id'
-            })
+            GoogleFile(id='some id', name=filename, parents=[]))
 
         # when:
         self.sut.get_file_id_from_folder(folder_id, filename)
@@ -395,9 +389,7 @@ class TestFilesAPI(TestCase):
         expected_file_id = 'nice id'
         self.sut.set_get_file_response(
             filename,
-            {
-                'name': filename,
-                'id': expected_file_id})
+            GoogleFile(id=expected_file_id, name=filename, parents=[]))
 
         # when:
         file_id = self.sut.get_file_id_from_folder(folder_id, filename)
@@ -418,16 +410,10 @@ class TestFilesAPI(TestCase):
         folder_id = 'folder_id'
         self.sut.set_get_file_response(
             folder_name,
-            {
-                'name': folder_name,
-                'id': folder_id
-            })
+            GoogleFile(id=folder_id, name=folder_name, parents=[]))
         self.sut.set_get_file_response(
             filename,
-            {
-                'name': filename,
-                'id': file_id
-            })
+            GoogleFile(id=file_id, name=filename, parents=[]))
         rows_range = 'A2::F4'
 
         # when:
@@ -466,10 +452,7 @@ class TestFilesAPI(TestCase):
         folder_id = 'folder_id'
         self.sut.set_get_file_response(
             folder_name,
-            {
-                'name': folder_name,
-                'id': folder_id
-            })
+            GoogleFile(id=folder_id, name=folder_name, parents=[]))
         rows_range = 'A2::F4'
 
         # when:
@@ -530,16 +513,10 @@ class TestFilesAPI(TestCase):
         parent_foldername = 'i am you father'
         self.sut.set_get_file_response(
             parent_foldername,
-            {
-                'name': parent_foldername,
-                'id': 'some parent id'
-            })
+            GoogleFile(id='some parent id', name=parent_foldername, parents=[]))
         self.sut.set_get_file_response(
             foldername,
-            {
-                'name': foldername,
-                'id': 'some id'
-            })
+            GoogleFile(id='some id', name=foldername, parents=[]))
 
         # when:
         folder = self.sut.get_folder_from_folder(foldername, parent_foldername)
@@ -552,7 +529,7 @@ class TestFilesAPI(TestCase):
         calls = calls['get_file']
         self.assertEqual(2, len(calls))
 
-        self.assertEqual(foldername, folder.get('name'))
+        self.assertEqual(foldername, folder.name)
 
     def test_get_folder_from_folder_when_folder_does_not_exist(self):
         # given:
@@ -572,16 +549,10 @@ class TestFilesAPI(TestCase):
         is_spreadsheet = "mimeType='application/vnd.google-apps.spreadsheet'"
         query = "%s and '%s' in parents" % (is_spreadsheet, folder_id)
         self.sut.set_get_files_response(
-            query,
-            [
-                {
-                    'name': 'file1'
-                }, {
-                    'name': 'file2'
-                }, {
-                    'name': 'file3'
-                }
-        ])
+            query, [
+                GoogleFile(id='', name='file1', parents=[]),
+                GoogleFile(id='', name='file2', parents=[]),
+                GoogleFile(id='', name='file3', parents=[])])
 
         # when:
         self.sut.get_files_from_folder(folder_id)

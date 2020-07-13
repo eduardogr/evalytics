@@ -1,11 +1,11 @@
 
-import tornado.web
 from googleapiclient.errors import HttpError
 
 from evalytics.config import Config, ConfigReader
-from evalytics.models import Reviewer, GoogleSetup, GoogleFile, CommunicationKind, PeersAssignment
+from evalytics.models import GoogleFile
+from evalytics.models import Reviewer, CommunicationKind, PeersAssignment
 from evalytics.communications_channels import CommunicationChannelFactory
-from evalytics.communications_channels import GmailChannel, SlackChannel, SlackClient
+from evalytics.communications_channels import GmailChannel, SlackClient
 from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.google_api import GoogleAPI, GoogleService
@@ -538,10 +538,11 @@ class MockGoogleAPI(GoogleAPI,
         return self.folder_from_folder
 
     def create_folder(self, name: str):
-        folder = {
-            'parents': ['folders_parent'],
-            'id': 'folder_id'
-        }
+        folder = GoogleFile(
+            id='folder_id',
+            name='name',
+            parents=['folders_parent']
+        )
         self.set_folder(folder)
         return self.folder
 
@@ -553,7 +554,7 @@ class MockGoogleAPI(GoogleAPI,
 
     def create_sheet(self, folder_parent: str, folder, filename: str):
         spreasheet_id = filename
-        self.set_fileid_by_name(folder['id'], spreasheet_id, spreasheet_id)
+        self.set_fileid_by_name(folder.id, spreasheet_id, spreasheet_id)
         return spreasheet_id
 
     def send_message(self, user_id, message):
@@ -636,6 +637,7 @@ class MockConfigReader(ConfigReader):
             'google_drive_provider': {
                 'folder': 'mock_folder',
                 'form_responses_folder': 'mock_tests_folder',
+                'responses_files_range': 'A1:A1',
                 'assignments_folder': 'mock_assignments_folder',
                 'assignments_manager_forms_folder': 'mock_man_ssignments_folder',
                 'org_chart': 'mock_orgchart',
@@ -742,6 +744,9 @@ class MockConfig(Config, MockConfigReader):
 
     def read_google_responses_folder(self):
         return "form_responses_folder"
+
+    def read_google_responses_files_range(self):
+        return "A1:A1"
 
     def read_company_domain(self):
         return "company.com"
@@ -858,13 +863,6 @@ class MockGoogleStorage(GoogleStorage):
     def __init__(self):
         self.evaluations_raise_exception_by_reviewee = []
 
-    def setup(self):
-        mock_fileid = 'mockid'
-        mock_filename = 'mockfolder'
-        folder = GoogleFile(name=mock_filename, id=mock_fileid)
-        orgchart = GoogleFile(name=mock_filename, id=mock_fileid)
-        return GoogleSetup(folder=folder, files=[orgchart])
-
     def get_employees(self):
         return {
             'em_email': employees_collection().get('em_email'),
@@ -912,7 +910,7 @@ class MockGmailChannel(GmailChannel):
 
     def send_communication(self, reviewer: Reviewer, kind: CommunicationKind):
         if reviewer.uid in self.raise_exception_for_reviewers:
-            raise Exception("MockCommunicationsProvider was asked to throw this exception")
+            raise Exception("MockGmailChannel was asked to throw this exception")
         return
 
 class MockMapper(Mapper):

@@ -1,27 +1,55 @@
 import json
 
-from evalytics.models import GoogleFile, GoogleSetup
+from evalytics.models import GoogleFile
 from evalytics.models import EvalKind, Eval, Employee, Reviewer
 from evalytics.models import ReviewerResponse
 from evalytics.models import CommunicationKind
 from evalytics.models import GoogleApiClientHttpError
+from evalytics.config import Config
 
-class GoogleFileToJson:
+class StrToBool:
+
+    def str_to_bool(self, str_bool: str):
+        true_strings = ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']
+        return str_bool.lower() in true_strings
+
+class JsonToList:
+
+    def json_to_list(self, json_list):
+        if json_list is None:
+            return None
+
+        if isinstance(json_list, str):
+            json_list = json.loads(json_list)
+
+        return json_list
+
+class ListToJson:
+    def list_to_json(self, some_list):
+        return json.dumps(
+            some_list,
+            default=lambda o:
+            o.__dict__ if type(o) is not EvalKind else str(o.name))
+
+class GoogleFileDictToGoogleFile:
+
+    def google_file_dict_to_google_file(self, google_file_dict):
+        if google_file_dict is None:
+            return None
+
+        return GoogleFile(
+            name=google_file_dict.get('name'),
+            id=google_file_dict.get('id'),
+            parents=google_file_dict.get('parents'),
+        )
+
+class GoogleFileToJson(ListToJson):
 
     def google_file_to_json(self, google_file: GoogleFile):
         return {
             'name': google_file.name,
-            'id': google_file.id
-        }
-
-class GoogleSetupToJson(GoogleFileToJson):
-
-    def google_setup_to_json(self, google_setup: GoogleSetup):
-        return {
-            'folder': super().google_file_to_json(google_setup.folder),
-            'files': list(map(
-                super().google_file_to_json,
-                google_setup.files))
+            'id': google_file.id,
+            'parents': super().list_to_json(google_file.parents)
         }
 
 class EvalToJson:
@@ -109,37 +137,26 @@ class ReviewerToJsonObject:
             default=lambda o:
             o.__dict__ if type(o) is not EvalKind else str(o.name))
 
-class StrToBool:
+class ResponseFileNameToEvalKind(Config):
 
-    def str_to_bool(self, str_bool: str):
-        true_strings = ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']
-        return str_bool.lower() in true_strings
+    def response_file_name_to_eval_kind(self, filename):
 
-class JsonToList:
+        if filename.startswith(super().read_google_manager_eval_by_report_prefix()):
+            return EvalKind.PEER_MANAGER
 
-    def json_to_list(self, json_list):
-        if json_list is None:
+        elif filename.startswith(super().read_google_report_eval_by_manager_prefix()):
+            return EvalKind.MANAGER_PEER
+
+        elif filename.startswith(super().read_google_peer_eval_by_peer_prefix()):
+            return EvalKind.PEER_TO_PEER
+
+        elif filename.startswith(super().read_google_self_eval_prefix()):
+            return EvalKind.SELF
+
+        else:
             return None
 
-        if isinstance(json_list, str):
-            json_list = json.loads(json_list)
-
-        return json_list
-
-class ListToJson:
-    def list_to_json(self, some_list):
-        return json.dumps(
-            some_list,
-            default=lambda o:
-            o.__dict__ if type(o) is not EvalKind else str(o.name))
-
-class StrToCommunicationKind:
-
-    def string_to_communication_kind(self, communication_kind: str):
-        return CommunicationKind.from_str(communication_kind)
-
 class Mapper(
-        GoogleSetupToJson,
         GoogleApiClientHttpErrorToJson,
         ReviewerToJson,
         ReviewerResponseToJson,
@@ -148,5 +165,6 @@ class Mapper(
         StrToBool,
         JsonToList,
         ListToJson,
-        StrToCommunicationKind):
+        GoogleFileDictToGoogleFile,
+        ResponseFileNameToEvalKind):
     'Composition of Mappers'

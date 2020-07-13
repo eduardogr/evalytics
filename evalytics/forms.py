@@ -1,5 +1,6 @@
-from evalytics.models import EvalKind, PeersAssignment
+from evalytics.models import PeersAssignment
 from evalytics.models import ReviewerResponse, ReviewerResponseBuilder
+from evalytics.mappers import ResponseFileNameToEvalKind
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
 from evalytics.exceptions import MissingDataException
@@ -29,9 +30,9 @@ class ReviewerResponseKeyDictStrategy:
 
         else:
             raise NotImplementedError(
-                'ExtractResponseDataStrategy does not implement {} strategy'.format(data_kind))
+                'ReviewerResponseKeyDictStrategy does not implement {} strategy'.format(data_kind))
 
-class GoogleForms(GoogleAPI, Config):
+class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
 
     def get_peers_assignment(self):
         files = self.__get_peers_assignment_response_files()
@@ -108,31 +109,30 @@ class GoogleForms(GoogleAPI, Config):
             raise MissingGoogleDriveFolderException(
                 "Missing folder: {}".format(responses_folder))
 
-        files = super().get_files_from_folder(folder.get('id'))
+        files = super().get_files_from_folder(folder.id)
 
         # TODO: read responses in batches, read til there's no more responses
         responses_range = 'A1:V' + str(1000)
 
         responses_by_file = {}
         for file in files:
-            filename = file.get('name')
-            eval_kind = self.__get_eval_kind(filename)
+            eval_kind = super().response_file_name_to_eval_kind(file.name)
 
             if eval_kind is None:
                 continue
 
             rows = super().get_file_rows(
-                file.get('id'),
+                file.id,
                 responses_range)
 
             if len(rows) < 1:
-                raise MissingDataException("Missing data in response file: %s" % (filename))
+                raise MissingDataException("Missing data in response file: %s" % (file.name))
 
             questions = rows[0][3:]
             file_responses = rows[1:]
 
             responses_by_file.update({
-                filename: {
+                file.name: {
                     'questions': questions,
                     'responses': file_responses,
                     'eval_kind': eval_kind,
@@ -162,22 +162,21 @@ class GoogleForms(GoogleAPI, Config):
             raise MissingGoogleDriveFolderException(
                 "Missing folder: {}".format(assignments_manager_forms_folder))
 
-        return super().get_files_from_folder(folder.get('id'))
+        return super().get_files_from_folder(folder.id)
 
     def __read_peers_assignment(self, files):
-        number_of_employees = int(super().read_company_number_of_employees())
-        responses_range = 'C1:S' + str(number_of_employees + 2)
+        responses_range = super().read_google_responses_files_range()
 
         peers_assignment = {}
         unanswered_forms = []
 
         for file in files:
             rows = super().get_file_rows(
-                file.get('id'),
+                file.id,
                 responses_range)
 
             if len(rows) < 1:
-                raise MissingDataException("Missing data in response file: %s" % (file.get('name')))
+                raise MissingDataException("Missing data in response file: %s" % (file.name))
 
             questions = rows[0]
             reviewees = list(map(self.__get_reviewee_from_question, questions))
@@ -185,7 +184,7 @@ class GoogleForms(GoogleAPI, Config):
             answers = rows[1:]
             if len(answers) == 0:
                 unanswered_forms.append(
-                    file.get('name')
+                    file.name
                 )
 
             for answer in answers:
@@ -214,20 +213,3 @@ class GoogleForms(GoogleAPI, Config):
         reviewee = parts[len(parts)-1]
         reviewee = reviewee[:len(reviewee)-1]
         return reviewee
-
-    def __get_eval_kind(self, filename):
-        # TODO: make this more explicit, too important to hide it like this
-        if filename.startswith(super().read_google_manager_eval_by_report_prefix()):
-            return EvalKind.PEER_MANAGER
-
-        elif filename.startswith(super().read_google_report_eval_by_manager_prefix()):
-            return EvalKind.MANAGER_PEER
-
-        elif filename.startswith(super().read_google_peer_eval_by_peer_prefix()):
-            return EvalKind.PEER_TO_PEER
-
-        elif filename.startswith(super().read_google_self_eval_prefix()):
-            return EvalKind.SELF
-
-        else:
-            return None

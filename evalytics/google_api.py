@@ -7,6 +7,7 @@ from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+from evalytics.mappers import GoogleFileDictToGoogleFile
 from evalytics.models import EvalKind, GoogleApiClientHttpError
 from evalytics.exceptions import GoogleApiClientHttpErrorException
 from evalytics.exceptions import MissingGoogleDriveFolderException
@@ -94,9 +95,11 @@ class DriveService(GoogleService):
             self.DRIVE_SERVICE_ID,
             self.DRIVE_SERVICE_VERSION
         )
-        return drive_service.files().create(
+        folder = drive_service.files().create(
             body=file_metadata,
-            fields='id, parents').execute()
+            fields='id, name, parents').execute()
+
+        return GoogleFileDictToGoogleFile().google_file_dict_to_google_file(folder)
 
     def update_file_parent(self, file_id, current_parent, new_parent):
         drive_service = super().get_service(
@@ -114,13 +117,20 @@ class DriveService(GoogleService):
             self.DRIVE_SERVICE_ID,
             self.DRIVE_SERVICE_VERSION
         )
-        return drive_service.files().list(
+        response = drive_service.files().list(
             q=query,
             pageSize=100,
             spaces='drive',
             corpora='user',
             fields='nextPageToken, files(id, name, parents)',
             pageToken=page_token).execute()
+
+        google_files = [
+            GoogleFileDictToGoogleFile().google_file_dict_to_google_file(google_file_dict)
+            for google_file_dict in response.get('files', [])]
+        next_page_token = response.get('nextPageToken', None)
+
+        return google_files, next_page_token
 
     def copy_file(self, file_id, new_filename):
         drive_service = super().get_service(
@@ -154,16 +164,15 @@ class DriveService(GoogleService):
         try:
             page_token = None
             while True:
-                response = self.list_files(
+                google_files, next_page_token = self.list_files(
                     page_token=page_token,
                     query=query
                 )
-                for file in response.get('files', []):
-                    if file.get('name') == filename:
-                        return file
+                for google_file in google_files:
+                    if google_file.name == filename:
+                        return google_file
 
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
+                if next_page_token is None:
                     break
             return None
         except HttpError as e:
@@ -180,18 +189,16 @@ class DriveService(GoogleService):
     def get_files(self, query: str):
         try:
             page_token = None
-            files = []
+            total_google_files = []
             while True:
-                response = self.list_files(
+                google_files, next_page_token = self.list_files(
                     page_token=page_token,
                     query=query
                 )
-                for file in response.get('files', []):
-                    files.append(file)
+                total_google_files = total_google_files + google_files
 
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
-                    return files
+                if next_page_token is None:
+                    return total_google_files
             return None
         except HttpError as err:
             error_reason = json.loads(e.content)
@@ -430,7 +437,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         super().update_file_parent(
             file_id=spreadsheet_id,
             current_parent=folder_parent,
-            new_parent=folder.get('id')
+            new_parent=folder.id
         )
         return spreadsheet_id
 
@@ -443,7 +450,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         file = super().get_file(query, filename)
 
         if file is not None:
-            return file.get('id')
+            return file.id
 
         return None
 
@@ -451,7 +458,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         folder = self.get_folder(parent_foldername)
         if folder is not None:
             is_folder = "mimeType='application/vnd.google-apps.folder'"
-            query = "%s and '%s' in parents" % (is_folder, folder.get('id'))
+            query = "%s and '%s' in parents" % (is_folder, folder.id)
             folder = super().get_file(query, foldername)
         return folder
 
@@ -471,7 +478,7 @@ class FilesAPI(DriveService, SheetsService, DocsService):
             raise MissingGoogleDriveFolderException('Missing folder: {}'.format(foldername))
 
         spreadsheet_id = self.get_file_id_from_folder(
-            folder_id=folder.get('id'),
+            folder_id=folder.id,
             filename=filename)
 
         if spreadsheet_id is None:

@@ -192,7 +192,7 @@ class CommunicationHandler(tornado.web.RequestHandler):
             kind_arg = self.get_argument('kind', "", strip=False)
 
             reviewers = Mapper().json_to_reviewers(reviewers_arg)
-            kind = Mapper().string_to_communication_kind(kind_arg)
+            kind = CommunicationKind.from_str(kind_arg)
 
             comms_sent, comms_not_sent = SendCommunicationUseCase().send(reviewers, kind=kind)
             self.finish({

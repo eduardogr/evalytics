@@ -1,6 +1,5 @@
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
-from evalytics.models import GoogleSetup, GoogleFile
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
@@ -134,7 +133,7 @@ class GoogleStorage(GoogleAPI, Config):
             if len(row) < 2:
                 raise MissingDataException("Missing data in peers, row: %s" % (row))
 
-            reviewer = row[0]
+            reviewer = row[0].strip()
             reviewees = list(map(str.strip, row[1].split(',')))
 
             peers.update({
@@ -173,7 +172,7 @@ class GoogleStorage(GoogleAPI, Config):
                 "Missing folder: {}".format(assignments_folder))
 
         spreadheet_id = super().get_file_id_from_folder(
-            folder_id=folder.get('id'),
+            folder_id=folder.id,
             filename=assignments_peers_file)
 
         if spreadheet_id is None:
@@ -183,6 +182,10 @@ class GoogleStorage(GoogleAPI, Config):
         return spreadheet_id
 
     def __get_eval_report_id(self, filename):
+        '''
+            This function returns an ID of an empty eval report document ready to be filled
+        '''
+
         google_folder = super().read_google_folder()
         eval_reports_folder = super().read_eval_reports_folder()
 
@@ -195,7 +198,7 @@ class GoogleStorage(GoogleAPI, Config):
                 "Missing folder: {}".format(eval_reports_folder))
 
         document_id = self.get_file_id_from_folder(
-            folder_id=folder.get('id'),
+            folder_id=folder.id,
             filename=filename)
 
         if document_id is None:

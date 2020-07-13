@@ -157,6 +157,11 @@ class TestGoogleDriveProviderConfig(TestCase):
 
         self.assertEqual('mock_tests_folder', tests_folder)
 
+    def test_read_google_responses_files_range(self):
+        google_responses_files_range = self.sut.read_google_responses_files_range()
+
+        self.assertEqual('A1:A1', google_responses_files_range)
+
     def test_read_eval_reports_folder(self):
         tests_folder = self.sut.read_eval_reports_folder()
 
