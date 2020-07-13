@@ -180,6 +180,8 @@ class MockDriveService(DriveService):
         self.calls = {}
         self.response_files = []
         self.pages_requested = 0
+        self.get_file_response = {}
+        self.get_files_response = {}
 
     def create_drive_folder(self, file_metadata):
         self.__update_calls(
@@ -236,11 +238,40 @@ class MockDriveService(DriveService):
         )
         return
 
+    def get_file(self, query: str, filename):
+        self.__update_calls(
+            'get_file',
+            params={
+                'query': query,
+                'filename': filename,
+            }
+        )
+        return self.get_file_response.get(filename, None)
+
+    def get_files(self, query: str):
+        self.__update_calls(
+            'get_files',
+            params={
+                'query': query,
+            }
+        )
+        return self.get_files_response.get(query, None)
+
     def get_calls(self):
         return self.calls
 
     def set_pages_requested(self, pages_requested):
         self.pages_requested = pages_requested
+
+    def set_get_file_response(self, filename, response):
+        self.get_file_response.update({
+            filename: response
+        })
+
+    def set_get_files_response(self, query, response):
+        self.get_files_response.update({
+            query: response
+        })
 
     def set_response_files(self, response_files):
         self.response_files = response_files
@@ -640,6 +671,7 @@ class MockConfigReader(ConfigReader):
 class MockConfig(Config, MockConfigReader):
 
     company_number_of_employees = 1000
+    is_add_comenter_to_evals_reports_enabled = False
 
     def __init__(self):
         super().__init__()
@@ -650,6 +682,7 @@ class MockConfig(Config, MockConfigReader):
         self.forms_platform_provider = ""
         self.response_slack_message_is_direct = None
         self.slack_users_map = []
+        self.is_add_comenter_to_evals_reports_enabled = False
 
     def read_eval_process_id(self):
         return 'EVAL_PROCESS_ID'
@@ -658,7 +691,7 @@ class MockConfig(Config, MockConfigReader):
         return 'DUE_DATE'
 
     def read_is_add_comenter_to_eval_reports_enabled(self):
-        return False
+        return self.is_add_comenter_to_evals_reports_enabled
 
     def read_storage_provider(self):
         return self.storage_provider
@@ -731,6 +764,9 @@ class MockConfig(Config, MockConfigReader):
 
     def read_google_self_eval_prefix(self):
         return "SELF EVAL"
+
+    def set_is_add_comenter_to_evals_reports_enabled(self, is_enabled: bool):
+        self.is_add_comenter_to_evals_reports_enabled = is_enabled
 
     def get_slack_token(self):
         return "TOKEN::TOKEN"

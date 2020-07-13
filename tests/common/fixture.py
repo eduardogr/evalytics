@@ -1,6 +1,7 @@
 from evalytics.models import GoogleFile, GoogleSetup
 from evalytics.models import EvalKind, Eval
 from evalytics.models import Employee, Reviewer
+from evalytics.models import ReviewerResponse
 from evalytics.models import GoogleApiClientHttpError
 
 class GoogleFileMother:
@@ -149,6 +150,23 @@ class ReviewerMother:
             evals=[]
         )
 
+class ReviewerResponseMother:
+
+    def get_any_reviewer_response_model(self):
+        reviewee = 'reviewee'
+        reviewer = 'reviewer'
+        eval_kind = EvalKind.SELF
+        eval_response = ('how do you do?', 'well!')
+        filename = 'some file'
+        line_number = 9
+        return ReviewerResponse(
+                reviewee,
+                reviewer,
+                eval_kind,
+                eval_response,
+                filename,
+                line_number)
+
 class GoogleApiClientHttpErrorMother:
 
     def get_any_google_api_client_http_error__model(self):
@@ -170,5 +188,6 @@ class Fixture(
         EmployeeMother,
         EmployeeFixture,
         ReviewerMother,
+        ReviewerResponseMother,
         GoogleApiClientHttpErrorMother):
     'Composition of mother classes'
