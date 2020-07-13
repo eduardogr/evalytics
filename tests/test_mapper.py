@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from evalytics.mappers import GoogleFileToJson
+from evalytics.mappers import GoogleFileDictToGoogleFile, GoogleFileToJson
 from evalytics.mappers import EvalToJson, EmployeeToJson, ReviewerToJson
 from evalytics.mappers import ReviewerResponseToJson
 from evalytics.mappers import GoogleApiClientHttpErrorToJson
@@ -8,10 +8,41 @@ from evalytics.mappers import JsonToReviewer, ReviewerToJsonObject
 from evalytics.mappers import StrToBool, JsonToList, ListToJson
 from evalytics.mappers import ResponseFileNameToEvalKind
 
+from evalytics.models import GoogleFile
 from evalytics.models import Reviewer, Employee, Eval, EvalKind
 
 from tests.common.fixture import Fixture
 from tests.common.mocks import MockConfig
+
+class TestGoogleFileDictToGoogleFile(TestCase):
+
+    def test_to_json(self):
+        # given:
+        google_file_dict = {
+            'name': 'id',
+            'id': 'name',
+            'parents': '[]'
+        }
+        expected_google_file = GoogleFile(id='id', name='name', parents=[])
+        sut = GoogleFileDictToGoogleFile()
+
+        # when:
+        json_dict = sut.google_file_dict_to_google_file(google_file_dict)
+
+        # then:
+        self.assertEqual(expected_google_file, json_dict)
+
+    def test_to_json_when_is_none(self):
+        # given:
+        google_file_dict = None
+        expected_google_file = None
+        sut = GoogleFileDictToGoogleFile()
+
+        # when:
+        json_dict = sut.google_file_dict_to_google_file(google_file_dict)
+
+        # then:
+        self.assertEqual(expected_google_file, json_dict)
 
 class TestGoogleFileToJson(TestCase):
 

@@ -137,11 +137,6 @@ class ReviewerToJsonObject:
             default=lambda o:
             o.__dict__ if type(o) is not EvalKind else str(o.name))
 
-class StrToCommunicationKind:
-
-    def string_to_communication_kind(self, communication_kind: str):
-        return CommunicationKind.from_str(communication_kind)
-
 class ResponseFileNameToEvalKind(Config):
 
     def response_file_name_to_eval_kind(self, filename):
@@ -170,7 +165,6 @@ class Mapper(
         StrToBool,
         JsonToList,
         ListToJson,
-        StrToCommunicationKind,
         GoogleFileDictToGoogleFile,
         ResponseFileNameToEvalKind):
     'Composition of Mappers'
