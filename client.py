@@ -92,7 +92,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         return self.__get_response(success, response, 'employees')
 
     def get_surveys(self):
-        success, response = super().reviewers()
+        success, response = super().surveys()
         return self.__get_response(success, response, 'surveys')
 
     def get_reviewers(self):

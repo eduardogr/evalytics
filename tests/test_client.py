@@ -22,6 +22,12 @@ class CommandFactorySut(CommandFactory, MockEvalyticsClient):
 class TestCommandFactory(TestCase):
 
     def setUp(self):
+        self.correct_employees_response = {
+            'employees': []
+        }
+        self.correct_surveys_response = {
+            'surveys': []
+        }
         self.correct_reviewers_response = {
             'reviewers': [
                 {
@@ -89,8 +95,22 @@ class TestCommandFactory(TestCase):
             }
         }
         self.sut = CommandFactorySut()
+        self.sut.set_employees_response(self.correct_employees_response)
+        self.sut.set_surveys_response(self.correct_surveys_response)
         self.sut.set_reviewers_response(self.correct_reviewers_response)
         self.sut.set_status_response(self.correct_status_response)
+
+    def test_command_factory_get_employees(self):
+        self.sut.execute(['employees'])
+
+        self.assertIn('employees', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['employees'])
+
+    def test_command_factory_get_surveys(self):
+        self.sut.execute(['surveys'])
+
+        self.assertIn('surveys', self.sut.get_calls())
+        self.assertEqual(1, self.sut.get_calls()['surveys'])
 
     def test_command_factory_get_reviewers(self):
         self.sut.execute(['reviewers'])

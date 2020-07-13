@@ -932,18 +932,26 @@ class MockEvalyticsRequests(EvalyticsRequests):
 
     def __init__(self):
         self.calls = {}
-        self.setup_response = {}
+        self.employees_response = {}
+        self.surveys_response = {}
         self.reviewers_response = {}
         self.status_response = {}
         self.communications_response = {}
         self.evalreports_response = {}
 
-    def set_setup_response(self, response):
-        self.setup_response = response
+    def set_employees_response(self, response):
+        self.employees_response = response
 
-    def setup(self):
-        self.update_calls('setup')
-        return True, self.setup_response
+    def employees(self):
+        self.update_calls('employees')
+        return True, self.employees_response
+
+    def set_surveys_response(self, response):
+        self.surveys_response = response
+
+    def surveys(self):
+        self.update_calls('surveys')
+        return True, self.surveys_response
 
     def set_reviewers_response(self, response):
         self.reviewers_response = response
