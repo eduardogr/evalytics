@@ -1,4 +1,4 @@
-from evalytics.models import EvalKind, PeersAssignment
+from evalytics.models import PeersAssignment
 from evalytics.models import ReviewerResponse, ReviewerResponseBuilder
 from evalytics.mappers import ResponseFileNameToEvalKind
 from evalytics.google_api import GoogleAPI

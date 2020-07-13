@@ -133,7 +133,7 @@ class GoogleStorage(GoogleAPI, Config):
             if len(row) < 2:
                 raise MissingDataException("Missing data in peers, row: %s" % (row))
 
-            reviewer = row[0]
+            reviewer = row[0].strip()
             reviewees = list(map(str.strip, row[1].split(',')))
 
             peers.update({
