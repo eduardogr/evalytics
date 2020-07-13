@@ -1,4 +1,4 @@
-from evalytics.models import GoogleFile, GoogleSetup
+from evalytics.models import GoogleFile
 from evalytics.models import EvalKind, Eval
 from evalytics.models import Employee, Reviewer
 from evalytics.models import ReviewerResponse
@@ -9,23 +9,11 @@ class GoogleFileMother:
     def get_any_google_file_model(self):
         any_name = 'name'
         any_id = 'ID'
+        parents = []
         return GoogleFile(
             name=any_name,
-            id=any_id
-        )
-
-class GoogleSetupMother:
-
-    def get_any_google_setup_model(self, with_files_number: int):
-        any_folder = GoogleFileMother().get_any_google_file_model()
-        any_files = []
-
-        for _ in range(0, with_files_number):
-            any_files.append(any_folder)
-
-        return GoogleSetup(
-            any_folder,
-            any_files
+            id=any_id,
+            parents=parents
         )
 
 class EvalMother:
@@ -183,7 +171,6 @@ class GoogleApiClientHttpErrorMother:
 
 class Fixture(
         GoogleFileMother,
-        GoogleSetupMother,
         EvalMother,
         EmployeeMother,
         EmployeeFixture,

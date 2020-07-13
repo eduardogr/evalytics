@@ -1,14 +1,17 @@
 from unittest import TestCase
 
-from evalytics.mappers import GoogleFileToJson, GoogleSetupToJson
+from evalytics.mappers import GoogleFileToJson
 from evalytics.mappers import EvalToJson, EmployeeToJson, ReviewerToJson
 from evalytics.mappers import ReviewerResponseToJson
 from evalytics.mappers import GoogleApiClientHttpErrorToJson
 from evalytics.mappers import JsonToReviewer, ReviewerToJsonObject
 from evalytics.mappers import StrToBool, JsonToList, ListToJson
+from evalytics.mappers import ResponseFileNameToEvalKind
+
 from evalytics.models import Reviewer, Employee, Eval, EvalKind
 
 from tests.common.fixture import Fixture
+from tests.common.mocks import MockConfig
 
 class TestGoogleFileToJson(TestCase):
 
@@ -17,37 +20,13 @@ class TestGoogleFileToJson(TestCase):
         google_file = Fixture().get_any_google_file_model()
         expected_json_dict = {
             'name': google_file.name,
-            'id': google_file.id
+            'id': google_file.id,
+            'parents': '[]'
         }
         sut = GoogleFileToJson()
 
         # when:
         json_dict = sut.google_file_to_json(google_file)
-
-        # then:
-        self.assertEqual(expected_json_dict, json_dict)
-
-class TestGoogleSetupToJson(TestCase):
-
-    def test_to_json(self):
-        # given:
-        google_setup = Fixture().get_any_google_setup_model(with_files_number=1)
-        expected_json_dict = {
-            'folder': {
-                'name': google_setup.folder.name,
-                'id': google_setup.folder.id
-            },
-            'files': [
-                {
-                    'name': google_setup.files[0].name,
-                    'id': google_setup.files[0].id
-                }
-            ]
-        }
-        sut = GoogleSetupToJson()
-
-        # when:
-        json_dict = sut.google_setup_to_json(google_setup)
 
         # then:
         self.assertEqual(expected_json_dict, json_dict)
@@ -304,3 +283,62 @@ class TestListToJson(TestCase):
         result = self.sut.list_to_json(list_to_convert)
 
         self.assertEqual('[1, 2, 3, 4]', result)
+
+class ResponseFileNameToEvalKindSut(ResponseFileNameToEvalKind, MockConfig):
+    'Inject a mock into ResponseFileNameToEvalKind dependency'
+
+class TestResponseFileNameToEvalKind(TestCase):
+
+    def setUp(self):
+        self.sut = ResponseFileNameToEvalKindSut()
+
+    def test_response_file_name_to_eval_kind_when_peer_manager(self):
+        # given:
+        filename = 'MANAGER EVAL BY REPORT'
+        expected_eval_kind = EvalKind.PEER_MANAGER
+
+        # when:
+        eval_kind = self.sut.response_file_name_to_eval_kind(filename)
+
+        # then:
+        self.assertEqual(expected_eval_kind, eval_kind)
+
+    def test_response_file_name_to_eval_kind_when_manager_peer(self):
+        # given:
+        filename = 'REPORT EVAL BY MANAGER'
+        expected_eval_kind = EvalKind.MANAGER_PEER
+
+        # when:
+        eval_kind = self.sut.response_file_name_to_eval_kind(filename)
+
+        # then:
+        self.assertEqual(expected_eval_kind, eval_kind)
+
+    def test_response_file_name_to_eval_kind_when_peer_peer(self):
+        # given:
+        filename = 'PEER EVAL BY PEER'
+        expected_eval_kind = EvalKind.PEER_TO_PEER
+
+        # when:
+        eval_kind = self.sut.response_file_name_to_eval_kind(filename)
+
+        # then:
+        self.assertEqual(expected_eval_kind, eval_kind)
+
+    def test_response_file_name_to_eval_kind_when_self(self):
+        # given:
+        filename = 'SELF EVAL'
+        expected_eval_kind = EvalKind.SELF
+
+        # when:
+        eval_kind = self.sut.response_file_name_to_eval_kind(filename)
+
+        # then:
+        self.assertEqual(expected_eval_kind, eval_kind)
+
+    def test_response_file_name_to_eval_kind_when_none(self):
+        # when:
+        eval_kind = self.sut.response_file_name_to_eval_kind('NOO FILENAME')
+
+        # then:
+        self.assertEqual(None, eval_kind)

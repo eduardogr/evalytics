@@ -3,7 +3,7 @@ from unittest import TestCase
 from evalytics.exceptions import MissingDataException
 from evalytics.exceptions import MissingGoogleDriveFolderException
 from evalytics.forms import ReviewerResponseKeyDictStrategy
-from evalytics.models import ReviewerResponse
+from evalytics.models import GoogleFile, ReviewerResponse
 from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.config import ProvidersConfig
 
@@ -52,7 +52,8 @@ class TestGoogleForms(TestCase):
             self.sut.get_peers_assignment()
 
     def test_get_peers_assignment_ok_when_no_files(self):
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
+        self.sut.set_folder_from_folder(responses_folder)
         self.sut.set_files_from_folder_response([])
 
         peers_assignment = self.sut.get_peers_assignment().peers
@@ -137,7 +138,8 @@ class TestGoogleForms(TestCase):
         self.assertEqual(0, len(peers_assignment))
 
     def test_get_responses_when_no_files(self):
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
+        self.sut.set_folder_from_folder(responses_folder)
         self.sut.set_files_from_folder_response([])
 
         responses_map = self.sut.get_responses()
@@ -193,7 +195,8 @@ class TestGoogleForms(TestCase):
 
     def test_get_evaluations_correct_when_no_files(self):
         # given:
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
+        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
+        self.sut.set_folder_from_folder(responses_folder)
         self.sut.set_files_from_folder_response([])
 
         # when:
@@ -203,36 +206,49 @@ class TestGoogleForms(TestCase):
         self.assertEqual(0, len(evaluations))
 
     def __given_files_within_assignments_folder(self):
-        self.sut.set_folder_from_folder({'id': 'assignments_folder'})
-        self.sut.set_files_from_folder_response([{
-            'id': self.assignments_manager_1,
-            'name': self.assignments_manager_1,
-        }, {
-            'id': self.assignments_manager_2,
-            'name': self.assignments_manager_2,
-        }, {
-            'id': self.assignments_manager_3,
-            'name': self.assignments_manager_3,
-        }])
+        assignments_folder = GoogleFile(id='assignments_folder', name='assignments', parents=['google_folder'])
+        assignments_file_manager_1 = GoogleFile(id=self.assignments_manager_1, name=self.assignments_manager_1, parents=[])
+        assignments_file_manager_2 = GoogleFile(id=self.assignments_manager_2, name=self.assignments_manager_2, parents=[])
+        assignments_file_manager_3 = GoogleFile(id=self.assignments_manager_3, name=self.assignments_manager_3, parents=[])
+
+        self.sut.set_folder_from_folder(assignments_folder)
+        self.sut.set_files_from_folder_response([
+            assignments_file_manager_1,
+            assignments_file_manager_2,
+            assignments_file_manager_3
+        ])
 
     def __given_files_within_response_folder(self):
-        self.sut.set_folder_from_folder({'id': 'responses_folder'})
-        self.sut.set_files_from_folder_response([{
-            'id': self.file_id_manager_by,
-            'name': 'MANAGER EVAL BY REPORT',
-        }, {
-            'id': self.file_id_report_by,
-            'name': 'REPORT EVAL BY MANAGER',
-        }, {
-            'id': self.file_id_self,
-            'name': 'SELF EVAL',
-        }, {
-            'id': self.file_id_peer,
-            'name': 'PEER EVAL BY PEER',
-        }, {
-            'id': 'NO_ID',
-            'name': 'None evalkind file',
-        }])
+        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
+        self.sut.set_folder_from_folder(responses_folder)
+
+        manager_eval_by_report_file = GoogleFile(
+            id=self.file_id_manager_by,
+            name='MANAGER EVAL BY REPORT',
+            parents=[])
+        report_eval_by_manager_file = GoogleFile(
+            id=self.file_id_report_by,
+            name='REPORT EVAL BY MANAGER',
+            parents=[])
+        self_eval_report_file = GoogleFile(
+            id=self.file_id_self,
+            name='SELF EVAL',
+            parents=[])
+        peer_eval_by_peer_file = GoogleFile(
+            id=self.file_id_peer,
+            name='PEER EVAL BY PEER',
+            parents=[])
+        no_eval_report_report_file = GoogleFile(
+            id='NO ID',
+            name='None evalkind file',
+            parents=[])
+        self.sut.set_files_from_folder_response([
+            manager_eval_by_report_file,
+            report_eval_by_manager_file,
+            self_eval_report_file,
+            peer_eval_by_peer_file,
+            no_eval_report_report_file
+        ])
 
     def __set_file_responses(self, file_id, responses):
         file_response = []

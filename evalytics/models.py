@@ -4,16 +4,10 @@ from enum import Enum
 @dataclass
 class GoogleFile:
 
-    def __init__(self, name, id):
+    def __init__(self, name, id, parents):
         self.name = name
         self.id = id
-
-@dataclass
-class GoogleSetup():
-
-    def __init__(self, folder: GoogleFile, files: [GoogleFile]):
-        self.folder = folder
-        self.files = files
+        self.parents = parents
 
 class EvalKind(Enum):
     SELF = 1
