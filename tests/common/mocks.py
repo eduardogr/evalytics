@@ -122,7 +122,12 @@ class RawDriveServiceMock:
             def list(self, q, pageSize, spaces, corpora, fields, pageToken):
                 class List:
                     def execute(self):
-                        return {}
+                        return {
+                            'files': [{
+                                'name': '',
+                                'id': ''
+                            }]
+                        }
                 return List()
 
             def copy(self, fileId, body):

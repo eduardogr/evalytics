@@ -41,10 +41,11 @@ class TestDriveService(TestCase):
 
     def setUp(self):
         self.sut = DriveServiceSut()
+        drive_service = RawDriveServiceMock()
         self.sut.set_service(
             DriveService.DRIVE_SERVICE_ID,
             DriveService.DRIVE_SERVICE_VERSION,
-            RawDriveServiceMock()
+            drive_service
         )
 
     def test_create_drive_folder_ok(self):
@@ -77,6 +78,21 @@ class TestDriveService(TestCase):
         email_address = 'myemail@email.com'
 
         self.sut.create_permission(document_id, role, email_address)
+
+    def test_get_file_ok(self):
+        # given:
+        filename = 'name of a file'
+        query = "mimeType='application/vnd.google-apps.folder'"
+
+        # when:
+        self.sut.get_file(query, filename)
+
+    def test_get_files_ok(self):
+        # given:
+        query = "mimeType='application/vnd.google-apps.folder'"
+
+        # when:
+        self.sut.get_files(query)
 
 class TestSheetsService(TestCase):
 
@@ -568,7 +584,7 @@ class TestFilesAPI(TestCase):
         ])
 
         # when:
-        files = self.sut.get_files_from_folder(folder_id)
+        self.sut.get_files_from_folder(folder_id)
 
         # then:
         calls = self.sut.get_calls()
