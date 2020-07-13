@@ -1,8 +1,9 @@
 from unittest import TestCase
 
-from evalytics.usecases import SetupUseCase
+from evalytics.usecases import GetEmployeesUseCase, GetSurveysUseCase
 from evalytics.usecases import GetReviewersUseCase, SendCommunicationUseCase
 from evalytics.usecases import GetResponseStatusUseCase
+from evalytics.usecases import GetEvalReportsUseCase
 from evalytics.usecases import GenerateEvalReportsUseCase
 from evalytics.usecases import GetPeersAssignmentUseCase
 from evalytics.usecases import UpdatePeersAssignmentUseCase
@@ -10,7 +11,7 @@ from evalytics.models import ReviewerResponse
 
 from tests.common.employees import employees_collection
 from tests.common.mocks import MockStorageFactory
-from tests.common.mocks import MockGoogleStorage, MockConfig
+from tests.common.mocks import MockGoogleStorage
 from tests.common.mocks import MockEmployeeAdapter, MockReviewerAdapter
 from tests.common.mocks import MockCommunicationChannelFactory
 from tests.common.mocks import MockFormsPlatformFactory, MockGoogleForms
@@ -18,8 +19,11 @@ from tests.common.mocks import MockGmailChannel
 from tests.common.mocks import GetReviewersUseCaseMock
 from tests.common.mocks import MockReviewerResponseFilter
 
-class SetupUseCaseSut(SetupUseCase, MockStorageFactory):
-    'Inject a mock into the SetupUseCase dependency'
+class GetEmployeesUseCaseSut(GetEmployeesUseCase, MockStorageFactory):
+    'Inject a mock into the GetEmployeesUseCase dependency'
+
+class GetSurveysUseCaseSut(GetSurveysUseCase, MockStorageFactory):
+    'Inject a mock into the GetSurveysUseCase dependency'
 
 class GetReviewersUseCaseSut(
         GetReviewersUseCase,
@@ -38,6 +42,14 @@ class GetResponseStatusUseCaseSut(
         MockFormsPlatformFactory,
         MockReviewerAdapter):
     'Inject mocks into GetResponseStatusUseCase dependencies'
+
+class GetEvalReportsUseCaseSut(
+        GetEvalReportsUseCase,
+        MockStorageFactory,
+        MockFormsPlatformFactory,
+        MockEmployeeAdapter,
+        MockReviewerResponseFilter):
+    'Inject mocks into GetEvalReportsUseCaseSut dependencies'
 
 class GenerateEvalReportsUseCaseSut(
         GenerateEvalReportsUseCase,
@@ -59,19 +71,27 @@ class UpdatePeersAssignmentUseCaseSut(
         MockFormsPlatformFactory,):
     'Inject mocks into GetPeersAssignmentUseCase dependencies'
 
-class TestSetupUseCase(TestCase):
+class TestGetEmployeesUseCase(TestCase):
 
     def setUp(self):
-        self.mock_fileid = 'mockid'
-        self.mock_filename = 'mockfolder'
-        self.sut = SetupUseCaseSut()
+        self.sut = GetEmployeesUseCaseSut()
         self.sut.set_storage(MockGoogleStorage())
 
-    def test_setup_usecase(self):
-        setup = self.sut.setup()
+    def test_get_employees_usecase(self):
+        employees = self.sut.get_employees()
 
-        self.assertEqual(self.mock_fileid, setup.folder.id)
-        self.assertEqual(self.mock_filename, setup.folder.name)
+        self.assertEqual(2, len(employees))
+
+class TestGetSurveysUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GetSurveysUseCaseSut()
+        self.sut.set_storage(MockGoogleStorage())
+
+    def test_get_surveys_usecase(self):
+        surveys = self.sut.get_surveys()
+
+        self.assertEqual(1, len(surveys))
 
 class TestGetReviewersUseCase(TestCase):
 
@@ -129,6 +149,43 @@ class TestGetResponseStatusUseCase(TestCase):
     def test_get_response_status(self):
         _ = self.sut.get_response_status()
 
+class TestGetEvalReportsUseCase(TestCase):
+
+    def setUp(self):
+        self.sut = GetEvalReportsUseCaseSut()
+        self.storage = MockGoogleStorage()
+        self.forms_platform = MockGoogleForms()
+        self.any_reviewer_response = ReviewerResponse(
+            'reviewee',
+            'reviewer',
+            'eval_kind',
+            [],
+            'filename',
+            0
+        )
+        self.evaluations_response = {
+            'uid1': self.any_reviewer_response,
+            'uid2': self.any_reviewer_response,
+            'uid3': self.any_reviewer_response,
+        }
+
+    def test_get_evalreports_status(self):
+        area = ''
+        managers = []
+        employee_uids = []
+
+        self.forms_platform.set_evaluations_response(self.evaluations_response)
+        self.sut.set_storage(self.storage)
+        self.sut.set_forms_platform(self.forms_platform)
+
+        evaluations = self.sut.get(
+            area,
+            managers,
+            employee_uids
+        )
+
+        self.assertEqual(3, len(evaluations))
+
 class TestGenerateEvalReportsUseCase(TestCase):
 
     def setUp(self):
@@ -149,8 +206,7 @@ class TestGenerateEvalReportsUseCase(TestCase):
             'uid3': self.any_reviewer_response,
         }
 
-    def test_get_response_status(self):
-        dry_run = False
+    def test_get_evalreports_status(self):
         area = ''
         managers = []
         employee_uids = []
@@ -160,7 +216,6 @@ class TestGenerateEvalReportsUseCase(TestCase):
         self.sut.set_forms_platform(self.forms_platform)
 
         created, not_created = self.sut.generate(
-            dry_run,
             area,
             managers,
             employee_uids
@@ -169,8 +224,7 @@ class TestGenerateEvalReportsUseCase(TestCase):
         self.assertEqual(0, len(not_created))
         self.assertEqual(3, len(created))
 
-    def test_get_response_status_when_exceptions_is_raised(self):
-        dry_run = False
+    def test_generate_evalreports_when_exceptions_is_raised(self):
         area = ''
         managers = []
         employee_uids = []
@@ -181,7 +235,6 @@ class TestGenerateEvalReportsUseCase(TestCase):
         self.sut.set_forms_platform(self.forms_platform)
 
         created, not_created = self.sut.generate(
-            dry_run,
             area,
             managers,
             employee_uids

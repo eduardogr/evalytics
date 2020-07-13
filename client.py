@@ -16,10 +16,17 @@ class EvalyticsRequests:
 
     BASE_URL = "http://evalytics:8080"
 
-    def setup(self):
-        response = requests.post(
-            url="%s/setup" % self.BASE_URL,
-            data={})
+    def employees(self):
+        response = requests.get(
+            url="%s/employees" % self.BASE_URL,
+            params={})
+
+        return self.__get_data_response(response)
+
+    def surveys(self):
+        response = requests.get(
+            url="%s/surveys" % self.BASE_URL,
+            params={})
 
         return self.__get_data_response(response)
 
@@ -52,15 +59,13 @@ class EvalyticsRequests:
             self,
             uids=None,
             managers=None,
-            area=None,
-            dry_run: bool = False):
+            area=None):
         response = requests.post(
             url="%s/evalreports" % self.BASE_URL,
             data={
                 "uids": uids,
                 "managers": managers,
                 "area": area,
-                "dry_run": dry_run
             }
         )
 
@@ -82,9 +87,13 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
     EVALS_NOT_SENT_CSV = 'evals_not_sent.csv'
     EVALS_WHITELIST = 'evals_whitelist.csv'
 
-    def post_setup(self):
-        success, response = super().setup()
-        return self.__get_response(success, response, 'setup')
+    def get_employees(self):
+        success, response = super().employees()
+        return self.__get_response(success, response, 'employees')
+
+    def get_surveys(self):
+        success, response = super().surveys()
+        return self.__get_response(success, response, 'surveys')
 
     def get_reviewers(self):
         success, response = super().reviewers()
@@ -93,24 +102,6 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
     def get_status(self):
         success, response = super().status()
         return self.__get_response(success, response, 'status')
-
-    def print_reviewers_stats(self, all_reviewers):
-        reviewers_by_evals_numbers = {}
-        for reviewer in all_reviewers:
-            uid = reviewer['employee']['uid']
-            evals_number = len(reviewer['evals'])
-
-            if evals_number in reviewers_by_evals_numbers:
-                reviewers_by_evals_numbers[evals_number].append(uid)
-            else:
-                reviewers_by_evals_numbers.update({
-                    evals_number: [uid]
-                })
-        print('\nReviewers per number of evals:')
-        for evals_number in sorted(reviewers_by_evals_numbers):
-            reviewers = reviewers_by_evals_numbers[evals_number]
-            print('  Number of evals: %d' % evals_number)
-            print('  Reviewers: %s\n' % reviewers)
 
     def print_reviewers(self, show_stats: bool = False):
         reviewers = self.get_reviewers()
@@ -121,7 +112,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
             print('\n-----------')
             print('|  STATS  |')
             print('-----------')
-            self.print_reviewers_stats(reviewers)
+            self.__print_reviewers_stats(reviewers)
 
     def print_status(self):
         status = self.get_status()
@@ -203,18 +194,15 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
         self.__send_communication(reviewers, kind, dry_run)
 
-    def generate_reports(self, dry_run, whitelist=None):
+    def generate_reports(self, whitelist=None):
         uids = super().list_to_json(whitelist)
-        success, response = super().evalreports(
-            dry_run=dry_run,
-            uids=uids)
+        success, response = super().evalreports(uids=uids)
 
         if success:
             evals_reports = response['evals_reports']
             created = evals_reports['created']
             not_created = evals_reports['not_created']
 
-            print('[DRY-RUN] %s' % dry_run)
             print("Reports created:")
             for uid, reports_created in created.items():
                 print(' - {} report will be shared with {}'.format(uid, reports_created['managers']))
@@ -224,10 +212,10 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 print(' - {} report will be shared with {}'.format(uid, reports_not_created['managers']))
 
     def get_whitelist(self):
-        return self.__get_list_from(self.EVALS_WHITELIST)
+        return self.__get_list_from_file(self.EVALS_WHITELIST)
 
     def get_retry_list(self):
-        return self.__get_list_from(self.EVALS_NOT_SENT_CSV)
+        return self.__get_list_from_file(self.EVALS_NOT_SENT_CSV)
 
     def help(self, command):
         help_message = {
@@ -244,6 +232,24 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         }
         print(json.dumps(help_message))
 
+    def __print_reviewers_stats(self, all_reviewers):
+        reviewers_by_evals_numbers = {}
+        for reviewer in all_reviewers:
+            uid = reviewer['employee']['uid']
+            evals_number = len(reviewer['evals'])
+
+            if evals_number in reviewers_by_evals_numbers:
+                reviewers_by_evals_numbers[evals_number].append(uid)
+            else:
+                reviewers_by_evals_numbers.update({
+                    evals_number: [uid]
+                })
+        print('\nReviewers per number of evals:')
+        for evals_number in sorted(reviewers_by_evals_numbers):
+            reviewers = reviewers_by_evals_numbers[evals_number]
+            print('  Number of evals: %d' % evals_number)
+            print('  Reviewers: %s\n' % reviewers)
+
     def __get_response(self, success, response, key):
         if success:
             return response[key]
@@ -256,7 +262,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 print("  - Error response: %s" % response.content)
             return {}
 
-    def __get_list_from(self, filename):
+    def __get_list_from_file(self, filename):
         list_from_file = []
         list_file = super().open(filename, "r")
         for reviewer in list_file.readlines():
@@ -293,7 +299,8 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
 class CommandFactory(EvalyticsClient):
 
-    SETUP = 'setup'
+    EMPLOYEES = 'employees'
+    SURVEYS = 'surveys'
     REVIEWERS = 'reviewers'
     SEND_EVALS = 'send_evals'
     SEND_DUE_DATE_COMM = 'send_due_date_comm'
@@ -322,8 +329,11 @@ class CommandFactory(EvalyticsClient):
             args.remove('--whitelist')
             whitelist = super().get_whitelist()
 
-        if command == CommandFactory.SETUP:
-            super().post_setup()
+        if command == CommandFactory.EMPLOYEES:
+            super().get_employees()
+
+        elif command == CommandFactory.SURVEYS:
+            super().get_surveys()
 
         elif command == CommandFactory.REVIEWERS:
             show_stats = '--stats' in args
@@ -359,9 +369,7 @@ class CommandFactory(EvalyticsClient):
                 super().print_status()
 
         elif command == CommandFactory.REPORTS:
-            super().generate_reports(
-                dry_run=dry_run,
-                whitelist=whitelist)
+            super().generate_reports(whitelist=whitelist)
         else:
             super().help(command)
 

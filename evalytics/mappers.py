@@ -2,6 +2,7 @@ import json
 
 from evalytics.models import GoogleFile, GoogleSetup
 from evalytics.models import EvalKind, Eval, Employee, Reviewer
+from evalytics.models import ReviewerResponse
 from evalytics.models import CommunicationKind
 from evalytics.models import GoogleApiClientHttpError
 
@@ -48,6 +49,16 @@ class ReviewerToJson(EmployeeToJson, EvalToJson):
         return {
             "employee": super().employee_to_json(reviewer.employee),
             "evals": list(map(super().eval_to_json, reviewer.evals))
+        }
+
+class ReviewerResponseToJson:
+
+    def reviewer_response_to_json(self, reviewer_response: ReviewerResponse):
+        return {
+            'reviewee': reviewer_response.reviewee,
+            'reviewer': reviewer_response.reviewer,
+            'eval_kind': reviewer_response.eval_kind.name,
+            'eval_response': reviewer_response.eval_response
         }
 
 class GoogleApiClientHttpErrorToJson:
@@ -128,13 +139,14 @@ class StrToCommunicationKind:
         return CommunicationKind.from_str(communication_kind)
 
 class Mapper(
-    GoogleSetupToJson,
-    GoogleApiClientHttpErrorToJson,
-    ReviewerToJson,
-    JsonToReviewer,
-    ReviewerToJsonObject,
-    StrToBool,
-    JsonToList,
-    ListToJson,
-    StrToCommunicationKind):
+        GoogleSetupToJson,
+        GoogleApiClientHttpErrorToJson,
+        ReviewerToJson,
+        ReviewerResponseToJson,
+        JsonToReviewer,
+        ReviewerToJsonObject,
+        StrToBool,
+        JsonToList,
+        ListToJson,
+        StrToCommunicationKind):
     'Composition of Mappers'

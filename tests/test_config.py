@@ -42,6 +42,11 @@ class TestEvalProcessConfig(TestCase):
 
         self.assertEqual('eval_process_due_date', eval_process_due_date)
 
+    def test_read_is_add_comenter_to_eval_reports_enabled(self):
+        is_add_comenter_to_eval_reports_enabled = self.sut.read_is_add_comenter_to_eval_reports_enabled()
+
+        self.assertEqual(False, is_add_comenter_to_eval_reports_enabled)
+
 class TestSlackProviderConfig(TestCase):
 
     def setUp(self):
@@ -206,13 +211,6 @@ class TestGoogleDriveProviderConfig(TestCase):
 
         # then:
         self.assertEqual(expected_value, value)
-
-    def test_read_needed_spreadsheets(self):
-        needed_spreachseets = self.sut.read_needed_spreadsheets()
-
-        self.assertEqual([
-            'mock_orgchart',
-            'mock_formmap'], needed_spreachseets)
 
 class TestConfig(TestCase):
 

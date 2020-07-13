@@ -1,12 +1,18 @@
 ---
-company:
-    domain: "company.com"
-    number_of_employees: 1000
+eval_process:
+    id: '2020 Q2'
+    due_date: '12:00 PM, noon, June 12, 2019'
+    feature_disabling:
+        add_comenter_to_eval_reports: False
 
 providers:
     storage: "google_drive"
     communication_channel: "gmail"
     forms_platform: "google_forms"
+
+company:
+    domain: "company.com"
+    number_of_employees: 1000
 
 gmail_provider:
     mail_subject: "Evalytics: You can now complete your evaluation assignments!"
@@ -17,11 +23,20 @@ google_drive_provider:
     assignments_folder: "Assignments"
     assignments_manager_forms_folder: "Manager assignments forms"
     form_responses_folder: "ResponsesTest"
+    eval_reports_folder: "EvalReportsTest"
     org_chart: "My Employee List"
+    org_chart_range: "A2:C301"
     form_map: "Form mapping"
-    assignments_peers_file: "Peers file"
+    form_map_range: "A2:E4"
+    assignments_peers_file: "Peering analysis"
+    assignments_peers_range: "B2:C301"
     eval_report_template_id: "ID_OF_GOOGLE_DOCUMENT"
-    eval_report_prefix_name: "Prefix Doc: "
+    file_prefixes:
+        manager_eval_by_report: "Manager Evaluation By Team Member"
+        report_eval_by_manager: "Report Evaluation by Manager"
+        peer_eval_by_peer: "Peer Evaluation"
+        self_eval: "Self Evaluation"
+        eval_report: "Eval Doc: "
 
 slack_provider:
     token: "asdfñljasdf-asdf-sdaf-asdf"
@@ -30,3 +45,7 @@ slack_provider:
         text: "{}"
         channel: "@{}"
         as_user: True
+     users_map:
+        employee_uid1: 'slack_uid1'
+        employee_uid2: 'slack_uid2'
+        employee_uid3: 'slack_uid3'

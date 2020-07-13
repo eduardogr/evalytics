@@ -4,7 +4,8 @@ from evalytics.storages import GoogleStorage
 from evalytics.storages import StorageFactory
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import MissingGoogleDriveFolderException
-from evalytics.exceptions import MissingGoogleDriveFileException, NoPeersException
+from evalytics.exceptions import MissingGoogleDriveFileException
+from evalytics.exceptions import NoPeersException
 from evalytics.models import EvalKind, ReviewerResponse
 from evalytics.config import ProvidersConfig
 
@@ -38,84 +39,6 @@ class TestGoogleStorage(TestCase):
 
     def setUp(self):
         self.sut = GoogleStorageSut()
-
-    def test_setup_when_setup_files_not_exist(self):
-        # given:
-        self.sut.set_needed_spreadhseets([
-            "google_orgchart",
-            "google_formap"
-        ])
-
-        # when:
-        setup = self.sut.setup()
-
-        # then:
-        self.assertEqual(2, len(setup.files))
-
-    def test_setup_when_no_files_needed(self):
-        self.sut.set_needed_spreadhseets([])
-
-        setup = self.sut.setup()
-
-        self.assertEqual(0, len(setup.files))
-        self.assertEqual('folder_id', setup.folder.id)
-
-    def test_setup_when_folder_exists_with_no_files(self):
-        self.sut.set_folder({
-            'parents': ['folders_parent'],
-            'id': 'folder_id'
-        })
-        self.sut.set_needed_spreadhseets([
-            "google_orgchart",
-            "google_formap"
-        ])
-
-        setup = self.sut.setup()
-
-        self.assertEqual(2, len(setup.files))
-
-    def test_setup_when_setup_files_exist(self):
-        # given:
-        self.sut.set_folder({
-            'parents': ['folders_parent'],
-            'id': 'folder_id'
-        })
-        self.sut.set_needed_spreadhseets([
-            "google_orgchart",
-            "google_formap"
-        ])
-        self.sut.set_fileid_by_name(
-            folder_id='folder_id',
-            filename="google_orgchart",
-            fileid="google_orgchart")
-        self.sut.set_fileid_by_name(
-            folder_id='folder_id',
-            filename="google_form_map",
-            fileid="google_form_map")
-
-        # when:
-        setup = self.sut.setup()
-
-        # then:
-        self.assertEqual(2, len(setup.files))
-
-    def test_setup_when_just_one_setup_file_exists(self):
-        self.sut.set_folder({
-            'parents': ['folders_parent'],
-            'id': 'folder_id'
-        })
-        self.sut.set_needed_spreadhseets([
-            "google_orgchart",
-            "google_formap"
-        ])
-        self.sut.set_fileid_by_name(
-            folder_id='folder_id',
-            filename="google_form_map",
-            fileid="google_form_map")
-
-        setup = self.sut.setup()
-
-        self.assertEqual(2, len(setup.files))
 
     def test_get_employees_correct_when_no_values(self):
         employees = self.sut.get_employees()
@@ -185,7 +108,7 @@ class TestGoogleStorage(TestCase):
         forms = self.sut.get_forms()
 
         self.assertEqual(1, len(forms))
-        self.assertEqual('last-form-self', forms['area1'][EvalKind.SELF])
+        self.assertEqual('last-form-self', forms['area1'][EvalKind.SELF.name])
 
     def test_get_forms_when_missing_data(self):
         self.sut.set_file_rows_response([
@@ -198,7 +121,6 @@ class TestGoogleStorage(TestCase):
 
     def test_generate_eval_reports_when_files(self):
         # given:
-        dry_run = False
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -219,7 +141,6 @@ class TestGoogleStorage(TestCase):
 
         # when:
         employee_managers_response = self.sut.generate_eval_reports(
-            dry_run,
             reviewee,
             reviewee_evaluations,
             employee_managers)
@@ -228,32 +149,29 @@ class TestGoogleStorage(TestCase):
         self.assertEqual(2, len(employee_managers_response))
 
     def test_generate_eval_reports_when_no_reports_folder(self):
-            # given:
-            dry_run = False
-            reviewee = 'pepe'
-            reviewee_evaluations = [
-                ReviewerResponse(
-                    reviewee=reviewee,
-                    reviewer=reviewee,
-                    eval_kind=EvalKind.SELF,
-                    eval_response=(),
-                    filename="filename",
-                    line_number=10
-                )
-            ]
-            employee_managers = ['jefe', 'manager']
+        # given:
+        reviewee = 'pepe'
+        reviewee_evaluations = [
+            ReviewerResponse(
+                reviewee=reviewee,
+                reviewer=reviewee,
+                eval_kind=EvalKind.SELF,
+                eval_response=(),
+                filename="filename",
+                line_number=10
+            )
+        ]
+        employee_managers = ['jefe', 'manager']
 
-            # when:
-            with self.assertRaises(MissingGoogleDriveFolderException):
-                self.sut.generate_eval_reports(
-                    dry_run,
-                    reviewee,
-                    reviewee_evaluations,
-                    employee_managers)
+        # when:
+        with self.assertRaises(MissingGoogleDriveFolderException):
+            self.sut.generate_eval_reports(
+                reviewee,
+                reviewee_evaluations,
+                employee_managers)
 
     def test_generate_eval_reports_when_no_eval_report_does_not_exist(self):
         # given:
-        dry_run = False
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -273,7 +191,6 @@ class TestGoogleStorage(TestCase):
 
         # when:
         employee_managers_response = self.sut.generate_eval_reports(
-                dry_run,
                 reviewee,
                 reviewee_evaluations,
                 employee_managers)
@@ -281,9 +198,8 @@ class TestGoogleStorage(TestCase):
         # then:
         self.assertEqual(2, len(employee_managers_response))
 
-    def test_generate_eval_reports_when_files_and_dry_run(self):
+    def test_generate_eval_reports_when_files_and_add_comenter_is_enabled(self):
         # given:
-        dry_run = True
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -302,10 +218,10 @@ class TestGoogleStorage(TestCase):
             'id': 'eval_reports_folder'
         })
         self.sut.set_fileid_by_name('eval_reports_folder', 'Eval Doc: pepe', 'fileid')
+        self.sut.set_is_add_comenter_to_evals_reports_enabled(True)
 
         # when:
         employee_managers_response = self.sut.generate_eval_reports(
-            dry_run,
             reviewee,
             reviewee_evaluations,
             employee_managers)

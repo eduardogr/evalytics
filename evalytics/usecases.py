@@ -5,12 +5,17 @@ from evalytics.storages import StorageFactory
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.forms import FormsPlatformFactory
 
-class SetupUseCase(StorageFactory):
+class GetEmployeesUseCase(StorageFactory):
 
-    def setup(self):
+    def get_employees(self):
         storage = super().get_storage()
-        setup = storage.setup()
-        return setup
+        return storage.get_employees()
+
+class GetSurveysUseCase(StorageFactory):
+
+    def get_surveys(self):
+        storage = super().get_storage()
+        return storage.get_forms()
 
 class GetReviewersUseCase(
         StorageFactory,
@@ -36,6 +41,7 @@ class SendCommunicationUseCase(CommunicationChannelFactory):
                     reviewer=reviewer,
                     kind=kind)
                 comms_sent.append(reviewer.uid)
+            # TODO: we need more info here to know why a communication was not sent
             except:
                 comms_not_sent.append(reviewer.uid)
 
@@ -49,13 +55,35 @@ class GetResponseStatusUseCase(
         responses = super().get_forms_platform().get_responses()
         return super().get_status_from_responses(reviewers, responses)
 
+class GetEvalReportsUseCase(
+        StorageFactory, FormsPlatformFactory,
+        EmployeeAdapter, ReviewerResponseFilter):
+
+    def get(
+            self,
+            area, managers,
+            employee_uids):
+        storage = super().get_storage()
+        forms_platform = super().get_forms_platform()
+
+        reviewee_evaluations = forms_platform.get_evaluations()
+        employees = storage.get_employees()
+
+        reviewee_evaluations = super().filter_reviewees(
+            reviewee_evaluations,
+            employees,
+            area,
+            managers,
+            employee_uids)
+
+        return reviewee_evaluations
+
 class GenerateEvalReportsUseCase(
         StorageFactory, FormsPlatformFactory,
         EmployeeAdapter, ReviewerResponseFilter):
 
     def generate(
             self,
-            dry_run,
             area, managers,
             employee_uids):
         storage = super().get_storage()
@@ -78,7 +106,6 @@ class GenerateEvalReportsUseCase(
 
             try:
                 storage.generate_eval_reports(
-                    dry_run,
                     uid,
                     reviewee_evaluations,
                     employee_managers)
@@ -89,6 +116,7 @@ class GenerateEvalReportsUseCase(
                         'managers': employee_managers
                     }
                 })
+            # TODO: we need more info here to know why a communication was not sent
             except:
                 not_created.update({
                     uid: {

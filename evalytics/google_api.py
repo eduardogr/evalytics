@@ -9,6 +9,8 @@ from google.auth.transport.requests import Request
 
 from evalytics.models import EvalKind, GoogleApiClientHttpError
 from evalytics.exceptions import GoogleApiClientHttpErrorException
+from evalytics.exceptions import MissingGoogleDriveFolderException
+from evalytics.exceptions import MissingGoogleDriveFileException
 
 class GoogleAuth:
     # If modifying these scopes, delete the file token.pickle.
@@ -147,6 +149,60 @@ class DriveService(GoogleService):
                 'role': role,
             }
         ).execute()
+
+    def get_file(self, query: str, filename):
+        try:
+            page_token = None
+            while True:
+                response = self.list_files(
+                    page_token=page_token,
+                    query=query
+                )
+                for file in response.get('files', []):
+                    if file.get('name') == filename:
+                        return file
+
+                page_token = response.get('nextPageToken', None)
+                if page_token is None:
+                    break
+            return None
+        except HttpError as e:
+            error_reason = json.loads(e.content)
+            error = error_reason['error']
+            http_error = GoogleApiClientHttpError(
+                error['code'],
+                error['message'],
+                error['status'],
+                error['details'] if 'details' in error else []
+            )
+            raise GoogleApiClientHttpErrorException(http_error)
+
+    def get_files(self, query: str):
+        try:
+            page_token = None
+            files = []
+            while True:
+                response = self.list_files(
+                    page_token=page_token,
+                    query=query
+                )
+                for file in response.get('files', []):
+                    files.append(file)
+
+                page_token = response.get('nextPageToken', None)
+                if page_token is None:
+                    return files
+            return None
+        except HttpError as err:
+            error_reason = json.loads(e.content)
+            error = error_reason['error']
+            http_error = GoogleApiClientHttpError(
+                error['code'],
+                error['message'],
+                error['status'],
+                error['details'] if 'details' in error else []
+            )
+            raise GoogleApiClientHttpErrorException(http_error)
 
 class SheetsService(GoogleService):
 
@@ -380,11 +436,11 @@ class FilesAPI(DriveService, SheetsService, DocsService):
 
     def get_folder(self, name):
         query = "mimeType='application/vnd.google-apps.folder'"
-        return self.__get_file(query, name)
+        return super().get_file(query, name)
 
     def get_file_id_from_folder(self, folder_id, filename):
         query = "'%s' in parents" % folder_id
-        file = self.__get_file(query, filename)
+        file = super().get_file(query, filename)
 
         if file is not None:
             return file.get('id')
@@ -396,13 +452,13 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         if folder is not None:
             is_folder = "mimeType='application/vnd.google-apps.folder'"
             query = "%s and '%s' in parents" % (is_folder, folder.get('id'))
-            folder = self.__get_file(query, foldername)
+            folder = super().get_file(query, foldername)
         return folder
 
     def get_files_from_folder(self, folder_id):
         is_spreadsheet = "mimeType='application/vnd.google-apps.spreadsheet'"
         query = "%s and '%s' in parents" % (is_spreadsheet, folder_id)
-        files = self.__get_files(query)
+        files = super().get_files(query)
         return files
 
     def get_file_rows_from_folder(self,
@@ -410,9 +466,16 @@ class FilesAPI(DriveService, SheetsService, DocsService):
                                   filename: str,
                                   rows_range: str):
         folder = self.get_folder(name=foldername)
+
+        if folder is None:
+            raise MissingGoogleDriveFolderException('Missing folder: {}'.format(foldername))
+
         spreadsheet_id = self.get_file_id_from_folder(
             folder_id=folder.get('id'),
             filename=filename)
+
+        if spreadsheet_id is None:
+            raise MissingGoogleDriveFileException('Missing file: {}'.format(filename))
 
         values = super().get_file_values(
             spreadsheet_id,
@@ -592,60 +655,6 @@ class FilesAPI(DriveService, SheetsService, DocsService):
         super().batch_update(
             document_id=document_id,
             requests=delete_token_requests)
-
-    def __get_file(self, query: str, filename):
-        try:
-            page_token = None
-            while True:
-                response = super().list_files(
-                    page_token=page_token,
-                    query=query
-                )
-                for file in response.get('files', []):
-                    if file.get('name') == filename:
-                        return file
-
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
-                    break
-            return None
-        except HttpError as e:
-            error_reason = json.loads(e.content)
-            error = error_reason['error']
-            http_error = GoogleApiClientHttpError(
-                error['code'],
-                error['message'],
-                error['status'],
-                error['details'] if 'details' in error else []
-            )
-            raise GoogleApiClientHttpErrorException(http_error)
-
-    def __get_files(self, query: str):
-        try:
-            page_token = None
-            files = []
-            while True:
-                response = super().list_files(
-                    page_token=page_token,
-                    query=query
-                )
-                for file in response.get('files', []):
-                    files.append(file)
-
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
-                    return files
-            return None
-        except HttpError as err:
-            error_reason = json.loads(e.content)
-            error = error_reason['error']
-            http_error = GoogleApiClientHttpError(
-                error['code'],
-                error['message'],
-                error['status'],
-                error['details'] if 'details' in error else []
-            )
-            raise GoogleApiClientHttpErrorException(http_error)
 
     def __get_indext_after_firt_horizontal_rule(self, content):
         horizontal_rule_was_seen = False

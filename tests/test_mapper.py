@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from evalytics.mappers import GoogleFileToJson, GoogleSetupToJson
 from evalytics.mappers import EvalToJson, EmployeeToJson, ReviewerToJson
+from evalytics.mappers import ReviewerResponseToJson
 from evalytics.mappers import GoogleApiClientHttpErrorToJson
 from evalytics.mappers import JsonToReviewer, ReviewerToJsonObject
 from evalytics.mappers import StrToBool, JsonToList, ListToJson
@@ -107,7 +108,25 @@ class TestReviewerToJson(TestCase):
         # when:
         json_dict = sut.reviewer_to_json(reviewer)
 
-        print(json_dict)
+        # then:
+        self.assertEqual(expected_json_dict, json_dict)
+
+class TestReviewerResponseToJson(TestCase):
+
+    def test_to_json(self):
+        # given:
+        reviewer_response = Fixture().get_any_reviewer_response_model()
+        expected_json_dict = {
+            'reviewee': reviewer_response.reviewee,
+            'reviewer': reviewer_response.reviewer,
+            'eval_kind': reviewer_response.eval_kind.name,
+            'eval_response': reviewer_response.eval_response
+        }
+        sut = ReviewerResponseToJson()
+
+        # when:
+        json_dict = sut.reviewer_response_to_json(reviewer_response)
+
         # then:
         self.assertEqual(expected_json_dict, json_dict)
 

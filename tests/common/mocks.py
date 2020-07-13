@@ -122,7 +122,12 @@ class RawDriveServiceMock:
             def list(self, q, pageSize, spaces, corpora, fields, pageToken):
                 class List:
                     def execute(self):
-                        return {}
+                        return {
+                            'files': [{
+                                'name': '',
+                                'id': ''
+                            }]
+                        }
                 return List()
 
             def copy(self, fileId, body):
@@ -180,6 +185,8 @@ class MockDriveService(DriveService):
         self.calls = {}
         self.response_files = []
         self.pages_requested = 0
+        self.get_file_response = {}
+        self.get_files_response = {}
 
     def create_drive_folder(self, file_metadata):
         self.__update_calls(
@@ -236,11 +243,40 @@ class MockDriveService(DriveService):
         )
         return
 
+    def get_file(self, query: str, filename):
+        self.__update_calls(
+            'get_file',
+            params={
+                'query': query,
+                'filename': filename,
+            }
+        )
+        return self.get_file_response.get(filename, None)
+
+    def get_files(self, query: str):
+        self.__update_calls(
+            'get_files',
+            params={
+                'query': query,
+            }
+        )
+        return self.get_files_response.get(query, None)
+
     def get_calls(self):
         return self.calls
 
     def set_pages_requested(self, pages_requested):
         self.pages_requested = pages_requested
+
+    def set_get_file_response(self, filename, response):
+        self.get_file_response.update({
+            filename: response
+        })
+
+    def set_get_files_response(self, query, response):
+        self.get_files_response.update({
+            query: response
+        })
 
     def set_response_files(self, response_files):
         self.response_files = response_files
@@ -584,6 +620,9 @@ class MockConfigReader(ConfigReader):
             'eval_process': {
                 'id': 'eval_process_id',
                 'due_date': 'eval_process_due_date',
+                'feature_disabling': {
+                    'add_comenter_to_eval_reports': False
+                }
             },
             'providers': {
                 'storage': 'storage-provider',
@@ -637,6 +676,7 @@ class MockConfigReader(ConfigReader):
 class MockConfig(Config, MockConfigReader):
 
     company_number_of_employees = 1000
+    is_add_comenter_to_evals_reports_enabled = False
 
     def __init__(self):
         super().__init__()
@@ -647,12 +687,16 @@ class MockConfig(Config, MockConfigReader):
         self.forms_platform_provider = ""
         self.response_slack_message_is_direct = None
         self.slack_users_map = []
+        self.is_add_comenter_to_evals_reports_enabled = False
 
     def read_eval_process_id(self):
         return 'EVAL_PROCESS_ID'
 
     def read_eval_process_due_date(self):
         return 'DUE_DATE'
+
+    def read_is_add_comenter_to_eval_reports_enabled(self):
+        return self.is_add_comenter_to_evals_reports_enabled
 
     def read_storage_provider(self):
         return self.storage_provider
@@ -696,9 +740,6 @@ class MockConfig(Config, MockConfigReader):
     def read_assignments_peers_range(self):
         return "A1:A1"
 
-    def read_needed_spreadsheets(self):
-        return self.needed_spreadsheets
-
     def read_google_responses_folder(self):
         return "form_responses_folder"
 
@@ -728,6 +769,9 @@ class MockConfig(Config, MockConfigReader):
 
     def read_google_self_eval_prefix(self):
         return "SELF EVAL"
+
+    def set_is_add_comenter_to_evals_reports_enabled(self, is_enabled: bool):
+        self.is_add_comenter_to_evals_reports_enabled = is_enabled
 
     def get_slack_token(self):
         return "TOKEN::TOKEN"
@@ -828,10 +872,9 @@ class MockGoogleStorage(GoogleStorage):
         }
 
     def get_forms(self):
-        return {}
+        return {'SELF': 'first form'}
 
     def generate_eval_reports(self,
-                              dry_run,
                               reviewee,
                               reviewee_evaluations,
                               employee_managers):
@@ -930,18 +973,26 @@ class MockEvalyticsRequests(EvalyticsRequests):
 
     def __init__(self):
         self.calls = {}
-        self.setup_response = {}
+        self.employees_response = {}
+        self.surveys_response = {}
         self.reviewers_response = {}
         self.status_response = {}
         self.communications_response = {}
         self.evalreports_response = {}
 
-    def set_setup_response(self, response):
-        self.setup_response = response
+    def set_employees_response(self, response):
+        self.employees_response = response
 
-    def setup(self):
-        self.update_calls('setup')
-        return True, self.setup_response
+    def employees(self):
+        self.update_calls('employees')
+        return True, self.employees_response
+
+    def set_surveys_response(self, response):
+        self.surveys_response = response
+
+    def surveys(self):
+        self.update_calls('surveys')
+        return True, self.surveys_response
 
     def set_reviewers_response(self, response):
         self.reviewers_response = response
@@ -967,7 +1018,7 @@ class MockEvalyticsRequests(EvalyticsRequests):
     def set_evalreports_response(self, response):
         self.evalreports_response = response
 
-    def evalreports(self, dry_run, uids):
+    def evalreports(self, uids):
         self.update_calls('evalreports')
         return True, self.evalreports_response
 

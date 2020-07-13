@@ -44,7 +44,7 @@ class EmployeeAdapter(Config):
             evals.append(Eval(
                 reviewee=uid,
                 kind=EvalKind.SELF,
-                form=employee_forms[EvalKind.SELF]))
+                form=employee_forms[EvalKind.SELF.name]))
 
             for peer in peers_assignment.get(uid, []):
                 if peer not in employees:
@@ -67,13 +67,13 @@ class EmployeeAdapter(Config):
                 evals.append(Eval(
                     reviewee=peer,
                     kind=EvalKind.PEER_TO_PEER,
-                    form=peer_forms[EvalKind.PEER_TO_PEER]))
+                    form=peer_forms[EvalKind.PEER_TO_PEER.name]))
 
             if employee.has_manager:
                 evals.append(Eval(
                     reviewee=employee.manager,
                     kind=EvalKind.PEER_MANAGER,
-                    form=employee_forms[EvalKind.PEER_MANAGER]))
+                    form=employee_forms[EvalKind.PEER_MANAGER.name]))
 
                 # Employee's manager has no manager, no PEER_MANAGER evaluation
                 # Employee's manager has no SELF evaluation
@@ -81,7 +81,7 @@ class EmployeeAdapter(Config):
                     manager_peer_eval = Eval(
                         reviewee=employee.uid,
                         kind=EvalKind.MANAGER_PEER,
-                        form=employee_forms[EvalKind.MANAGER_PEER])
+                        form=employee_forms[EvalKind.MANAGER_PEER.name])
 
                     if employee.manager in reviewers:
                         reviewer_manager = reviewers[employee.manager]
@@ -107,7 +107,7 @@ class EmployeeAdapter(Config):
                     evals.append(Eval(
                         reviewee=employee_uid,
                         kind=EvalKind.MANAGER_PEER,
-                        form=employee_forms[EvalKind.MANAGER_PEER]))
+                        form=employee_forms[EvalKind.MANAGER_PEER.name]))
 
             reviewer = Reviewer(
                 employee=employee,
@@ -119,7 +119,7 @@ class EmployeeAdapter(Config):
 
     def __check_area_exists_in_forms(self, forms, area):
         if area not in forms:
-                raise MissingDataException("Missing area '{}' in forms".format(area))
+            raise MissingDataException("Missing area '{}' in forms".format(area))
 
 class ReviewerAdapter(EmployeeAdapter):
 

@@ -46,10 +46,10 @@ class TestEmployeeAdapter(TestCase):
         self.no_forms = {}
         self.forms = {
             cto.area: {
-                EvalKind.SELF: self.self_form,
-                EvalKind.PEER_MANAGER: self.peer_manager_form,
-                EvalKind.MANAGER_PEER: self.manager_peer_form,
-                EvalKind.PEER_TO_PEER: self.peer_to_peer_form,
+                EvalKind.SELF.name: self.self_form,
+                EvalKind.PEER_MANAGER.name: self.peer_manager_form,
+                EvalKind.MANAGER_PEER.name: self.manager_peer_form,
+                EvalKind.PEER_TO_PEER.name: self.peer_to_peer_form,
             }
         }
         self.forms_with_other_area = {

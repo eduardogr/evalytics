@@ -44,6 +44,9 @@ class EvalProcessConfig(ConfigReader):
     ID = 'id'
     DUE_DATE = 'due_date'
 
+    FEATURE_DISABLING = 'feature_disabling'
+    ADD_COMENTER_TO_EVAL_REPORT = 'add_comenter_to_eval_reports'
+
     def read_eval_process_id(self):
         config = super().read()
         return config.get(self.EVAL_PROCESS).get(self.ID)
@@ -51,6 +54,13 @@ class EvalProcessConfig(ConfigReader):
     def read_eval_process_due_date(self):
         config = super().read()
         return config.get(self.EVAL_PROCESS).get(self.DUE_DATE)
+
+    def read_is_add_comenter_to_eval_reports_enabled(self):
+        config = super().read()
+        return config.get(
+            self.EVAL_PROCESS).get(
+                self.FEATURE_DISABLING).get(
+                    self.ADD_COMENTER_TO_EVAL_REPORT)
 
 class SlackProviderConfig(ConfigReader):
 
@@ -198,14 +208,6 @@ class GoogleDriveProviderConfig(ConfigReader):
         config = super().read()
         return config.get(
             self.GOOGLE_DRIVE_PROVIDER).get(self.FILE_PREFIXES).get(self.SELF_EVAL)
-
-    def read_needed_spreadsheets(self):
-        orgchart_filename = self.read_google_orgchart()
-        formmap_filename = self.read_google_form_map()
-        return [
-            orgchart_filename,
-            formmap_filename
-        ]
 
 class CompanyConfig(ConfigReader):
 
