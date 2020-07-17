@@ -9,12 +9,13 @@ from evalytics.communications_channels import GmailChannel, SlackClient
 from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.google_api import GoogleAPI, GoogleService
-from evalytics.google_api import GmailService, DriveService
+from evalytics.google_api import GmailService, GoogleDrive
 from evalytics.google_api import SheetsService, DocsService
 from evalytics.usecases import GetReviewersUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
 from evalytics.filters import ReviewerResponseFilter
+from evalytics.exceptions import MissingGoogleDriveFolderException
 
 from client import EvalyticsRequests
 from client import EvalyticsClient
@@ -103,7 +104,7 @@ class RawSheetsServiceMock:
 
         return Spreadsheets()
 
-class RawDriveServiceMock:
+class RawGoogleDriveMock:
 
     def files(self):
         class Files:
@@ -179,7 +180,10 @@ class RawDocsServiceMock:
 
         return Documents()
 
-class MockDriveService(DriveService):
+class MockGoogleDrive(GoogleDrive):
+
+    calls = {}
+    gdrive_list_response = {}
 
     def __init__(self):
         self.calls = {}
@@ -187,16 +191,21 @@ class MockDriveService(DriveService):
         self.pages_requested = 0
         self.get_file_response = {}
         self.get_files_response = {}
+        self.gdrive_list_response = {}
 
-    def create_drive_folder(self, file_metadata):
+    #
+    # Mock interface
+    #
+
+    def create_folder(self, name):
         self.__update_calls(
-            'create_drive_folder',
+            'create_folder',
             params={
-                'file_metadata': file_metadata
+                'name': name
             }
         )
         return {
-            'folder': file_metadata
+            'folder': name
         }
 
     def update_file_parent(self, file_id, current_parent, new_parent):
@@ -243,24 +252,22 @@ class MockDriveService(DriveService):
         )
         return
 
-    def get_file(self, query: str, filename):
+    def gdrive_list(self, path: str):
         self.__update_calls(
-            'get_file',
+            'gdrive_list',
             params={
-                'query': query,
-                'filename': filename,
+                'path': path
             }
         )
-        return self.get_file_response.get(filename, None)
+        response = self.gdrive_list_response.get(path, None)
+        if response is None:
+            raise MissingGoogleDriveFolderException(f'Path "{path}"" does not exist')
+        else:
+            return response
 
-    def get_files(self, query: str):
-        self.__update_calls(
-            'get_files',
-            params={
-                'query': query,
-            }
-        )
-        return self.get_files_response.get(query, None)
+    #
+    # Testing Interface
+    #
 
     def get_calls(self):
         return self.calls
@@ -276,6 +283,11 @@ class MockDriveService(DriveService):
     def set_get_files_response(self, query, response):
         self.get_files_response.update({
             query: response
+        })
+
+    def set_gdrive_list_response(self, path, response):
+        self.gdrive_list_response.update({
+            path: response
         })
 
     def set_response_files(self, response_files):
@@ -300,6 +312,9 @@ class MockDriveService(DriveService):
             })
 
 class MockSheetsService(SheetsService):
+
+    __get_file_values_will_raise_exception = []
+    __get_file_values_response = {}
 
     def __init__(self):
         self.calls = {}
@@ -328,9 +343,7 @@ class MockSheetsService(SheetsService):
                 'rows_range': rows_range,
             }
         )
-        return {
-            'values': ['whatever']
-        }
+        return self.__get_file_values_response.get(spreadsheet_id, [])
 
     def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
         self.__update_calls(
@@ -351,6 +364,11 @@ class MockSheetsService(SheetsService):
 
     def get_calls(self):
         return self.calls
+
+    def set_get_file_values_response(self, spreadsheet_id, response):
+        self.__get_file_values_response.update({
+            spreadsheet_id: response
+        })
 
     def __update_calls(self, function, params):
         current_call_number = 0
@@ -505,7 +523,7 @@ class MockSlackClient(SlackClient):
         return self.chat_post_message_calls
 
 class MockGoogleAPI(GoogleAPI,
-                    MockDriveService,
+                    MockGoogleDrive,
                     MockSheetsService,
                     MockDocsService,
                     MockGmailService):
@@ -513,7 +531,6 @@ class MockGoogleAPI(GoogleAPI,
     def __init__(self):
         self.response = []
         self.files_from_folder_response = []
-        self.file_rows_by_id_response = {}
         self.folder = None
         self.folder_from_folder = None
         self.fileid_by_name = {}
@@ -521,9 +538,6 @@ class MockGoogleAPI(GoogleAPI,
 
     def get_file_rows_from_folder(self, foldername: str, filename: str, rows_range: str):
         return self.response
-
-    def get_file_rows(self, file_id: str, rows_range: str):
-        return self.file_rows_by_id_response.get(file_id, [])
 
     def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
         return
@@ -587,11 +601,6 @@ class MockGoogleAPI(GoogleAPI,
 
     def set_file_rows_response(self, response):
         self.response = response
-
-    def set_file_rows_by_id(self, file_id, response):
-        self.file_rows_by_id_response.update({
-            file_id: response
-        })
 
     def set_files_from_folder_response(self, response):
         self.files_from_folder_response = response
@@ -719,7 +728,7 @@ class MockConfig(Config, MockConfigReader):
         return "assignments_folder"
 
     def read_assignments_manager_forms_folder(self):
-        return "assignments_manager_forms_folder("
+        return "assignments_manager_forms_folder"
 
     def read_google_orgchart(self):
         return "google_orgchart"

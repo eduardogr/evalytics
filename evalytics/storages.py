@@ -131,12 +131,6 @@ class GoogleStorage(GoogleAPI, Config):
         assignments_peers_range = super().read_assignments_peers_range()
 
         spreadheet_id = self.__get_assignments_peers_file()
-
-        # TODO:
-        # file = google_drive.open(spreadheet_id, "r")
-        # values = file.readlines(assignments_peers_range): // podría no especificarse el rango y leer hasta que ... X
-        # for row in values:
-        #
         values = super().get_file_values(
             spreadsheet_id=spreadheet_id,
             rows_range=assignments_peers_range)
@@ -178,13 +172,7 @@ class GoogleStorage(GoogleAPI, Config):
         assignments_peers_file = super().read_assignments_peers_file()
 
         file_path = f'/{google_folder}/{assignments_folder}/{assignments_peers_file}'
-        google_file = super().gdrive_get_file(file_path)
-
-        if google_file is None:
-            raise MissingGoogleDriveFileException(
-                "Missing file: {}".format(assignments_peers_file))
-
-        return google_file.id
+        return super().gdrive_get_file(file_path)
 
     def __get_eval_report_id(self, filename):
         '''

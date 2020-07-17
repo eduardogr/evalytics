@@ -52,9 +52,9 @@ class TestGoogleForms(TestCase):
             self.sut.get_peers_assignment()
 
     def test_get_peers_assignment_ok_when_no_files(self):
-        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
-        self.sut.set_folder_from_folder(responses_folder)
-        self.sut.set_files_from_folder_response([])
+        self.sut.set_gdrive_list_response(
+            '/google_folder/assignments_folder/assignments_manager_forms_folder',
+            [])
 
         peers_assignment = self.sut.get_peers_assignment().peers
 
@@ -78,9 +78,9 @@ class TestGoogleForms(TestCase):
                 'pmo1, se1'
             ]
         ]
-        self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
-        self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
-        self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_1, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_2, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_3, peer_assignment_file)
 
         peers_assignment = self.sut.get_peers_assignment().peers
 
@@ -113,9 +113,9 @@ class TestGoogleForms(TestCase):
             ['who will review em1?', 'who will review em2?'],
             ['em3,em3,em3', 'em3,em3']
         ]
-        self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
-        self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
-        self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_1, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_2, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_3, peer_assignment_file)
 
         peers_assignment = self.sut.get_peers_assignment().peers
 
@@ -129,18 +129,18 @@ class TestGoogleForms(TestCase):
         peer_assignment_file = [
             ['who will review em1?', 'who will review em2?'],
         ]
-        self.sut.set_file_rows_by_id(self.assignments_manager_1, peer_assignment_file)
-        self.sut.set_file_rows_by_id(self.assignments_manager_2, peer_assignment_file)
-        self.sut.set_file_rows_by_id(self.assignments_manager_3, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_1, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_2, peer_assignment_file)
+        self.sut.set_get_file_values_response(self.assignments_manager_3, peer_assignment_file)
 
         peers_assignment = self.sut.get_peers_assignment().peers
 
         self.assertEqual(0, len(peers_assignment))
 
     def test_get_responses_when_no_files(self):
-        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
-        self.sut.set_folder_from_folder(responses_folder)
-        self.sut.set_files_from_folder_response([])
+        self.sut.set_gdrive_list_response(
+            '/google_folder/form_responses_folder',
+            [])
 
         responses_map = self.sut.get_responses()
 
@@ -173,10 +173,10 @@ class TestGoogleForms(TestCase):
 
     def test_get_responses_when_no_data_in_files(self):
         self.__given_files_within_response_folder()
-        self.sut.set_file_rows_by_id(self.file_id_manager_by, [])
-        self.sut.set_file_rows_by_id(self.file_id_report_by, [])
-        self.sut.set_file_rows_by_id(self.file_id_self, [])
-        self.sut.set_file_rows_by_id(self.file_id_peer, [])
+        self.sut.set_get_file_values_response(self.file_id_manager_by, [])
+        self.sut.set_get_file_values_response(self.file_id_report_by, [])
+        self.sut.set_get_file_values_response(self.file_id_self, [])
+        self.sut.set_get_file_values_response(self.file_id_peer, [])
 
         with self.assertRaises(MissingDataException):
             self.sut.get_responses()
@@ -195,9 +195,9 @@ class TestGoogleForms(TestCase):
 
     def test_get_evaluations_correct_when_no_files(self):
         # given:
-        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
-        self.sut.set_folder_from_folder(responses_folder)
-        self.sut.set_files_from_folder_response([])
+        self.sut.set_gdrive_list_response(
+            '/google_folder/form_responses_folder',
+            [])
 
         # when:
         evaluations = self.sut.get_evaluations()
@@ -206,22 +206,19 @@ class TestGoogleForms(TestCase):
         self.assertEqual(0, len(evaluations))
 
     def __given_files_within_assignments_folder(self):
-        assignments_folder = GoogleFile(id='assignments_folder', name='assignments', parents=['google_folder'])
         assignments_file_manager_1 = GoogleFile(id=self.assignments_manager_1, name=self.assignments_manager_1, parents=[])
         assignments_file_manager_2 = GoogleFile(id=self.assignments_manager_2, name=self.assignments_manager_2, parents=[])
         assignments_file_manager_3 = GoogleFile(id=self.assignments_manager_3, name=self.assignments_manager_3, parents=[])
 
-        self.sut.set_folder_from_folder(assignments_folder)
-        self.sut.set_files_from_folder_response([
-            assignments_file_manager_1,
-            assignments_file_manager_2,
-            assignments_file_manager_3
+        self.sut.set_gdrive_list_response(
+            '/google_folder/assignments_folder/assignments_manager_forms_folder',
+            [
+                assignments_file_manager_1,
+                assignments_file_manager_2,
+                assignments_file_manager_3
         ])
 
     def __given_files_within_response_folder(self):
-        responses_folder = GoogleFile(id='responses_folder', name='responses', parents=[])
-        self.sut.set_folder_from_folder(responses_folder)
-
         manager_eval_by_report_file = GoogleFile(
             id=self.file_id_manager_by,
             name='MANAGER EVAL BY REPORT',
@@ -242,12 +239,15 @@ class TestGoogleForms(TestCase):
             id='NO ID',
             name='None evalkind file',
             parents=[])
-        self.sut.set_files_from_folder_response([
-            manager_eval_by_report_file,
-            report_eval_by_manager_file,
-            self_eval_report_file,
-            peer_eval_by_peer_file,
-            no_eval_report_report_file
+
+        self.sut.set_gdrive_list_response(
+            '/google_folder/form_responses_folder',
+            [
+                manager_eval_by_report_file,
+                report_eval_by_manager_file,
+                self_eval_report_file,
+                peer_eval_by_peer_file,
+                no_eval_report_report_file
         ])
 
     def __set_file_responses(self, file_id, responses):
@@ -256,7 +256,7 @@ class TestGoogleForms(TestCase):
         for response in responses:
             file_response.append(response)
 
-        self.sut.set_file_rows_by_id(file_id, file_response)
+        self.sut.set_get_file_values_response(file_id, file_response)
 
 class TestReviewerResponseKeyDictStrategy(TestCase):
 

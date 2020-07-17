@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from evalytics.google_api import GmailAPI, FilesAPI, DocsService, DriveService
+from evalytics.google_api import GmailAPI, FilesAPI, DocsService, GoogleDrive
 from evalytics.google_api import SheetsService, GmailService
 from evalytics.models import GoogleFile, ReviewerResponse, EvalKind
 from evalytics.exceptions import MissingGoogleDriveFolderException
@@ -10,9 +10,9 @@ from evalytics.exceptions import GoogleApiClientHttpErrorException
 from tests.common.mocks import RawSheetsServiceMock
 from tests.common.mocks import RawGmailServiceMock
 from tests.common.mocks import RawDocsServiceMock
-from tests.common.mocks import RawDriveServiceMock
+from tests.common.mocks import RawGoogleDriveMock
 from tests.common.mocks import MockGoogleService, MockGmailService
-from tests.common.mocks import MockDriveService, MockSheetsService
+from tests.common.mocks import MockGoogleDrive, MockSheetsService
 from tests.common.mocks import MockDocsService
 
 class DocServiceSut(DocsService, MockGoogleService):
@@ -24,12 +24,12 @@ class SheetsServiceSut(SheetsService, MockGoogleService):
 class GmailServiceSut(GmailService, MockGoogleService):
     'Inject a mock into the GmailService dependency'
 
-class DriveServiceSut(DriveService, MockGoogleService):
-    'Inject a mock into the DriveService dependency'
+class GoogleDriveSut(GoogleDrive, MockGoogleService):
+    'Inject a mock into the GoogleDrive dependency'
 
 class FilesAPISut(
         FilesAPI,
-        MockDriveService,
+        MockGoogleDrive,
         MockSheetsService,
         MockDocsService):
     'Inject mocks into FilesAPI dependencies'
@@ -37,14 +37,14 @@ class FilesAPISut(
 class GmailAPISut(GmailAPI, MockGmailService):
     'Inject a mock into the GmailAPI dependency'
 
-class TestDriveService(TestCase):
+class TestGoogleDrive(TestCase):
 
     def setUp(self):
-        self.sut = DriveServiceSut()
-        drive_service = RawDriveServiceMock()
+        self.sut = GoogleDriveSut()
+        drive_service = RawGoogleDriveMock()
         self.sut.set_service(
-            DriveService.DRIVE_SERVICE_ID,
-            DriveService.DRIVE_SERVICE_VERSION,
+            GoogleDrive.DRIVE_SERVICE_ID,
+            GoogleDrive.DRIVE_SERVICE_VERSION,
             drive_service
         )
 
