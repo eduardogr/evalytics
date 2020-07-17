@@ -1,9 +1,8 @@
-from evalytics.google_api import GoogleAPI
+from evalytics.google_api import GoogleAPI, GoogleDrive
 from evalytics.config import Config, ProvidersConfig
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
-from evalytics.exceptions import MissingGoogleDriveFolderException
 from evalytics.exceptions import MissingGoogleDriveFileException
 from evalytics.exceptions import NoPeersException
 
@@ -22,13 +21,19 @@ class GoogleStorage(GoogleAPI, Config):
         google_folder = super().read_google_folder()
         org_chart = super().read_google_orgchart()
         org_chart_range = super().read_google_orgchart_range()
+        company_domain = super().read_company_domain()
+
         employees = {}
 
+        # TODO:
+        # file = super().open('/google_folder/org_chart', "r")
+        # values = file.readlines(org_chart_range): // podría no especificarse el rango y leer hasta que ... X
+        # for row in values:
+        #
         values = super().get_file_rows_from_folder(
             foldername=google_folder,
             filename=org_chart,
             rows_range=org_chart_range)
-        company_domain = super().read_company_domain()
 
         # Creating models
         for row in values:
@@ -53,6 +58,11 @@ class GoogleStorage(GoogleAPI, Config):
         google_form_map = super().read_google_form_map()
         google_form_map_range = super().read_google_form_map_range()
 
+        # TODO:
+        # file = super().open('/google_folder/google_form_map', "r")
+        # values = file.readlines(google_form_map_range): // podría no especificarse el rango y leer hasta que ... X
+        # for row in values:
+        #
         values = super().get_file_rows_from_folder(
             foldername=google_folder,
             filename=google_form_map,
@@ -108,10 +118,12 @@ class GoogleStorage(GoogleAPI, Config):
             reviewee_evaluations)
 
         if is_add_comenter_to_eval_reports_enabled:
-            super().add_comenter_permission(
-                document_id,
-                employee_managers
-            )
+            for email in employee_managers:
+                super().create_permission(
+                    document_id=document_id,
+                    role=GoogleDrive.PERMISSION_ROLE_COMMENTER,
+                    email_address=email
+                )
 
         return employee_managers
 
@@ -120,8 +132,13 @@ class GoogleStorage(GoogleAPI, Config):
 
         spreadheet_id = self.__get_assignments_peers_file()
 
-        values = super().get_file_rows(
-            file_id=spreadheet_id,
+        # TODO:
+        # file = google_drive.open(spreadheet_id, "r")
+        # values = file.readlines(assignments_peers_range): // podría no especificarse el rango y leer hasta que ... X
+        # for row in values:
+        #
+        values = super().get_file_values(
+            spreadsheet_id=spreadheet_id,
             rows_range=assignments_peers_range)
 
         # Creating models
@@ -149,7 +166,7 @@ class GoogleStorage(GoogleAPI, Config):
         for reviewer, peers in peers_assignment.items():
             values.append([reviewer, ','.join(peers)])
 
-        super().update_file_rows(
+        super().update_file_values(
             spreadheet_id,
             assignments_peers_range,
             value_input_option,
@@ -160,23 +177,14 @@ class GoogleStorage(GoogleAPI, Config):
         assignments_folder = super().read_assignments_folder()
         assignments_peers_file = super().read_assignments_peers_file()
 
-        folder = super().get_folder_from_folder(
-            assignments_folder,
-            google_folder)
+        file_path = f'/{google_folder}/{assignments_folder}/{assignments_peers_file}'
+        google_file = super().gdrive_get_file(file_path)
 
-        if folder is None:
-            raise MissingGoogleDriveFolderException(
-                "Missing folder: {}".format(assignments_folder))
-
-        spreadheet_id = super().get_file_id_from_folder(
-            folder_id=folder.id,
-            filename=assignments_peers_file)
-
-        if spreadheet_id is None:
+        if google_file is None:
             raise MissingGoogleDriveFileException(
                 "Missing file: {}".format(assignments_peers_file))
 
-        return spreadheet_id
+        return google_file.id
 
     def __get_eval_report_id(self, filename):
         '''
@@ -186,22 +194,13 @@ class GoogleStorage(GoogleAPI, Config):
         google_folder = super().read_google_folder()
         eval_reports_folder = super().read_eval_reports_folder()
 
-        folder = self.get_folder_from_folder(
-            eval_reports_folder,
-            google_folder)
+        file_path = f'/{google_folder}/{eval_reports_folder}'
+        google_file = super().gdrive_get_file(file_path)
 
-        if folder is None:
-            raise MissingGoogleDriveFolderException(
-                "Missing folder: {}".format(eval_reports_folder))
-
-        document_id = self.get_file_id_from_folder(
-            folder_id=folder.id,
-            filename=filename)
-
-        if document_id is None:
+        if google_file is None:
             template_id = super().read_google_eval_report_template_id()
-            document_id = super().copy_file(template_id, filename)
+            return super().copy_file(template_id, filename)
         else:
-            super().empty_document(document_id)
+            super().empty_document(google_file.id)
 
-        return document_id
+        return google_file.id

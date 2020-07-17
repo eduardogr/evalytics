@@ -83,14 +83,26 @@ class GoogleService:
             self.__credentials = GoogleAuth.authenticate()
         return self.__credentials
 
-class DriveService(GoogleService):
+class GoogleDrive(GoogleService):
 
     DRIVE_SERVICE_ID = 'drive'
     DRIVE_SERVICE_VERSION = 'v3'
 
     PERMISSION_ROLE_COMMENTER = 'commenter'
 
-    def create_drive_folder(self, file_metadata):
+    MIMETYPE_FOLDER = 'application/vnd.google-apps.folder'
+    MIMETYPE_DOCUMENT = 'application/vnd.google-apps.document'
+    MIMETYPE_SPREADSHEET = 'application/vnd.google-apps.spreadsheet'
+
+    QUERY_IS_FOLDER = f"mimeType='{MIMETYPE_FOLDER}'"
+    QUERY_IS_SPREAD = f"mimeType='{MIMETYPE_FOLDER}'"
+    QUERY_IS_SPREADSHEET = f"mimeType='{MIMETYPE_SPREADSHEET}'"
+
+    def create_folder(self, name):
+        file_metadata = {
+            'name': name,
+            'mimeType': GoogleDrive.MIMETYPE_FOLDER
+        }
         drive_service = super().get_service(
             self.DRIVE_SERVICE_ID,
             self.DRIVE_SERVICE_VERSION
@@ -141,7 +153,7 @@ class DriveService(GoogleService):
             fileId=file_id,
             body={
                 'name': new_filename,
-                'mimeType': 'application/vnd.google-apps.document'
+                'mimeType': GoogleDrive.MIMETYPE_DOCUMENT
             }
         ).execute()
         return results.get('id')
@@ -160,7 +172,52 @@ class DriveService(GoogleService):
             }
         ).execute()
 
-    def get_file(self, query: str, filename):
+    #
+    # High level API access
+    #
+
+    def get_folder(self, name):
+        query = GoogleDrive.QUERY_IS_FOLDER
+        return self.__get_file(query, name)
+
+    def gdrive_list(self, path: str):
+        path = list(filter(lambda x: x != '', path.split('/')))
+
+        folder = self.get_folder(path[0])
+
+        for path_element in path[1:]:
+            query = f"{GoogleDrive.QUERY_IS_FOLDER} and '{folder.id}' in parents"
+            folder = self.__get_file(query, path_element)
+
+            if folder is None:
+                raise MissingGoogleDriveFolderException(
+                    "Missing folder: {}".format(path_element))
+
+        query = f"{GoogleDrive.QUERY_IS_SPREADSHEET} and '{folder.id}' in parents"
+        return self.__get_files(query)
+
+    def gdrive_get_file(self, path: str):
+        path = list(filter(lambda x: x != '', path.split('/')))
+
+        folder = self.get_folder(path[0])
+        path_elements = path[1 : len(path)-1]
+
+        for path_element in path_elements:
+            query = f"{GoogleDrive.QUERY_IS_FOLDER} and '{folder.id}' in parents"
+            folder = self.__get_file(query, path_element)
+
+            if folder is None:
+                raise MissingGoogleDriveFolderException(
+                    "Missing folder: {}".format(path_element))
+
+        filename = path[len(path)-1]
+        query = f"'{folder.id}' in parents"
+        return self.__get_file(query, filename)
+
+    def create_file(self):
+        pass
+
+    def __get_file(self, query: str, filename):
         try:
             page_token = None
             while True:
@@ -186,7 +243,7 @@ class DriveService(GoogleService):
             )
             raise GoogleApiClientHttpErrorException(http_error)
 
-    def get_files(self, query: str):
+    def __get_files(self, query: str):
         try:
             page_token = None
             total_google_files = []
@@ -200,7 +257,7 @@ class DriveService(GoogleService):
                 if next_page_token is None:
                     return total_google_files
             return None
-        except HttpError as err:
+        except HttpError as e:
             error_reason = json.loads(e.content)
             error = error_reason['error']
             http_error = GoogleApiClientHttpError(
@@ -218,7 +275,12 @@ class SheetsService(GoogleService):
 
     cached_file_values = {}
 
-    def create_spreadsheet(self, file_metadata):
+    def create_spreadsheet(self, filename):
+        file_metadata = {
+            'properties': {
+                'title': filename,
+            }
+        }
         sheets_service = super().get_service(
             self.SHEETS_SERVICE_ID,
             self.SHEETS_SERVICE_VERSION
@@ -239,19 +301,31 @@ class SheetsService(GoogleService):
                 return self.cached_file_values[spreadsheet_id][rows_range]
 
         sheet = sheets_service.spreadsheets()
-        result = sheet.values().get(
-            spreadsheetId=spreadsheet_id,
-            range=rows_range
-        ).execute()
-        values = result.get('values', [])
 
-        if len(values) > 0:
-            self.cached_file_values.update({
-                spreadsheet_id: {
-                    rows_range: values
-                }
-            })
-        return values
+        try:
+            result = sheet.values().get(
+                spreadsheetId=spreadsheet_id,
+                range=rows_range
+            ).execute()
+            values = result.get('values', [])
+
+            if len(values) > 0:
+                self.cached_file_values.update({
+                    spreadsheet_id: {
+                        rows_range: values
+                    }
+                })
+            return values
+        except HttpError as e:
+            error_reason = json.loads(e.content)
+            error = error_reason['error']
+            http_error = GoogleApiClientHttpError(
+                error['code'],
+                error['message'],
+                error['status'],
+                error['details'] if 'details' in error else []
+            )
+            raise GoogleApiClientHttpErrorException(http_error)
 
     def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
         sheets_service = super().get_service(
@@ -270,6 +344,13 @@ class SheetsService(GoogleService):
             body=value_range_body
         ).execute()
         return result.get('values', [])
+
+    #
+    # High level API access
+    #
+
+    def open_file(self):
+        pass
 
 class GmailService(GoogleService):
 
@@ -416,104 +497,35 @@ class DocsService(GoogleService):
         else:
             raise NotImplementedError("eval report style not implemented")
 
-class FilesAPI(DriveService, SheetsService, DocsService):
-
-    def create_folder(self, name: str):
-        file_metadata = {
-            'name': name,
-            'mimeType': 'application/vnd.google-apps.folder'
-        }
-        folder = super().create_drive_folder(file_metadata)
-        return folder
+class FilesAPI(GoogleDrive, SheetsService, DocsService):
 
     def create_sheet(self, folder_parent, folder, filename: str):
-        file_metadata = {
-            'properties': {
-                'title': filename,
-            }
-        }
-        spreadsheet = super().create_spreadsheet(file_metadata)
+        spreadsheet = super().create_spreadsheet(filename)
         spreadsheet_id = spreadsheet.get('spreadsheetId')
         super().update_file_parent(
             file_id=spreadsheet_id,
             current_parent=folder_parent,
             new_parent=folder.id
         )
+        # TODO:
+        # return create('/folder_parent/folder/filename', mimetype='blablabal.spreadsheet')
         return spreadsheet_id
-
-    def get_folder(self, name):
-        query = "mimeType='application/vnd.google-apps.folder'"
-        return super().get_file(query, name)
-
-    def get_file_id_from_folder(self, folder_id, filename):
-        query = "'%s' in parents" % folder_id
-        file = super().get_file(query, filename)
-
-        if file is not None:
-            return file.id
-
-        return None
-
-    def get_folder_from_folder(self, foldername, parent_foldername):
-        folder = self.get_folder(parent_foldername)
-        if folder is not None:
-            is_folder = "mimeType='application/vnd.google-apps.folder'"
-            query = "%s and '%s' in parents" % (is_folder, folder.id)
-            folder = super().get_file(query, foldername)
-        return folder
-
-    def get_files_from_folder(self, folder_id):
-        is_spreadsheet = "mimeType='application/vnd.google-apps.spreadsheet'"
-        query = "%s and '%s' in parents" % (is_spreadsheet, folder_id)
-        files = super().get_files(query)
-        return files
 
     def get_file_rows_from_folder(self,
                                   foldername: str,
                                   filename: str,
                                   rows_range: str):
-        folder = self.get_folder(name=foldername)
+        file_path = f'/{foldername}/{filename}'
+        google_file = super().gdrive_get_file(file_path)
 
-        if folder is None:
-            raise MissingGoogleDriveFolderException('Missing folder: {}'.format(foldername))
-
-        spreadsheet_id = self.get_file_id_from_folder(
-            folder_id=folder.id,
-            filename=filename)
-
-        if spreadsheet_id is None:
+        if google_file is None:
             raise MissingGoogleDriveFileException('Missing file: {}'.format(filename))
 
         values = super().get_file_values(
-            spreadsheet_id,
+            google_file.id,
             rows_range)
 
         return values
-
-    def get_file_rows(self, file_id: str, rows_range: str):
-        try:
-            return super().get_file_values(
-                file_id,
-                rows_range
-            )
-        except HttpError as e:
-            error_reason = json.loads(e.content)
-            error = error_reason['error']
-            http_error = GoogleApiClientHttpError(
-                error['code'],
-                error['message'],
-                error['status'],
-                error['details'] if 'details' in error else []
-            )
-            raise GoogleApiClientHttpErrorException(http_error)
-
-    def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
-        return super().update_file_values(
-            file_id,
-            rows_range,
-            value_input_option,
-            values
-        )
 
     def insert_eval_report_in_document(self,
                                        eval_process_id,
@@ -529,14 +541,6 @@ class FilesAPI(DriveService, SheetsService, DocsService):
             reviewee)
         self.__apply_eval_report_style(document_id)
         self.__delete_tokens_from_document(document_id)
-
-    def add_comenter_permission(self, document_id, emails):
-        for email in emails:
-            super().create_permission(
-                document_id=document_id,
-                role=DriveService.PERMISSION_ROLE_COMMENTER,
-                email_address=email
-            )
 
     def empty_document(self, document_id):
         document = super().get_document(document_id)
