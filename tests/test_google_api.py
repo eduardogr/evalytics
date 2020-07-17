@@ -643,25 +643,6 @@ class TestFilesAPI(TestCase):
         self.assertIn('batch_update', calls)
         self.assertIn('get_document', calls)
 
-    def test_add_comenter_permission(self):
-        # given:
-        document_id = 'ID'
-        emails = ['email1', 'email2', 'email3']
-
-        # when:
-        self.sut.add_comenter_permission(document_id, emails)
-
-        # then:
-        calls = self.sut.get_calls()
-        self.assertEqual(1, len(calls))
-        self.assertIn('create_permission', calls)
-
-        calls = calls['create_permission']
-        for _, call in calls.items():
-            self.assertEqual(
-                DriveService.PERMISSION_ROLE_COMMENTER,
-                call.get('role'))
-
     def test_empty_document_when_empty_file(self):
         # given:
         document_id = 'ID'

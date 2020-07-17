@@ -260,7 +260,7 @@ class EvalReportsHandler(tornado.web.RequestHandler):
             managers = Mapper().json_to_list(managers_arg)
             employee_uids = Mapper().json_to_list(employee_uids_arg)
 
-            reviewees_evaluations = GetEvalReportsUseCase().get_eval_reports(
+            reviewees_evaluations = GetEvalReportsUseCase().get(
                 area,
                 managers,
                 employee_uids

@@ -579,9 +579,6 @@ class MockGoogleAPI(GoogleAPI,
                                        reviewee_evaluations):
        return
 
-    def add_comenter_permission(self, document_id, emails):
-        return
-
     def empty_document(self, document_id):
         return
 
