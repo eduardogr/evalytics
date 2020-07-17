@@ -100,7 +100,7 @@ class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
         google_folder = super().read_google_folder()
         responses_folder = super().read_google_responses_folder()
 
-        folder_path = f'/{google_folder}/{responses_folder}'
+        folder_path = f"/{google_folder}/{responses_folder}"
         files = super().gdrive_list(folder_path)
 
         # TODO: read responses in batches, read til there's no more responses
@@ -113,11 +113,6 @@ class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
             if eval_kind is None:
                 continue
 
-            # TODO:
-            # file = google_drive.open(file.id, "r")
-            # values = file.readlines(responses_range): // podría no especificarse el rango y leer hasta que ... X
-            # for row in values:
-            #
             rows = super().get_file_values(
                 spreadsheet_id=file.id,
                 rows_range=responses_range)
@@ -143,7 +138,7 @@ class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
         assignments_folder = super().read_assignments_folder()
         assignments_manager_forms_folder = super().read_assignments_manager_forms_folder()
 
-        folder_path = f'/{google_folder}/{assignments_folder}/{assignments_manager_forms_folder}'
+        folder_path = f"/{google_folder}/{assignments_folder}/{assignments_manager_forms_folder}"
         return super().gdrive_list(folder_path)
 
     def __read_peers_assignment(self, files):
@@ -153,11 +148,6 @@ class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
         unanswered_forms = []
 
         for file in files:
-            # TODO:
-            # file = google_drive.open(file.id, "r")
-            # values = file.readlines(responses_range): // podría no especificarse el rango y leer hasta que ... X
-            # for row in values:
-            #
             rows = super().get_file_values(
                 spreadsheet_id=file.id,
                 rows_range=responses_range)

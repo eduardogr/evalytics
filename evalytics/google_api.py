@@ -290,7 +290,15 @@ class SheetsService(GoogleService):
             fields='spreadsheetId').execute()
         return spreadsheet
 
+    # TODO:
+    # file = google_drive.open(spreadheet_id, "r")
+    # values = file.readlines(assignments_peers_range): // podría no especificarse el rango y leer hasta que ... X
+    # for row in values:
+    #
     def get_file_values(self, spreadsheet_id, rows_range):
+        if spreadsheet_id is None:
+            raise MissingGoogleDriveFileException('Missing file: {}'.format(spreadsheet_id))
+
         sheets_service = super().get_service(
             self.SHEETS_SERVICE_ID,
             self.SHEETS_SERVICE_VERSION
@@ -515,7 +523,7 @@ class FilesAPI(GoogleDrive, SheetsService, DocsService):
                                   foldername: str,
                                   filename: str,
                                   rows_range: str):
-        file_path = f'/{foldername}/{filename}'
+        file_path = f"/{foldername}/{filename}"
         google_file = super().gdrive_get_file(file_path)
 
         if google_file is None:
