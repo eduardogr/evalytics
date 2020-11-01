@@ -1,8 +1,5 @@
-
-from googleapiclient.errors import HttpError
-
 from evalytics.config import Config, ConfigReader
-from evalytics.models import GoogleFile
+from evalytics.models import GoogleFile, GoogleApiClientHttpError
 from evalytics.models import Reviewer, CommunicationKind, PeersAssignment
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackClient
@@ -16,6 +13,7 @@ from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
 from evalytics.filters import ReviewerResponseFilter
 from evalytics.exceptions import MissingGoogleDriveFolderException
+from evalytics.exceptions import GoogleApiClientHttpErrorException
 
 from client import EvalyticsRequests
 from client import EvalyticsClient
@@ -104,7 +102,7 @@ class RawSheetsServiceMock:
 
         return Spreadsheets()
 
-class RawGoogleDriveMock:
+class RawGoogleServiceMock:
 
     def files(self):
         class Files:
@@ -124,10 +122,7 @@ class RawGoogleDriveMock:
                 class List:
                     def execute(self):
                         return {
-                            'files': [{
-                                'name': '',
-                                'id': ''
-                            }]
+                            'files': []
                         }
                 return List()
 
@@ -184,14 +179,14 @@ class MockGoogleDrive(GoogleDrive):
 
     calls = {}
     gdrive_list_response = {}
+    gdrive_get_file_response = {}
 
     def __init__(self):
         self.calls = {}
         self.response_files = []
         self.pages_requested = 0
-        self.get_file_response = {}
-        self.get_files_response = {}
         self.gdrive_list_response = {}
+        self.gdrive_get_file_response = {}
 
     #
     # Mock interface
@@ -228,15 +223,13 @@ class MockGoogleDrive(GoogleDrive):
         )
         if self.pages_requested > 0:
             self.pages_requested -= 1
-            return {
-                'files': self.response_files,
-                'nextPageToken': 'pagetoken::{}'.format(self.pages_requested)
-            }
+            files = self.response_files
+            next_page_token = 'pagetoken::{}'.format(self.pages_requested)
+        else:
+            files = []
+            next_page_token = None
 
-        return {
-            'files': [],
-            'nextPageToken': None
-        }
+        return files, next_page_token
 
     def copy_file(self, file_id, new_filename):
         return "ID"
@@ -259,11 +252,22 @@ class MockGoogleDrive(GoogleDrive):
                 'path': path
             }
         )
-        response = self.gdrive_list_response.get(path, None)
-        if response is None:
-            raise MissingGoogleDriveFolderException(f'Path "{path}"" does not exist')
+        if path in self.gdrive_list_response:
+            return self.gdrive_list_response.get(path)
         else:
-            return response
+            raise MissingGoogleDriveFolderException(f'Path "{path}"" does not exist')
+
+    def gdrive_get_file(self, path: str):
+        self.__update_calls(
+            'gdrive_get_file',
+            params={
+                'path': path
+            }
+        )
+        if path in self.gdrive_get_file_response:
+            return self.gdrive_get_file_response.get(path)
+        else:
+            raise MissingGoogleDriveFolderException(f'File "{path}"" does not exist')
 
     #
     # Testing Interface
@@ -275,18 +279,13 @@ class MockGoogleDrive(GoogleDrive):
     def set_pages_requested(self, pages_requested):
         self.pages_requested = pages_requested
 
-    def set_get_file_response(self, filename, response):
-        self.get_file_response.update({
-            filename: response
-        })
-
-    def set_get_files_response(self, query, response):
-        self.get_files_response.update({
-            query: response
-        })
-
     def set_gdrive_list_response(self, path, response):
         self.gdrive_list_response.update({
+            path: response
+        })
+
+    def set_gdrive_get_file_response(self, path, response):
+        self.gdrive_get_file_response.update({
             path: response
         })
 
@@ -320,21 +319,26 @@ class MockSheetsService(SheetsService):
         self.calls = {}
         self.__get_file_values_will_raise_exception = []
 
-    def create_spreadsheet(self, file_metadata):
+    def create_spreadsheet(self, filename):
         self.__update_calls(
             'create_spreadsheet',
             params={
-                'file_metadata': file_metadata
+                'filename': filename
             }
         )
         return {
-            'spreadsheetId': file_metadata['properties']['title']
+            'spreadsheetId': filename
         }
 
     def get_file_values(self, spreadsheet_id, rows_range):
         if spreadsheet_id in self.__get_file_values_will_raise_exception:
-            content = '{"error": {"code": 429,"message": "this is a test error message","status": 429,"details": []}}'
-            raise HttpError(resp='', content=bytes(content, 'utf-8'))
+            error = GoogleApiClientHttpError(
+                code=429,
+                message="this is a test error message",
+                status=429,
+                details=[]
+            )
+            raise GoogleApiClientHttpErrorException(error)
 
         self.__update_calls(
             'get_file_values',
@@ -539,7 +543,7 @@ class MockGoogleAPI(GoogleAPI,
     def get_file_rows_from_folder(self, foldername: str, filename: str, rows_range: str):
         return self.response
 
-    def update_file_rows(self, file_id: str, rows_range: str, value_input_option: str, values):
+    def update_file_values(self, file_id: str, rows_range: str, value_input_option: str, values):
         return
 
     def get_files_from_folder(self, folder_id):

@@ -10,7 +10,7 @@ from evalytics.exceptions import GoogleApiClientHttpErrorException
 from tests.common.mocks import RawSheetsServiceMock
 from tests.common.mocks import RawGmailServiceMock
 from tests.common.mocks import RawDocsServiceMock
-from tests.common.mocks import RawGoogleDriveMock
+from tests.common.mocks import RawGoogleServiceMock
 from tests.common.mocks import MockGoogleService, MockGmailService
 from tests.common.mocks import MockGoogleDrive, MockSheetsService
 from tests.common.mocks import MockDocsService
@@ -41,17 +41,17 @@ class TestGoogleDrive(TestCase):
 
     def setUp(self):
         self.sut = GoogleDriveSut()
-        drive_service = RawGoogleDriveMock()
+        drive_service = RawGoogleServiceMock()
         self.sut.set_service(
             GoogleDrive.DRIVE_SERVICE_ID,
             GoogleDrive.DRIVE_SERVICE_VERSION,
             drive_service
         )
 
-    def test_create_drive_folder_ok(self):
-        file_metadata = {}
+    def test_create_folder_ok(self):
+        name = ''
 
-        self.sut.create_drive_folder(file_metadata)
+        self.sut.create_folder(name)
 
     def test_update_file_parent_ok(self):
         file_id = 'ID'
@@ -79,20 +79,6 @@ class TestGoogleDrive(TestCase):
 
         self.sut.create_permission(document_id, role, email_address)
 
-    def test_get_file_ok(self):
-        # given:
-        filename = 'name of a file'
-        query = "mimeType='application/vnd.google-apps.folder'"
-
-        # when:
-        self.sut.get_file(query, filename)
-
-    def test_get_files_ok(self):
-        # given:
-        query = "mimeType='application/vnd.google-apps.folder'"
-
-        # when:
-        self.sut.get_files(query)
 
 class TestSheetsService(TestCase):
 
@@ -249,7 +235,8 @@ class TestFilesAPI(TestCase):
         self.sut = FilesAPISut()
         self.sut.raise_exception_for_get_file_values_for_ids([])
 
-    def test_create_drive_folder(self):
+    def test_create_folder(self):
+        # given:
         folder_name = 'test folder'
 
         # when:
@@ -258,15 +245,16 @@ class TestFilesAPI(TestCase):
         # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
-        self.assertIn('create_drive_folder', calls)
+        self.assertIn('create_folder', calls)
 
-        call = calls['create_drive_folder'][0]
-        self.assertIn('file_metadata', call)
+        call = calls['create_folder'][0]
+        self.assertIn('name', call)
         self.assertEqual(
             folder_name,
-            call['file_metadata']['name'])
+            call['name'])
 
     def test_create_spreadsheet(self):
+        # given:
         folder_parent = 'parent'
         filename = 'filename'
         folder = GoogleFile(id='new_parent_id', name='folder', parents=[])
@@ -282,10 +270,10 @@ class TestFilesAPI(TestCase):
         self.assertIn('update_file_parent', calls)
 
         call = calls['create_spreadsheet'][0]
-        self.assertIn('file_metadata', call)
+        self.assertIn('filename', call)
         self.assertEqual(
             filename,
-            call['file_metadata']['properties']['title'])
+            call['filename'])
 
         call = calls['update_file_parent'][0]
         self.assertIn('file_id', call)
@@ -318,9 +306,10 @@ class TestFilesAPI(TestCase):
     def test_correct_number_executions_when_get_folder_and_exists(self):
         # given:
         folder_name = 'my_folder'
-        self.sut.set_get_file_response(
-            folder_name,
-            GoogleFile(id='some id', name=folder_name, parents=[]))
+        self.sut.set_pages_requested(1)
+        self.sut.set_response_files([
+            GoogleFile(id='some id', name=folder_name, parents=[])
+        ])
 
         # when:
         folder = self.sut.get_folder(folder_name)
@@ -328,7 +317,7 @@ class TestFilesAPI(TestCase):
         # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
-        self.assertIn('get_file', calls)
+        self.assertIn('list_files', calls)
 
         self.assertEqual(folder_name, folder.name)
 
@@ -342,90 +331,35 @@ class TestFilesAPI(TestCase):
         # when:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
-        calls = self.sut.get_calls()
+        self.assertIn('list_files', calls)
+
         self.assertEqual(
-            "mimeType='application/vnd.google-apps.folder'",
-            calls['get_file'][0]['query']
-        )
-
-    def test_get_file_id_from_folder_when_not_exists(self):
-        # given:
-        folder_id = 'id'
-        filename = 'name'
-
-        # when:
-        folder = self.sut.get_file_id_from_folder(folder_id, filename)
-
-        # then:
-        calls = self.sut.get_calls()
-        self.assertEqual(1, len(calls))
-
-        self.assertEqual(None, folder)
-
-    def test_correct_query_when_get_file_id_from_folder(self):
-        # given:
-        folder_id = 'id'
-        filename = 'my_file'
-        expected_query = "'%s' in parents" % folder_id
-        self.sut.set_get_file_response(
-            filename,
-            GoogleFile(id='some id', name=filename, parents=[]))
-
-        # when:
-        self.sut.get_file_id_from_folder(folder_id, filename)
-
-        # then:
-        calls = self.sut.get_calls()
-        self.assertEqual(1, len(calls))
-        self.assertEqual(
-            expected_query,
-            calls['get_file'][0]['query']
-        )
-
-    def test_correct_fileid_when_get_file_id_from_folder_and_exists(self):
-        # given:
-        folder_id = 'id'
-        filename = 'my_file'
-        expected_file_id = 'nice id'
-        self.sut.set_get_file_response(
-            filename,
-            GoogleFile(id=expected_file_id, name=filename, parents=[]))
-
-        # when:
-        file_id = self.sut.get_file_id_from_folder(folder_id, filename)
-
-        # then:
-        calls = self.sut.get_calls()
-        self.assertEqual(1, len(calls))
-        self.assertEqual(
-            expected_file_id,
-            file_id
+            GoogleDrive.QUERY_IS_FOLDER,
+            calls['list_files'][0]['query']
         )
 
     def test_get_file_rows_from_folder(self):
         # given:
-        folder_name = 'my_folder'
+        foldername = 'my_folder'
         filename = 'filename'
         file_id = 'file_id'
-        folder_id = 'folder_id'
-        self.sut.set_get_file_response(
-            folder_name,
-            GoogleFile(id=folder_id, name=folder_name, parents=[]))
-        self.sut.set_get_file_response(
-            filename,
+        self.sut.set_gdrive_get_file_response(
+            f"/{foldername}/{filename}",
             GoogleFile(id=file_id, name=filename, parents=[]))
         rows_range = 'A2::F4'
 
         # when:
-        self.sut.get_file_rows_from_folder(folder_name, filename, rows_range)
+        self.sut.get_file_rows_from_folder(foldername, filename, rows_range)
 
         # then:
         calls = self.sut.get_calls()
         self.assertEqual(2, len(calls))
-        self.assertIn('get_file', calls)
-        self.assertEqual(2, len(calls['get_file']))
 
+        self.assertIn('gdrive_get_file', calls)
+        self.assertEqual(1, len(calls['gdrive_get_file']))
         self.assertIn('get_file_values', calls)
+        self.assertEqual(1, len(calls['get_file_values']))
+
         call = calls['get_file_values'][0]
         self.assertEqual(file_id, call['spreadsheet_id'])
 
@@ -442,28 +376,27 @@ class TestFilesAPI(TestCase):
         # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
-        self.assertIn('get_file', calls)
-        self.assertEqual(1, len(calls['get_file']))
+        self.assertIn('gdrive_get_file', calls)
+        self.assertEqual(1, len(calls['gdrive_get_file']))
 
     def test_get_file_rows_from_folder_when_missing_google_file_exception(self):
         # given:
-        folder_name = 'my_folder'
+        foldername = 'my_folder'
         filename = 'filename'
-        folder_id = 'folder_id'
-        self.sut.set_get_file_response(
-            folder_name,
-            GoogleFile(id=folder_id, name=folder_name, parents=[]))
+        self.sut.set_gdrive_get_file_response(
+            f"/{foldername}/{filename}",
+            None)
         rows_range = 'A2::F4'
 
         # when:
         with self.assertRaises(MissingGoogleDriveFileException):
-            self.sut.get_file_rows_from_folder(folder_name, filename, rows_range)
+            self.sut.get_file_rows_from_folder(foldername, filename, rows_range)
 
         # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
-        self.assertIn('get_file', calls)
-        self.assertEqual(2, len(calls['get_file']))
+        self.assertIn('gdrive_get_file', calls)
+        self.assertEqual(1, len(calls['gdrive_get_file']))
 
     def test_get_file_rows_when_ok(self):
         # given:
@@ -471,7 +404,7 @@ class TestFilesAPI(TestCase):
         rows_range = 'A2::F4'
 
         # when:
-        self.sut.get_file_rows(file_id, rows_range)
+        self.sut.get_file_values(file_id, rows_range)
 
         # then:
         calls = self.sut.get_calls()
@@ -487,83 +420,25 @@ class TestFilesAPI(TestCase):
 
         # when:
         with self.assertRaises(GoogleApiClientHttpErrorException):
-            self.sut.get_file_rows(file_id, rows_range)
+            self.sut.get_file_values(file_id, rows_range)
 
         # then:
         calls = self.sut.get_calls()
         self.assertEqual(0, len(calls))
 
-    def test_update_file_rows_when_ok(self):
+    def test_update_file_values_when_ok(self):
         # given:
         file_id = 'file_id'
         rows_range = 'A2::F4'
 
         # when:
-        self.sut.update_file_rows(file_id, rows_range, 'RAW', [])
+        self.sut.update_file_values(file_id, rows_range, 'RAW', [])
 
         # then:
         calls = self.sut.get_calls()
         self.assertEqual(1, len(calls))
         self.assertIn('update_file_values', calls)
         self.assertEqual(1, len(calls['update_file_values']))
-
-    def test_get_folder_from_folder(self):
-        # given:
-        foldername = 'my_folder'
-        parent_foldername = 'i am you father'
-        self.sut.set_get_file_response(
-            parent_foldername,
-            GoogleFile(id='some parent id', name=parent_foldername, parents=[]))
-        self.sut.set_get_file_response(
-            foldername,
-            GoogleFile(id='some id', name=foldername, parents=[]))
-
-        # when:
-        folder = self.sut.get_folder_from_folder(foldername, parent_foldername)
-
-        # then:
-        calls = self.sut.get_calls()
-        self.assertEqual(1, len(calls))
-        self.assertIn('get_file', calls)
-
-        calls = calls['get_file']
-        self.assertEqual(2, len(calls))
-
-        self.assertEqual(foldername, folder.name)
-
-    def test_get_folder_from_folder_when_folder_does_not_exist(self):
-        # given:
-        foldername = 'my_folder'
-        parent_foldername = 'i am you father'
-        self.sut.set_pages_requested(0)
-
-        # when:
-        folder = self.sut.get_folder_from_folder(foldername, parent_foldername)
-
-        # then:
-        self.assertEqual(None, folder)
-
-    def test_get_files_from_folder(self):
-        # given:
-        folder_id = 'lASDF::asdf::ID'
-        is_spreadsheet = "mimeType='application/vnd.google-apps.spreadsheet'"
-        query = "%s and '%s' in parents" % (is_spreadsheet, folder_id)
-        self.sut.set_get_files_response(
-            query, [
-                GoogleFile(id='', name='file1', parents=[]),
-                GoogleFile(id='', name='file2', parents=[]),
-                GoogleFile(id='', name='file3', parents=[])])
-
-        # when:
-        self.sut.get_files_from_folder(folder_id)
-
-        # then:
-        calls = self.sut.get_calls()
-        self.assertEqual(1, len(calls))
-        self.assertIn('get_files', calls)
-
-        calls = calls['get_files']
-        self.assertEqual(1, len(calls))
 
     def test_insert_eval_report_in_document_when_no_evaluations_then_empty_file(self):
         # given:
