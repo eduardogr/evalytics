@@ -3,7 +3,6 @@ from evalytics.config import Config, ProvidersConfig
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
-from evalytics.exceptions import MissingGoogleDriveFileException
 from evalytics.exceptions import NoPeersException
 
 class StorageFactory(Config):
@@ -130,9 +129,9 @@ class GoogleStorage(GoogleAPI, Config):
     def get_peers_assignment(self):
         assignments_peers_range = super().read_assignments_peers_range()
 
-        spreadheet_id = self.__get_assignments_peers_file()
+        spreadheet_file = self.__get_assignments_peers_file()
         values = super().get_file_values(
-            spreadsheet_id=spreadheet_id,
+            spreadsheet_id=spreadheet_file.id,
             rows_range=assignments_peers_range)
 
         # Creating models
@@ -153,7 +152,7 @@ class GoogleStorage(GoogleAPI, Config):
     def write_peers_assignment(self, peers_assignment):
         assignments_peers_range = super().read_assignments_peers_range()
 
-        spreadheet_id = self.__get_assignments_peers_file()
+        spreadheet_file = self.__get_assignments_peers_file()
 
         values = []
         value_input_option = 'RAW'
@@ -161,7 +160,7 @@ class GoogleStorage(GoogleAPI, Config):
             values.append([reviewer, ','.join(peers)])
 
         super().update_file_values(
-            spreadheet_id,
+            spreadheet_file.id,
             assignments_peers_range,
             value_input_option,
             values)
@@ -182,7 +181,7 @@ class GoogleStorage(GoogleAPI, Config):
         google_folder = super().read_google_folder()
         eval_reports_folder = super().read_eval_reports_folder()
 
-        file_path = f'/{google_folder}/{eval_reports_folder}'
+        file_path = f'/{google_folder}/{eval_reports_folder}/{filename}'
         google_file = super().gdrive_get_file(file_path)
 
         if google_file is None:

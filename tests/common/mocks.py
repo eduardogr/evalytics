@@ -255,7 +255,7 @@ class MockGoogleDrive(GoogleDrive):
         if path in self.gdrive_list_response:
             return self.gdrive_list_response.get(path)
         else:
-            raise MissingGoogleDriveFolderException(f'Path "{path}"" does not exist')
+            raise MissingGoogleDriveFolderException(f'Path "{path}" does not exist')
 
     def gdrive_get_file(self, path: str):
         self.__update_calls(
@@ -267,7 +267,7 @@ class MockGoogleDrive(GoogleDrive):
         if path in self.gdrive_get_file_response:
             return self.gdrive_get_file_response.get(path)
         else:
-            raise MissingGoogleDriveFolderException(f'File "{path}"" does not exist')
+            raise MissingGoogleDriveFolderException(f'File "{path}" does not exist')
 
     #
     # Testing Interface
