@@ -239,7 +239,7 @@ class TestGoogleStorage(TestCase):
         # then:
         self.assertEqual(2, len(peers))
 
-    def test_get_peers_assignment_when_no_peers_exception(self):
+    def test_get_peers_assignment_when_no_peers(self):
         # given:
         assignments_folder = GoogleFile(id='assignments_folder', name='assignments', parents=['google_folder'])
         self.sut.set_folder_from_folder(assignments_folder)
@@ -247,8 +247,10 @@ class TestGoogleStorage(TestCase):
         self.sut.set_file_rows_by_id('fileid', [])
 
         # when:
-        with self.assertRaises(NoPeersException):
-            self.sut.get_peers_assignment()
+        peers = self.sut.get_peers_assignment()
+
+         # then:
+        self.assertEqual(0, len(peers))
 
     def test_get_peers_assignment_when_missing_data_exception(self):
         # given:
