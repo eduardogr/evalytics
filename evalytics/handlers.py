@@ -9,6 +9,7 @@ from evalytics.usecases import GetPeersAssignmentUseCase
 from evalytics.usecases import UpdatePeersAssignmentUseCase
 from evalytics.usecases import SendCommunicationUseCase
 from evalytics.mappers import Mapper
+from evalytics.models import CommunicationKind
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import GoogleApiClientHttpErrorException
 from evalytics.exceptions import MissingGoogleDriveFolderException

@@ -105,8 +105,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
 
     def print_reviewers(self, show_stats: bool = False):
         reviewers = self.get_reviewers()
-        for reviewer in reviewers:
-            print(json.dumps(reviewer, indent=2))
+        print(json.dumps(reviewers, indent=2))
 
         if show_stats:
             print('\n-----------')

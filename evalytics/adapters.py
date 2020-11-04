@@ -97,8 +97,9 @@ class EmployeeAdapter(Config):
                                 manager_peer_eval
                             ]
                         )
+
                     reviewers.update({
-                        manager.uid: reviewer_manager
+                        reviewer_manager.uid: reviewer_manager
                     })
 
             # Employee is a manager

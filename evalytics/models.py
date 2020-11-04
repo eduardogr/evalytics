@@ -101,6 +101,8 @@ class ReviewerResponse:
         self.filename = filename
         self.line_number = line_number
 
+
+# TODO: 'decouple' from google line format
 class ReviewerResponseBuilder:
 
     def build(self, questions, filename, eval_kind, line, line_number):

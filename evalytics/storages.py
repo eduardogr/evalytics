@@ -124,9 +124,6 @@ class GoogleStorage(GoogleAPI, Config):
             file_id=spreadheet_id,
             rows_range=assignments_peers_range)
 
-        if len(values) == 0:
-            raise NoPeersException("Missing peers in google")
-
         # Creating models
         peers = {}
         for row in values:
