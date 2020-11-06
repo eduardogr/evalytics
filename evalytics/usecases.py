@@ -117,7 +117,8 @@ class GenerateEvalReportsUseCase(
                     }
                 })
             # TODO: we need more info here to know why a communication was not sent
-            except:
+            except Exception as e:
+                print(e)
                 not_created.update({
                     uid: {
                         'employee': uid,

@@ -231,6 +231,8 @@ class GoogleDrive(GoogleService):
 
                 if next_page_token is None:
                     break
+                else:
+                    page_token = next_page_token
             return None
         except HttpError as e:
             error_reason = json.loads(e.content)
@@ -256,6 +258,8 @@ class GoogleDrive(GoogleService):
 
                 if next_page_token is None:
                     return total_google_files
+                else:
+                    page_token = next_page_token
             return None
         except HttpError as e:
             error_reason = json.loads(e.content)
