@@ -2,6 +2,7 @@ from evalytics.google_api import GoogleAPI, GoogleDrive
 from evalytics.config import Config, ProvidersConfig
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
+from evalytics.exceptions import MissingGoogleDriveFileException
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import NoPeersException
 
@@ -153,6 +154,9 @@ class GoogleStorage(GoogleAPI, Config):
         assignments_peers_range = super().read_assignments_peers_range()
 
         spreadheet_file = self.__get_assignments_peers_file()
+
+        if spreadheet_file is None:
+            raise MissingGoogleDriveFileException("Missing assignment peers file")
 
         values = []
         value_input_option = 'RAW'

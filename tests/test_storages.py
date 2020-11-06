@@ -5,7 +5,6 @@ from evalytics.storages import StorageFactory
 from evalytics.exceptions import MissingDataException, NoFormsException
 from evalytics.exceptions import MissingGoogleDriveFolderException
 from evalytics.exceptions import MissingGoogleDriveFileException
-from evalytics.exceptions import NoPeersException
 from evalytics.models import GoogleFile, EvalKind, ReviewerResponse
 from evalytics.config import ProvidersConfig
 
@@ -39,6 +38,10 @@ class TestGoogleStorage(TestCase):
 
     def setUp(self):
         self.sut = GoogleStorageSut()
+
+    def tearDown(self):
+        self.sut.clear_gdrive_list_fixture()
+        self.sut.clear_gdrive_get_file_fixture()
 
     def test_get_employees_correct_when_no_values(self):
         employees = self.sut.get_employees()
@@ -159,6 +162,11 @@ class TestGoogleStorage(TestCase):
 
     def test_generate_eval_reports_when_no_reports_folder(self):
         # given:
+        foldername = 'google_folder'
+        eval_reports_folder_name = 'eval_reports_folder'
+        eval_report_filename = 'PREFIX: pepe' # TODO: get prefix from mock object
+        self.sut.set_gdrive_get_file_raise_exception(f'/{foldername}/{eval_reports_folder_name}/{eval_report_filename}')
+
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -181,6 +189,19 @@ class TestGoogleStorage(TestCase):
 
     def test_generate_eval_reports_when_no_eval_report_does_not_exist(self):
         # given:
+        foldername = 'google_folder'
+        eval_reports_folder_name = 'eval_reports_folder'
+        eval_reports_folder_id = 'guarevar'
+
+        eval_reports_folder = GoogleFile(
+            id=eval_reports_folder_id,
+            name=eval_reports_folder_name,
+            parents=[foldername])
+
+        self.sut.set_gdrive_get_file_response(
+            f"/{foldername}/{eval_reports_folder}",
+            eval_reports_folder)
+
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -193,8 +214,6 @@ class TestGoogleStorage(TestCase):
             )
         ]
         employee_managers = ['jefe', 'manager']
-        eval_reports_folder = GoogleFile(id='eval_reports_folder', name='eval_reports', parents=['google_folder'])
-        self.sut.set_folder_from_folder(eval_reports_folder)
 
         # when:
         employee_managers_response = self.sut.generate_eval_reports(
@@ -207,6 +226,25 @@ class TestGoogleStorage(TestCase):
 
     def test_generate_eval_reports_when_files_and_add_comenter_is_enabled(self):
         # given:
+        foldername = 'google_folder'
+        eval_reports_folder = 'eval_reports_folder'
+        eval_report_filename = 'PREFIX: pepe' # TODO: get prefix from mock object
+        eval_report_file_id = 'guarevar'
+
+        eval_report_file = GoogleFile(
+            id=eval_report_file_id,
+            name=eval_report_filename,
+            parents=[eval_reports_folder])
+
+        self.sut.set_gdrive_get_file_response(
+            f"/{foldername}/{eval_reports_folder}/{eval_report_filename}",
+            eval_report_file)
+
+        self.sut.set_get_file_values_response(
+            eval_report_file_id, [
+                ['reviewer1', 'peer1,peer2'],
+                ['reviewer2', 'peer1,peer2']])
+
         reviewee = 'pepe'
         reviewee_evaluations = [
             ReviewerResponse(
@@ -221,9 +259,6 @@ class TestGoogleStorage(TestCase):
         employee_managers = ['jefe', 'manager']
         employee_managers = ['jefe', 'manager']
 
-        eval_reports_folder = GoogleFile(id='eval_reports_folder', name='eval_reports', parents=['google_folder'])
-        self.sut.set_folder_from_folder(eval_reports_folder)
-        self.sut.set_fileid_by_name('eval_reports_folder', 'Eval Doc: pepe', 'fileid')
         self.sut.set_is_add_comenter_to_evals_reports_enabled(True)
 
         # when:
@@ -338,9 +373,19 @@ class TestGoogleStorage(TestCase):
 
     def test_write_peers_assignment_when_peers(self):
         # given:
-        assignments_folder = GoogleFile(id='assignments_folder', name='assignments', parents=['google_folder'])
-        self.sut.set_folder_from_folder(assignments_folder)
-        self.sut.set_fileid_by_name('assignments_folder', 'assignments_peers_file', 'fileid')
+        foldername = 'google_folder'
+        assignments_folder = 'assignments_folder'
+        peer_assignmetns_filename = 'assignments_peers_file'
+        peer_file_id = 'guarevar'
+        peer_assignments_file = GoogleFile(
+            id=peer_file_id,
+            name=peer_assignmetns_filename,
+            parents=[assignments_folder])
+
+        self.sut.set_gdrive_get_file_response(
+            f"/{foldername}/{assignments_folder}/{peer_assignmetns_filename}",
+            peer_assignments_file)
+
         peers = {
             'peer1': ['peer2']
         }
@@ -349,15 +394,16 @@ class TestGoogleStorage(TestCase):
         self.sut.write_peers_assignment(peers)
 
     def test_write_peers_assignment_when_no_folder(self):
+        foldername = 'google_folder'
+        assignments_folder = 'assignments_folder'
+        assignments_file = 'assignments_peers_file'
+        self.sut.set_gdrive_get_file_raise_exception(f'/{foldername}/{assignments_folder}/{assignments_file}')
+
         # when:
         with self.assertRaises(MissingGoogleDriveFolderException):
             self.sut.write_peers_assignment({})
 
     def test_write_peers_assignment_when_no_file(self):
-        # given:
-        folder = GoogleFile(id='', name='', parents=['google_folder'])
-        self.sut.set_folder_from_folder(folder)
-
         # when:
         with self.assertRaises(MissingGoogleDriveFileException):
             self.sut.write_peers_assignment({})

@@ -1,3 +1,7 @@
+# pylint: disable=unused-argument
+# pylint: disable=bad-super-call
+# No need to shout here
+
 from evalytics.config import Config, ConfigReader
 from evalytics.models import GoogleFile, GoogleApiClientHttpError
 from evalytics.models import Reviewer, CommunicationKind, PeersAssignment
@@ -179,14 +183,18 @@ class MockGoogleDrive(GoogleDrive):
 
     calls = {}
     gdrive_list_response = {}
+    gdrive_list_raise_exceptions = []
     gdrive_get_file_response = {}
+    gdrive_get_file_raise_exceptions = []
 
     def __init__(self):
         self.calls = {}
         self.response_files = []
         self.pages_requested = 0
         self.gdrive_list_response = {}
+        self.gdrive_list_raise_exceptions = []
         self.gdrive_get_file_response = {}
+        self.gdrive_get_file_raise_exceptions = []
 
     #
     # Mock interface
@@ -252,10 +260,11 @@ class MockGoogleDrive(GoogleDrive):
                 'path': path
             }
         )
-        if path in self.gdrive_list_response:
-            return self.gdrive_list_response.get(path)
-        else:
+
+        if path in self.gdrive_list_raise_exceptions:
             raise MissingGoogleDriveFolderException(f'Path "{path}" does not exist')
+
+        return self.gdrive_list_response.get(path, None)
 
     def gdrive_get_file(self, path: str):
         self.__update_calls(
@@ -264,10 +273,11 @@ class MockGoogleDrive(GoogleDrive):
                 'path': path
             }
         )
-        if path in self.gdrive_get_file_response:
-            return self.gdrive_get_file_response.get(path)
-        else:
+
+        if path in self.gdrive_get_file_raise_exceptions:
             raise MissingGoogleDriveFolderException(f'File "{path}" does not exist')
+
+        return self.gdrive_get_file_response.get(path, None)
 
     #
     # Testing Interface
@@ -284,10 +294,24 @@ class MockGoogleDrive(GoogleDrive):
             path: response
         })
 
+    def set_gdrive_list_raise_exception(self, path):
+        self.gdrive_list_raise_exceptions.append(path)
+
+    def clear_gdrive_list_fixture(self):
+        MockGoogleDrive.gdrive_list_response = {}
+        MockGoogleDrive.gdrive_list_raise_exceptions = []
+
     def set_gdrive_get_file_response(self, path, response):
         self.gdrive_get_file_response.update({
             path: response
         })
+
+    def set_gdrive_get_file_raise_exception(self, path):
+        self.gdrive_get_file_raise_exceptions.append(path)
+
+    def clear_gdrive_get_file_fixture(self):
+        MockGoogleDrive.gdrive_get_file_response = {}
+        MockGoogleDrive.gdrive_get_file_raise_exceptions = []
 
     def set_response_files(self, response_files):
         self.response_files = response_files
@@ -532,7 +556,7 @@ class MockGoogleAPI(GoogleAPI,
                     MockDocsService,
                     MockGmailService):
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.response = []
         self.files_from_folder_response = []
         self.folder = None
@@ -540,10 +564,15 @@ class MockGoogleAPI(GoogleAPI,
         self.fileid_by_name = {}
         self.send_message_calls = {}
 
+        super(MockGoogleDrive, self).__init__(*args, **kwargs)
+        super(MockSheetsService, self).__init__(*args, **kwargs)
+        super(MockDocsService, self).__init__(*args, **kwargs)
+        super(MockGmailService, self).__init__(*args, **kwargs)
+
     def get_file_rows_from_folder(self, foldername: str, filename: str, rows_range: str):
         return self.response
 
-    def update_file_values(self, file_id: str, rows_range: str, value_input_option: str, values):
+    def update_file_values(self, spreadsheet_id, rows_range, value_input_option, values):
         return
 
     def get_files_from_folder(self, folder_id):

@@ -235,6 +235,10 @@ class TestFilesAPI(TestCase):
         self.sut = FilesAPISut()
         self.sut.raise_exception_for_get_file_values_for_ids([])
 
+    def tearDown(self):
+        self.sut.clear_gdrive_list_fixture()
+        self.sut.clear_gdrive_get_file_fixture()
+
     def test_create_folder(self):
         # given:
         folder_name = 'test folder'
@@ -365,13 +369,14 @@ class TestFilesAPI(TestCase):
 
     def test_get_file_rows_from_folder_when_missing_google_folder_exception(self):
         # given:
-        folder_name = 'my_folder'
+        foldername = 'my_folder'
         filename = 'filename'
         rows_range = 'A2::F4'
+        self.sut.set_gdrive_get_file_raise_exception(f"/{foldername}/{filename}")
 
         # when:
         with self.assertRaises(MissingGoogleDriveFolderException):
-            self.sut.get_file_rows_from_folder(folder_name, filename, rows_range)
+            self.sut.get_file_rows_from_folder(foldername, filename, rows_range)
 
         # then:
         calls = self.sut.get_calls()
