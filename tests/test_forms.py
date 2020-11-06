@@ -47,7 +47,18 @@ class TestGoogleForms(TestCase):
         self.assignments_manager_2 = 'assignments for manager2'
         self.assignments_manager_3 = 'assignments for manager3'
 
+    def tearDown(self):
+        self.sut.clear_gdrive_list_fixture()
+        self.sut.clear_gdrive_get_file_fixture()
+
     def test_get_peers_assignment_missing_folder_when_no_folder(self):
+        # given:
+        google_folder = 'google_folder'
+        assignments_folder = 'assignments_folder'
+        assignments_manager_forms_folder = 'assignments_manager_forms_folder'
+        self.sut.set_gdrive_list_raise_exception(f'/{google_folder}/{assignments_folder}/{assignments_manager_forms_folder}')
+
+        # when:
         with self.assertRaises(MissingGoogleDriveFolderException):
             self.sut.get_peers_assignment()
 
