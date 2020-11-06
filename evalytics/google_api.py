@@ -184,6 +184,8 @@ class GoogleDrive(GoogleService):
         path = list(filter(lambda x: x != '', path.split('/')))
 
         folder = self.get_folder(path[0])
+        if folder is None:
+            return []
 
         for path_element in path[1:]:
             query = f"{GoogleDrive.QUERY_IS_FOLDER} and '{folder.id}' in parents"
@@ -218,34 +220,14 @@ class GoogleDrive(GoogleService):
         pass
 
     def __get_file(self, query: str, filename):
-        try:
-            page_token = None
-            while True:
-                google_files, next_page_token = self.list_files(
-                    page_token=page_token,
-                    query=query
-                )
-                for google_file in google_files:
-                    if google_file.name == filename:
-                        return google_file
-
-                if next_page_token is None:
-                    break
-                else:
-                    page_token = next_page_token
-            return None
-        except HttpError as e:
-            error_reason = json.loads(e.content)
-            error = error_reason['error']
-            http_error = GoogleApiClientHttpError(
-                error['code'],
-                error['message'],
-                error['status'],
-                error['details'] if 'details' in error else []
-            )
-            raise GoogleApiClientHttpErrorException(http_error)
+        files = self.__get_files(query)
+        for google_file in files:
+            if google_file.name == filename:
+                return google_file
+        return None
 
     def __get_files(self, query: str):
+        print(query)
         try:
             page_token = None
             total_google_files = []

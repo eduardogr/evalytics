@@ -53,6 +53,36 @@ class TestGoogleDrive(TestCase):
 
         self.sut.create_folder(name)
 
+    def test_gdrive_list_when_folder_no_exists(self):
+        # when:
+        google_files = self.sut.gdrive_list('/unexistent')
+
+        # then:
+        self.assertEqual(0, len(google_files))
+
+    def test_gdrive_list_when_for(self):
+        # when:
+        self.sut.gdrive_list('/basefolder')
+
+    def test_gdrive_list_when_for_none(self):
+        # when:
+        self.sut.gdrive_list('/something/unexistent')
+
+    # this is broken
+    # TODO: this should be list every file at the "root" path
+    def test_gdrive_list_when_no_for(self):
+        # when:
+        self.sut.gdrive_list('')
+
+    def test_gdrive_get_file_for(self):
+        pass
+
+    def test_gdrive_get_file_for_none(self):
+        pass
+
+    def test_gdrive_get_file_no_for(self):
+        pass
+
     def test_update_file_parent_ok(self):
         file_id = 'ID'
         current_parent = 'father'
