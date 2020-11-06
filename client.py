@@ -226,7 +226,7 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
                 'send_due_date_comm': ['--retry', '--whitelist', '--dry-run'],
                 'send_reminders': ['--retry', '--whitelist', '--dry-run'],
                 'status': ['--inconsisten-files'],
-                'reports': ['--whitelist', '--dry-run'],
+                'reports': ['--whitelist'],
             }
         }
         print(json.dumps(help_message))
