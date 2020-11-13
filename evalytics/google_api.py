@@ -183,25 +183,38 @@ class GoogleDrive(GoogleService):
     def gdrive_list(self, path: str):
         path = list(filter(lambda x: x != '', path.split('/')))
 
-        folder = self.get_folder(path[0])
-        if folder is None:
-            return []
+        if len(path) == 0:
+            query = f"{GoogleDrive.QUERY_IS_SPREADSHEET}"
 
-        for path_element in path[1:]:
-            query = f"{GoogleDrive.QUERY_IS_FOLDER} and '{folder.id}' in parents"
-            folder = self.__get_file(query, path_element)
-
+        else:
+            folder = self.get_folder(path[0])
             if folder is None:
                 raise MissingGoogleDriveFolderException(
-                    "Missing folder: {}".format(path_element))
+                        "Missing folder: {}".format(path[0]))
 
-        query = f"{GoogleDrive.QUERY_IS_SPREADSHEET} and '{folder.id}' in parents"
+            for path_element in path[1:]:
+                query = f"{GoogleDrive.QUERY_IS_FOLDER} and '{folder.id}' in parents"
+                folder = self.__get_file(query, path_element)
+
+                if folder is None:
+                    raise MissingGoogleDriveFolderException(
+                        "Missing folder: {}".format(path_element))
+
+            query = f"{GoogleDrive.QUERY_IS_SPREADSHEET} and '{folder.id}' in parents"
+
         return self.__get_files(query)
 
     def gdrive_get_file(self, path: str):
         path = list(filter(lambda x: x != '', path.split('/')))
 
+        if len(path) == 0:
+            return None
+
         folder = self.get_folder(path[0])
+        if folder is None:
+            raise MissingGoogleDriveFolderException(
+                        "Missing folder: {}".format(path[0]))
+
         path_elements = path[1 : len(path)-1]
 
         for path_element in path_elements:
@@ -227,7 +240,6 @@ class GoogleDrive(GoogleService):
         return None
 
     def __get_files(self, query: str):
-        print(query)
         try:
             page_token = None
             total_google_files = []
