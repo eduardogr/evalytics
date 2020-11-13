@@ -55,31 +55,54 @@ class TestGoogleDrive(TestCase):
 
     def test_gdrive_list_when_folder_no_exists(self):
         # when:
-        google_files = self.sut.gdrive_list('/unexistent')
+        with self.assertRaises(MissingGoogleDriveFolderException):
+            self.sut.gdrive_list('/unexistent')
 
-        # then:
-        self.assertEqual(0, len(google_files))
+    #
+    # TODO:
+    # Improve mocks to build fixtures and make asserts about what's going on
+    #
 
+    # TODO
     def test_gdrive_list_when_for(self):
         # when:
-        self.sut.gdrive_list('/basefolder')
-
-    def test_gdrive_list_when_for_none(self):
-        # when:
-        self.sut.gdrive_list('/something/unexistent')
-
-    # this is broken
-    # TODO: this should be list every file at the "root" path
-    def test_gdrive_list_when_no_for(self):
-        # when:
-        self.sut.gdrive_list('')
-
-    def test_gdrive_get_file_for(self):
+        #self.sut.gdrive_list('/basefolder')
         pass
 
+    # TODO
+    def test_gdrive_list_when_for_none(self):
+        # when:
+        with self.assertRaises(MissingGoogleDriveFolderException):
+            self.sut.gdrive_list('/something/unexistent')
+
+    # TODO
+    def test_gdrive_list_when_no_for(self):
+        # when:
+        self.sut.gdrive_list('/')
+
+    def test_gdrive_get_file_when_incorrect_path(self):
+        # when:
+        google_file = self.sut.gdrive_get_file('/')
+
+        # then:
+        self.assertEqual(None, google_file)
+
+    def test_gdrive_get_file_when_unexistent_file(self):
+        # when:
+        with self.assertRaises(MissingGoogleDriveFolderException):
+            self.sut.gdrive_get_file('/unexistent/path/file')
+
+    # TODO
+    def test_gdrive_get_file_for(self):
+        # when:
+        #self.sut.gdrive_get_file('/existent/path/existent_file')
+        pass
+
+    # TODO
     def test_gdrive_get_file_for_none(self):
         pass
 
+    # TODO
     def test_gdrive_get_file_no_for(self):
         pass
 
