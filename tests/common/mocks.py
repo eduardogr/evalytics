@@ -106,37 +106,49 @@ class RawSheetsServiceMock:
 
         return Spreadsheets()
 
+class RawGoogleListMock:
+
+    def __init__(self, files=[]):
+        self.files = files
+
+    def execute(self):
+        return {
+            'files': self.files
+        }
+
+class RawGoogleServiceFilesMock:
+
+    def __init__(self, raw_google_list_by_query):
+        self.raw_google_list_by_query = raw_google_list_by_query
+
+    def create(self, body, fields):
+        class Create:
+            def execute(self):
+                return {}
+        return Create()
+
+    def update(self, fileId, addParents, removeParents):
+        class Update:
+            def execute(self):
+                return {}
+        return Update()
+
+    def list(self, q, pageSize, spaces, corpora, fields, pageToken):
+        return self.raw_google_list_by_query.get(q, RawGoogleListMock())
+
+    def copy(self, fileId, body):
+        class Copy:
+            def execute(self):
+                return {}
+        return Copy()
+
 class RawGoogleServiceMock:
 
+    def __init__(self, raw_google_service_files):
+        self.raw_google_service_files = raw_google_service_files
+
     def files(self):
-        class Files:
-            def create(self, body, fields):
-                class Create:
-                    def execute(self):
-                        return {}
-                return Create()
-
-            def update(self, fileId, addParents, removeParents):
-                class Update:
-                    def execute(self):
-                        return {}
-                return Update()
-
-            def list(self, q, pageSize, spaces, corpora, fields, pageToken):
-                class List:
-                    def execute(self):
-                        return {
-                            'files': []
-                        }
-                return List()
-
-            def copy(self, fileId, body):
-                class Copy:
-                    def execute(self):
-                        return {}
-                return Copy()
-
-        return Files()
+        return self.raw_google_service_files
 
     def permissions(self):
         class Permissions:
