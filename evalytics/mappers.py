@@ -1,10 +1,10 @@
 import json
 
-from evalytics.models import GoogleFile
+from googledrive.models import GoogleFile
+from googledrive.models import GoogleApiClientHttpError
+
 from evalytics.models import EvalKind, Eval, Employee, Reviewer
 from evalytics.models import ReviewerResponse
-from evalytics.models import CommunicationKind
-from evalytics.models import GoogleApiClientHttpError
 from evalytics.config import Config
 
 class StrToBool:
@@ -30,18 +30,6 @@ class ListToJson:
             some_list,
             default=lambda o:
             o.__dict__ if type(o) is not EvalKind else str(o.name))
-
-class GoogleFileDictToGoogleFile:
-
-    def google_file_dict_to_google_file(self, google_file_dict):
-        if google_file_dict is None:
-            return None
-
-        return GoogleFile(
-            name=google_file_dict.get('name'),
-            id=google_file_dict.get('id'),
-            parents=google_file_dict.get('parents'),
-        )
 
 class GoogleFileToJson(ListToJson):
 
@@ -165,6 +153,5 @@ class Mapper(
         StrToBool,
         JsonToList,
         ListToJson,
-        GoogleFileDictToGoogleFile,
         ResponseFileNameToEvalKind):
     'Composition of Mappers'

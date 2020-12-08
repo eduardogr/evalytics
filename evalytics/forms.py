@@ -101,7 +101,7 @@ class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
         responses_folder = super().read_google_responses_folder()
 
         folder_path = f"/{google_folder}/{responses_folder}"
-        files = super().gdrive_list(folder_path)
+        files = super().googledrive_ls(folder_path)
 
         # TODO: read responses in batches, read til there's no more responses
         responses_range = 'A1:V' + str(1000)
@@ -139,7 +139,7 @@ class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
         assignments_manager_forms_folder = super().read_assignments_manager_forms_folder()
 
         folder_path = f"/{google_folder}/{assignments_folder}/{assignments_manager_forms_folder}"
-        return super().gdrive_list(folder_path)
+        return super().googledrive_ls(folder_path)
 
     def __read_peers_assignment(self, files):
         responses_range = super().read_google_responses_files_range()

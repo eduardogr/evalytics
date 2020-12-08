@@ -220,7 +220,6 @@ class EvalyticsClient(EvalyticsRequests, Mapper, FileManager):
         help_message = {
             'Message': "Command '{}' not expected".format(command),
             'Available commands: [OPTIONS]': {
-                'setup': [],
                 'reviewers': ['--stats'],
                 'send_evals': ['--retry', '--whitelist', '--dry-run'],
                 'send_due_date_comm': ['--retry', '--whitelist', '--dry-run'],

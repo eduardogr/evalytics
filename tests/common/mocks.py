@@ -2,6 +2,11 @@
 # pylint: disable=bad-super-call
 # No need to shout here
 
+from googledrive.api import GoogleService
+from googledrive.api import SheetsService
+from googledrive.exceptions import GoogleApiClientHttpErrorException
+from googledrive.exceptions import MissingGoogleDriveFolderException
+
 from evalytics.config import Config, ConfigReader
 from evalytics.models import GoogleFile, GoogleApiClientHttpError
 from evalytics.models import Reviewer, CommunicationKind, PeersAssignment
@@ -9,15 +14,13 @@ from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackClient
 from evalytics.storages import GoogleStorage, StorageFactory
 from evalytics.forms import FormsPlatformFactory, GoogleForms
-from evalytics.google_api import GoogleAPI, GoogleService
-from evalytics.google_api import GmailService, GoogleDrive
-from evalytics.google_api import SheetsService, DocsService
+from evalytics.google_api import GoogleAPI
+from evalytics.google_api import GmailService
+from evalytics.google_api import DocsService
 from evalytics.usecases import GetReviewersUseCase
 from evalytics.adapters import EmployeeAdapter, ReviewerAdapter
 from evalytics.mappers import Mapper
 from evalytics.filters import ReviewerResponseFilter
-from evalytics.exceptions import MissingGoogleDriveFolderException
-from evalytics.exceptions import GoogleApiClientHttpErrorException
 
 from client import EvalyticsRequests
 from client import EvalyticsClient
@@ -54,6 +57,12 @@ class MockGoogleService(GoogleService):
 
     __services_by_id = {}
 
+    def __init__(self, credentials_file, scopes):
+        self.__credentials_file = credentials_file
+        self.__scopes = scopes
+
+        super().__init__(credentials_file, scopes)
+
     def get_service(self, service_id, service_version):
         return self.__services_by_id[service_id][service_version]
 
@@ -69,95 +78,6 @@ class MockGoogleService(GoogleService):
             })
 
         self.__services_by_id[service_id][service_version] = service
-
-class RawSheetsServiceMock:
-
-    def spreadsheets(self):
-        class Spreadsheets:
-            def create(self, body, fields):
-                class Create:
-                    def execute(self):
-                        return {}
-                return Create()
-
-            def values(self):
-                class Values:
-                    def get(self, spreadsheetId, range):
-                        class Get:
-                            def execute(self):
-                                return {
-                                    'values': ['something']
-                                }
-                        return Get()
-
-                    def update(
-                            self,
-                            spreadsheetId,
-                            range,
-                            valueInputOption,
-                            body):
-                        class Update:
-                            def execute(self):
-                                return {
-                                    'values': []
-                                }
-                        return Update()
-                return Values()
-
-        return Spreadsheets()
-
-class RawGoogleListMock:
-
-    def __init__(self, files=[]):
-        self.files = files
-
-    def execute(self):
-        return {
-            'files': self.files
-        }
-
-class RawGoogleServiceFilesMock:
-
-    def __init__(self, raw_google_list_by_query):
-        self.raw_google_list_by_query = raw_google_list_by_query
-
-    def create(self, body, fields):
-        class Create:
-            def execute(self):
-                return {}
-        return Create()
-
-    def update(self, fileId, addParents, removeParents):
-        class Update:
-            def execute(self):
-                return {}
-        return Update()
-
-    def list(self, q, pageSize, spaces, corpora, fields, pageToken):
-        return self.raw_google_list_by_query.get(q, RawGoogleListMock())
-
-    def copy(self, fileId, body):
-        class Copy:
-            def execute(self):
-                return {}
-        return Copy()
-
-class RawGoogleServiceMock:
-
-    def __init__(self, raw_google_service_files):
-        self.raw_google_service_files = raw_google_service_files
-
-    def files(self):
-        return self.raw_google_service_files
-
-    def permissions(self):
-        class Permissions:
-            def create(self, fileId, body):
-                class Create:
-                    def execute(self):
-                        return {}
-                return Create()
-        return Permissions()
 
 class RawGmailServiceMock:
 
@@ -191,7 +111,7 @@ class RawDocsServiceMock:
 
         return Documents()
 
-class MockGoogleDrive(GoogleDrive):
+class MockGoogleDrive:
 
     calls = {}
     gdrive_list_response = {}
@@ -265,7 +185,7 @@ class MockGoogleDrive(GoogleDrive):
         )
         return
 
-    def gdrive_list(self, path: str):
+    def googledrive_ls(self, path: str):
         self.__update_calls(
             'gdrive_list',
             params={
@@ -278,7 +198,7 @@ class MockGoogleDrive(GoogleDrive):
 
         return self.gdrive_list_response.get(path, None)
 
-    def gdrive_get_file(self, path: str):
+    def googledrive_get_file(self, path: str):
         self.__update_calls(
             'gdrive_get_file',
             params={
@@ -590,12 +510,6 @@ class MockGoogleAPI(GoogleAPI,
     def get_files_from_folder(self, folder_id):
         return self.files_from_folder_response
 
-    def get_folder(self, name: str):
-        return self.folder
-
-    def get_folder_from_folder(self, foldername, parent_foldername):
-        return self.folder_from_folder
-
     def create_folder(self, name: str):
         folder = GoogleFile(
             id='folder_id',
@@ -610,11 +524,6 @@ class MockGoogleAPI(GoogleAPI,
             if filename in self.fileid_by_name[folder_id]:
                 return self.fileid_by_name[folder_id][filename]
         return None
-
-    def create_sheet(self, folder_parent: str, folder, filename: str):
-        spreasheet_id = filename
-        self.set_fileid_by_name(folder.id, spreasheet_id, spreasheet_id)
-        return spreasheet_id
 
     def send_message(self, user_id, message):
         current_call_number = 0
@@ -663,6 +572,9 @@ class MockGoogleAPI(GoogleAPI,
             })
 
         self.fileid_by_name.get(folder_id).update({filename: fileid})
+
+    def __get_credentials(self):
+        return None
 
 
 class MockConfigReader(ConfigReader):
