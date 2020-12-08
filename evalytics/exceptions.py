@@ -1,5 +1,3 @@
-from evalytics.models import GoogleApiClientHttpError
-
 class CustomException(Exception):
     def __init__(self, *args):
         if args:
@@ -13,27 +11,12 @@ class CustomException(Exception):
         else:
             return '{0} has been raised'.format(class_name)
 
-class GoogleApiClientHttpErrorException(Exception):
-    def __init__(self, google_api_client_http_error: GoogleApiClientHttpError):
-        self.google_api_client_http_error = google_api_client_http_error
-
-    def get_google_api_client_http_error(self):
-        return self.google_api_client_http_error
 
 class CommunicationChannelException(CustomException):
 
     def __str__(self):
         return super().get_str('CommunicationChannelException')
 
-class MissingGoogleDriveFolderException(CustomException):
-
-    def __str__(self):
-        return super().get_str('MissingGoogleDriveFolderException')
-
-class MissingGoogleDriveFileException(CustomException):
-
-    def __str__(self):
-        return super().get_str('MissingGoogleDriveFileException')
 
 class MissingDataException(CustomException):
 

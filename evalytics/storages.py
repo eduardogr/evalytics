@@ -1,10 +1,11 @@
-from evalytics.google_api import GoogleAPI, GoogleDrive
+from googledrive.exceptions import MissingGoogleDriveFileException
+from googledrive.api import GoogleDrive
+
+from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
-from evalytics.exceptions import MissingGoogleDriveFileException
 from evalytics.exceptions import MissingDataException, NoFormsException
-from evalytics.exceptions import NoPeersException
 
 class StorageFactory(Config):
 
@@ -175,7 +176,8 @@ class GoogleStorage(GoogleAPI, Config):
         assignments_peers_file = super().read_assignments_peers_file()
 
         file_path = f'/{google_folder}/{assignments_folder}/{assignments_peers_file}'
-        return super().gdrive_get_file(file_path)
+        print(file_path)
+        return super().googledrive_get_file(file_path)
 
     def __get_eval_report_id(self, filename):
         '''
@@ -186,7 +188,7 @@ class GoogleStorage(GoogleAPI, Config):
         eval_reports_folder = super().read_eval_reports_folder()
 
         file_path = f'/{google_folder}/{eval_reports_folder}/{filename}'
-        google_file = super().gdrive_get_file(file_path)
+        google_file = super().googledrive_get_file(file_path)
 
         if google_file is None:
             template_id = super().read_google_eval_report_template_id()
