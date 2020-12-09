@@ -6,9 +6,10 @@ from googledrive.api import GoogleService
 from googledrive.api import SheetsService
 from googledrive.exceptions import GoogleApiClientHttpErrorException
 from googledrive.exceptions import MissingGoogleDriveFolderException
+from googledrive.models import GoogleFile
 
 from evalytics.config import Config, ConfigReader
-from evalytics.models import GoogleFile, GoogleApiClientHttpError
+from evalytics.models import GoogleApiClientHttpError
 from evalytics.models import Reviewer, CommunicationKind, PeersAssignment
 from evalytics.communications_channels import CommunicationChannelFactory
 from evalytics.communications_channels import GmailChannel, SlackClient

@@ -176,7 +176,6 @@ class GoogleStorage(GoogleAPI, Config):
         assignments_peers_file = super().read_assignments_peers_file()
 
         file_path = f'/{google_folder}/{assignments_folder}/{assignments_peers_file}'
-        print(file_path)
         return super().googledrive_get_file(file_path)
 
     def __get_eval_report_id(self, filename):

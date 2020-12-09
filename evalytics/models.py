@@ -1,13 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-@dataclass
-class GoogleFile:
-
-    def __init__(self, name, id, parents):
-        self.name = name
-        self.id = id
-        self.parents = parents
 
 class EvalKind(Enum):
     SELF = 1

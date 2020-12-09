@@ -1,4 +1,5 @@
-from evalytics.models import GoogleFile
+from googledrive.models import GoogleFile
+
 from evalytics.models import EvalKind, Eval
 from evalytics.models import Employee, Reviewer
 from evalytics.models import ReviewerResponse
