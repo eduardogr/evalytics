@@ -1,10 +1,11 @@
 from unittest import TestCase
 
 from googledrive.exceptions import MissingGoogleDriveFolderException
+from googledrive.models import GoogleFile
 
 from evalytics.exceptions import MissingDataException
 from evalytics.forms import ReviewerResponseKeyDictStrategy
-from evalytics.models import GoogleFile, ReviewerResponse
+from evalytics.models import ReviewerResponse
 from evalytics.forms import FormsPlatformFactory, GoogleForms
 from evalytics.config import ProvidersConfig
 
