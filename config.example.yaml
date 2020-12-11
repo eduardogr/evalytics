@@ -3,6 +3,8 @@ eval_process:
     id: '2020 Q2'
     due_date: '12:00 PM, noon, June 12, 2019'
     feature_disabling:
+        send_eval_reports_as_pdf: False
+        generate_google_doc_from_eval_report: False
         add_comenter_to_eval_reports: False
 
 providers:
