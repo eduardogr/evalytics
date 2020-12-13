@@ -219,9 +219,9 @@ class TestGoogleForms(TestCase):
         self.assertEqual(0, len(evaluations))
 
     def __given_files_within_assignments_folder(self):
-        assignments_file_manager_1 = GoogleFile(id=self.assignments_manager_1, name=self.assignments_manager_1, parents=[])
-        assignments_file_manager_2 = GoogleFile(id=self.assignments_manager_2, name=self.assignments_manager_2, parents=[])
-        assignments_file_manager_3 = GoogleFile(id=self.assignments_manager_3, name=self.assignments_manager_3, parents=[])
+        assignments_file_manager_1 = GoogleFile(id=self.assignments_manager_1, name=self.assignments_manager_1, parents=[], mime_type='', export_links={})
+        assignments_file_manager_2 = GoogleFile(id=self.assignments_manager_2, name=self.assignments_manager_2, parents=[], mime_type='', export_links={})
+        assignments_file_manager_3 = GoogleFile(id=self.assignments_manager_3, name=self.assignments_manager_3, parents=[], mime_type='', export_links={})
 
         self.sut.set_gdrive_list_response(
             '/google_folder/assignments_folder/assignments_manager_forms_folder',
@@ -235,23 +235,33 @@ class TestGoogleForms(TestCase):
         manager_eval_by_report_file = GoogleFile(
             id=self.file_id_manager_by,
             name='MANAGER EVAL BY REPORT',
-            parents=[])
+            parents=[],
+            mime_type='',
+            export_links={})
         report_eval_by_manager_file = GoogleFile(
             id=self.file_id_report_by,
             name='REPORT EVAL BY MANAGER',
-            parents=[])
+            parents=[],
+            mime_type='',
+            export_links={})
         self_eval_report_file = GoogleFile(
             id=self.file_id_self,
             name='SELF EVAL',
-            parents=[])
+            parents=[],
+            mime_type='',
+            export_links={})
         peer_eval_by_peer_file = GoogleFile(
             id=self.file_id_peer,
             name='PEER EVAL BY PEER',
-            parents=[])
+            parents=[],
+            mime_type='',
+            export_links={})
         no_eval_report_report_file = GoogleFile(
             id='NO ID',
             name='None evalkind file',
-            parents=[])
+            parents=[],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_list_response(
             '/google_folder/form_responses_folder',

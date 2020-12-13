@@ -9,4 +9,4 @@ slackclient==2.7.1
 dataclasses==0.6
 pyyaml==5.3.1
 
-google-drive==0.1.2
+google-drive==0.2.0
