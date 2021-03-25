@@ -7,6 +7,6 @@ google-auth-oauthlib==0.4.1
 slackclient==2.7.1
 
 dataclasses==0.6
-pyyaml==5.3.1
+pyyaml==5.4
 
 google-drive==0.1.2
