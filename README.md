@@ -1,4 +1,4 @@
-<h1 align="center"> Evalytics </h1> <br>
+<h1 align="center"> evalytics </h1> <br>
 
 The Evalytics project aim is to be the platform to support a company's Human Resources team within the Performance Evaluation Cycle.
 
