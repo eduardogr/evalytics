@@ -1,6 +1,6 @@
 -r prod.txt
 
-requests==2.23.0
+requests==2.31.0
 
 # linter
 pylint==2.4.4
