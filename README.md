@@ -15,9 +15,8 @@ The Evalytics project aim is to be the platform to support a company's Human Res
 0. [License](#page_with_curl-license)
 
 # Introduction 
-[![Build Status](https://travis-ci.org/eduardogr/evalytics.svg?branch=master)](https://travis-ci.org/eduardogr/evalytics)
-[![codecov](https://codecov.io/gh/eduardogr/evalytics/branch/master/graph/badge.svg)](https://codecov.io/gh/eduardogr/evalytics)
-[![Python](https://img.shields.io/badge/Python-v3.6%2B-blue)]()
+![Build Status](https://github.com/eduardogr/evalytics/actions/workflows/python-tests.yml/badge.svg?event=push)
+[![Python](https://img.shields.io/badge/Python-v3.9%2B-blue)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/eduardogr/evalytics/blob/master/.github/CONTRIBUTING.md)
 [![GitHub license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/eduardogr/evalytics/blob/master/.github/LICENSE)  
 
