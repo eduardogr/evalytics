@@ -1,11 +1,20 @@
-FROM python:3.7
+FROM python:3.9.22-slim-bullseye
 
 ARG BUILD_ENV=dev
 
-RUN mkdir -p /usr/app
-COPY . /usr/app
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
 
-ENV PYTHONPATH /usr/app
+RUN mkdir -p /usr/app
+
+COPY poetry.lock pyproject.toml /usr/app/
+COPY client.py /usr/app
+COPY evalytics /usr/app
+
+ENV PYTHONPATH=/usr/app
 WORKDIR /usr/app
 
-RUN pip3 install --no-cache-dir -r requirements/${BUILD_ENV}.txt
+RUN pip install poetry==2.1.2
+RUN poetry install --with client
