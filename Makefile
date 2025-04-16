@@ -29,11 +29,20 @@ up:
 down:
 	docker-compose down
 
-test:
-	docker-compose exec $(CONTAINER_NAME) pytest $(ARGS)
-
 google-auth:
 	python3 google_auth.py
 
 request:
 	docker-compose run $(CONTAINER_CLIENT_NAME) python3 client.py $(ARGS)
+
+poetry-check:
+	poetry check
+
+poetry-install:
+	poetry install
+
+poetry-install-dev:
+	poetry install --with dev
+
+test:
+	poetry run pytest $(ARGS)

@@ -1,0 +1,45 @@
+[project]
+name = "evalytics"
+version = "0.1.0"
+description = "HR tool to orchestrate the Performance Review Cycle of the employees of a company. "
+authors = [
+    {name = "Eduardo Garcia Ruiz",email = "garciaruiz.edu+maintain+google-drive-python@gmail.com"}
+]
+maintainers = [
+    {name = "Eduardo Garcia Ruiz",email = "garciaruiz.edu+maintain+google-drive-python@gmail.com"}
+]
+license = {text = "Apache-2.0"}
+license-files = [
+    "LICENSE*",
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.9.21"
+dependencies = [
+    "tornado==6.3.3",
+    "google-api-python-client==1.8.0",
+    "google-auth-httplib2==0.0.3",
+    "google-auth-oauthlib==0.4.1",
+    "slackclient==2.7.1",
+    "dataclasses==0.6",
+    "pyyaml==6.0.2",
+    "google-drive==0.1.2"
+]
+keywords = ["evalytics", "hhrr", "performance"]
+
+classifiers = []
+
+[tool.poetry]
+
+[tool.poetry.group.client.dependencies]
+requests = "2.31.0"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "2.16.0b1"
+autopep8 = "2.0.1"
+pytest = "8.3.5"
+pytest-cov = "6.1.1"
+ipython = "7.23.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
