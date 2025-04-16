@@ -15,7 +15,6 @@ license-files = [
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9.21"
 dependencies = [
-    "tornado==6.3.3",
     "google-api-python-client==1.8.0",
     "google-auth-httplib2==0.0.3",
     "google-auth-oauthlib==0.4.1",
@@ -31,6 +30,9 @@ classifiers = []
 [tool.poetry]
 
 package-mode = false
+
+[tool.poetry.group.server.dependencies]
+tornado = "6.3.3"
 
 [tool.poetry.group.client.dependencies]
 requests = "2.31.0"
