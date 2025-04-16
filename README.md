@@ -321,7 +321,7 @@ Install make and docker-compose
 From the root path of this project:
 
 ```
-./setup.sh
+./scripts/setup.sh
 ```
 
 #### Running Evalytics server

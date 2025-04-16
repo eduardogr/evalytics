@@ -54,4 +54,4 @@ doc
 
 # Specific of evalytics project
 
-google_auth.py
+scripts/google_auth.py

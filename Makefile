@@ -30,7 +30,7 @@ down:
 	docker-compose down
 
 google-auth:
-	python3 google_auth.py
+	python3 scripts/google_auth.py
 
 request:
 	docker-compose run $(CONTAINER_CLIENT_NAME) python3 client.py $(ARGS)
