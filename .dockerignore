@@ -45,10 +45,7 @@ venv.bak
 LICENSE
 Makefile
 credentials*.json
-.travis.yml
 .pylintrc
-.coveragerc
-.coverage
 examples
 doc
 
