@@ -30,6 +30,8 @@ classifiers = []
 
 [tool.poetry]
 
+package-mode = false
+
 [tool.poetry.group.client.dependencies]
 requests = "2.31.0"
 
