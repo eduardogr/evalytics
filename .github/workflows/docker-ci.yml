@@ -1,10 +1,10 @@
-name: ci
+name: docker-ci
 
 on:
   push:
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     steps:
       #-
