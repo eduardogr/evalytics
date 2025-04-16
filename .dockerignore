@@ -3,6 +3,7 @@
 /notebooks/*
 /unused/*
 Dockerfile
+*.Dockerfile
 .DS_Store
 .gitignore
 *.md
@@ -44,13 +45,10 @@ venv.bak
 LICENSE
 Makefile
 credentials*.json
-.travis.yml
 .pylintrc
-.coveragerc
-.coverage
 examples
 doc
 
 # Specific of evalytics project
 
-google_auth.py
+scripts/google_auth.py

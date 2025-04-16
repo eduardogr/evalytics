@@ -1,6 +1,6 @@
 
-CONTAINER_NAME=evalytics
-CONTAINER_CLIENT_NAME=evalytics-client
+CONTAINER_SERVER_NAME=server
+CONTAINER_CLIENT_NAME=client
 
 env ?= dev # get from cl or 'dev' by default
 
@@ -10,7 +10,7 @@ env ?= dev # get from cl or 'dev' by default
 build:
 	docker-compose build \
 	    --build-arg BUILD_ENV=$(env) \
-		$(CONTAINER_NAME)  && \
+		$(CONTAINER_SERVER_NAME)  && \
 	docker-compose build \
 		--build-arg BUILD_ENV=$(env) \
 		$(CONTAINER_CLIENT_NAME)
@@ -18,22 +18,34 @@ build:
 build-force:
 	docker-compose build --force \
 	    --build-arg BUILD_ENV=$(env) \
-		$(CONTAINER_NAME) && \
+		$(CONTAINER_SERVER_NAME) && \
 	docker-compose build --force \
 		--build-arg BUILD_ENV=$(env) \
 		$(CONTAINER_CLIENT_NAME)
 
 up:
-	docker-compose up -d $(CONTAINER_NAME)
+	docker-compose up -d $(CONTAINER_SERVER_NAME)
 
 down:
 	docker-compose down
 
-test:
-	docker-compose exec $(CONTAINER_NAME) pytest $(ARGS)
-
 google-auth:
-	python3 google_auth.py
+	python3 scripts/google_auth.py
 
-request:
-	docker-compose run $(CONTAINER_CLIENT_NAME) python3 client.py $(ARGS)
+run-client:
+	docker compose run --rm $(CONTAINER_CLIENT_NAME) poetry run client.py $(ARGS)
+
+run-server:
+	docker compose run --rm $(CONTAINER_SERVER_NAME) poetry run python server.py
+
+poetry-check:
+	poetry check
+
+poetry-install:
+	poetry install
+
+poetry-install-dev:
+	poetry install --with dev
+
+test:
+	poetry run pytest $(ARGS)

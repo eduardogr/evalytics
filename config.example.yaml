@@ -47,7 +47,7 @@ slack_provider:
         text: "{}"
         channel: "@{}"
         as_user: True
-     users_map:
+    users_map:
         employee_uid1: 'slack_uid1'
         employee_uid2: 'slack_uid2'
         employee_uid3: 'slack_uid3'

@@ -1,9 +1,10 @@
-version: '3'
 services:
-    evalytics:
+    server:
+      container_name: evalytics-server
       build:
         context: .
         dockerfile: Dockerfile
+        target: server
         args:
           - "BUILD_ENV"
       ports:
@@ -11,10 +12,12 @@ services:
       volumes:
         - "./:/usr/app"
 
-    evalytics-client:
+    client:
+      container_name: evalytics-client
       build:
         context: .
-        dockerfile: Dockerfile-client
+        dockerfile: Dockerfile
+        target: client
         args:
           - "BUILD_ENV"
       volumes:

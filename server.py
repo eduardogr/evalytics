@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import tornado.ioloop
 from tornado.web import Application
 
