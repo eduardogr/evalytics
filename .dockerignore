@@ -3,6 +3,7 @@
 /notebooks/*
 /unused/*
 Dockerfile
+*.Dockerfile
 .DS_Store
 .gitignore
 *.md

@@ -3,7 +3,7 @@ services:
     evalytics:
       build:
         context: .
-        dockerfile: Dockerfile
+        dockerfile: server.Dockerfile
         args:
           - "BUILD_ENV"
       ports:
