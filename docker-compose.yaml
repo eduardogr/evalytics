@@ -14,7 +14,7 @@ services:
     evalytics-client:
       build:
         context: .
-        dockerfile: Dockerfile-client
+        dockerfile: client.Dockerfile
         args:
           - "BUILD_ENV"
       volumes:
