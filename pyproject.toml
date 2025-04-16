@@ -32,7 +32,7 @@ classifiers = []
 package-mode = false
 
 [tool.poetry.group.server.dependencies]
-tornado = "6.3.3"
+tornado = "6.4.1"
 
 [tool.poetry.group.client.dependencies]
 requests = "2.31.0"
