@@ -47,5 +47,8 @@ poetry-install:
 poetry-install-dev:
 	poetry install --with dev
 
+poetry-hard-reset:
+	rm -rf .venv && poetry env remove --all && poetry cache clear --all .
+
 test:
 	poetry run pytest $(ARGS)

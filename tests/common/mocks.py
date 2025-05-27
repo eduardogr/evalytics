@@ -515,7 +515,9 @@ class MockGoogleAPI(GoogleAPI,
         folder = GoogleFile(
             id='folder_id',
             name='name',
-            parents=['folders_parent']
+            parents=['folders_parent'],
+            mime_type='',
+            export_links={}
         )
         self.set_folder(folder)
         return self.folder

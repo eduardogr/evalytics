@@ -21,7 +21,7 @@ dependencies = [
     "slackclient==2.7.1",
     "dataclasses==0.6",
     "pyyaml==6.0.2",
-    "google-drive==0.1.2"
+    "google-drive==0.2.0"
 ]
 keywords = ["evalytics", "hhrr", "performance"]
 

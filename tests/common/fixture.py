@@ -11,10 +11,14 @@ class GoogleFileMother:
         any_name = 'name'
         any_id = 'ID'
         parents = []
+        mime_type = 'any_type'
+        export_links = {}
         return GoogleFile(
             name=any_name,
             id=any_id,
-            parents=parents
+            parents=parents,
+            mime_type=mime_type,
+            export_links=export_links
         )
 
 class EvalMother:
