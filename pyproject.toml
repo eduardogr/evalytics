@@ -35,7 +35,7 @@ package-mode = false
 tornado = "6.5.1"
 
 [tool.poetry.group.client.dependencies]
-requests = "2.32.3"
+requests = "2.32.4"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "2.16.0b1"
