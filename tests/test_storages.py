@@ -134,7 +134,9 @@ class TestGoogleStorage(TestCase):
         eval_reports_file = GoogleFile(
             id=eval_report_file_id,
             name=eval_report_filename,
-            parents=[eval_reports_folder])
+            parents=[eval_reports_folder],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{eval_reports_folder}/{eval_report_filename}",
@@ -198,7 +200,9 @@ class TestGoogleStorage(TestCase):
         eval_reports_folder = GoogleFile(
             id=eval_reports_folder_id,
             name=eval_reports_folder_name,
-            parents=[foldername])
+            parents=[foldername],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{eval_reports_folder}",
@@ -236,7 +240,9 @@ class TestGoogleStorage(TestCase):
         eval_report_file = GoogleFile(
             id=eval_report_file_id,
             name=eval_report_filename,
-            parents=[eval_reports_folder])
+            parents=[eval_reports_folder],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{eval_reports_folder}/{eval_report_filename}",
@@ -281,7 +287,9 @@ class TestGoogleStorage(TestCase):
         peer_assignments_file = GoogleFile(
             id=peer_file_id,
             name=peer_assignmetns_filename,
-            parents=[assignments_folder])
+            parents=[assignments_folder],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{assignments_folder}/{peer_assignmetns_filename}",
@@ -307,7 +315,9 @@ class TestGoogleStorage(TestCase):
         peer_assignments_file = GoogleFile(
             id=peer_file_id,
             name=peer_assignmetns_filename,
-            parents=[assignments_folder])
+            parents=[assignments_folder],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{assignments_folder}/{peer_assignmetns_filename}",
@@ -332,7 +342,9 @@ class TestGoogleStorage(TestCase):
         peer_assignments_file = GoogleFile(
             id=peer_file_id,
             name=peer_assignmetns_filename,
-            parents=[assignments_folder])
+            parents=[assignments_folder],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{assignments_folder}/{peer_assignmetns_filename}",
@@ -357,7 +369,9 @@ class TestGoogleStorage(TestCase):
         peer_assignments_file = GoogleFile(
             id=peer_file_id,
             name=peer_assignmetns_filename,
-            parents=[assignments_folder])
+            parents=[assignments_folder],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{assignments_folder}/{peer_assignmetns_filename}",
@@ -382,7 +396,9 @@ class TestGoogleStorage(TestCase):
         peer_assignments_file = GoogleFile(
             id=peer_file_id,
             name=peer_assignmetns_filename,
-            parents=[assignments_folder])
+            parents=[assignments_folder],
+            mime_type='',
+            export_links={})
 
         self.sut.set_gdrive_get_file_response(
             f"/{foldername}/{assignments_folder}/{peer_assignmetns_filename}",
