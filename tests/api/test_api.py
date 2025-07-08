@@ -1,12 +1,16 @@
 import tornado
 
 
-from server import create_app # isort:skip
+from server import App # isort:skip
 
+
+#class GetEmployeesUseCaseSut(GetEmployeesUseCase, MockStorageFactory):
+#    'Inject a mock into the GetEmployeesUseCase dependency'
 
 class TestHelloApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
-        return create_app()
+        app = App()
+        return app.create()
 
     def test_employees(self):
         # When
