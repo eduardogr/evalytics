@@ -8,26 +8,26 @@ env ?= dev # get from cl or 'dev' by default
 # make build
 # make build env=prod
 build:
-	docker-compose build \
+	docker compose build \
 	    --build-arg BUILD_ENV=$(env) \
 		$(CONTAINER_SERVER_NAME)  && \
-	docker-compose build \
+	docker compose build \
 		--build-arg BUILD_ENV=$(env) \
 		$(CONTAINER_CLIENT_NAME)
 
-build-force:
-	docker-compose build --force \
+build-nocache:
+	docker compose build --no-cache \
 	    --build-arg BUILD_ENV=$(env) \
 		$(CONTAINER_SERVER_NAME) && \
-	docker-compose build --force \
+	docker compose build --no-cache \
 		--build-arg BUILD_ENV=$(env) \
 		$(CONTAINER_CLIENT_NAME)
 
 up:
-	docker-compose up -d $(CONTAINER_SERVER_NAME)
+	docker compose up -d $(CONTAINER_SERVER_NAME)
 
 down:
-	docker-compose down
+	docker compose down
 
 google-auth:
 	python3 scripts/google_auth.py
