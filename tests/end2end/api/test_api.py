@@ -1,5 +1,5 @@
 import tornado
-from tornado.options import define, options
+from tornado.options import options
 import json
 
 
