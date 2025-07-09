@@ -25,6 +25,7 @@ class HealthHandler(tornado.web.RequestHandler):
         self.set_status(200)
         self.set_header("API-Version", VERSION)
         self.finish()
+        return
 
 
 # TODO: control response when no config.yaml
@@ -42,10 +43,13 @@ class EmployeesHandler(tornado.web.RequestHandler):
                     'employees': [Mapper().employee_to_json(e) for uid, e in employees.items()]
                 }
             })
+            return
         except (MissingGoogleDriveFolderException,
                 MissingGoogleDriveFileException) as e:
+            self.set_status(500)
             message = e.message
         except (MissingDataException, NoFormsException) as e:
+            self.set_status(500)
             message = e.message
         except FileNotFoundError as e:
             self.set_status(500)

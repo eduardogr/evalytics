@@ -12,10 +12,9 @@ from evalytics.handlers import \
     PeersAssignmentHandler
 
 
-define(
-    "port", default=8080,
-    help="Run tornado server on the given port", type=int)
 
+define("port", default=8080, help="Run tornado server on the given port", type=int)
+define("config", default="config.yaml", help="Config file holding configuration for the server", type=str)
 
 class App():
 

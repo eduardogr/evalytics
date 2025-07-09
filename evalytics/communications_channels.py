@@ -19,7 +19,16 @@ class CommunicationChannelFactory(Config):
         elif communication_channel_provider == ProvidersConfig.SLACK:
             return SlackChannel()
 
+        elif communication_channel_provider == ProvidersConfig.MOCK:
+            return MockChannel()
+
         raise ValueError(communication_channel_provider)
+
+
+class MockChannel:
+
+    def send_communication(self, reviewer, kind: CommunicationKind):
+        return
 
 class SlackClient:
 

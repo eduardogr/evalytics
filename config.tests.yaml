@@ -1,0 +1,17 @@
+---
+eval_process:
+    id: '2025 Q3'
+    due_date: '12:00 PM, noon, July 25, 2025'
+    feature_disabling:
+        send_eval_reports_as_pdf: False
+        generate_google_doc_from_eval_report: False
+        add_comenter_to_eval_reports: False
+
+providers:
+    storage: "mock"
+    communication_channel: "mock"
+    forms_platform: "mock"
+
+company:
+    domain: "company.com"
+    number_of_employees: 1000

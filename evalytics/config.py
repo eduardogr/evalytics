@@ -1,11 +1,14 @@
 import yaml
+from tornado.options import options
 
 class ConfigReader:
 
     CONFIG_FILE = 'config.yaml'
 
     def read(self):
-        with open(self.CONFIG_FILE, 'r') as stream:
+        print('CONFIG:', options.config)
+
+        with open(options.config, 'r') as stream:
             data_loaded = yaml.safe_load(stream)
 
         return data_loaded
@@ -17,6 +20,8 @@ class ProvidersConfig(ConfigReader):
     STORAGE = 'storage'
     COMMUNICATION_CHANNEL = 'communication_channel'
     FORMS_PLATFORM = 'forms_platform'
+
+    MOCK = "mock"
 
     GOOGLE_DRIVE = "google_drive"
 

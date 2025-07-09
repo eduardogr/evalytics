@@ -1,11 +1,14 @@
 from googledrive.exceptions import MissingGoogleDriveFileException
 from googledrive.api import GoogleDrive
 
+import csv
+
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
+
 
 class StorageFactory(Config):
 
@@ -14,7 +17,44 @@ class StorageFactory(Config):
         if storage_kind == ProvidersConfig.GOOGLE_DRIVE:
             return GoogleStorage()
 
+        elif storage_kind == ProvidersConfig.MOCK:
+            return MockStorage()
+
         raise ValueError(storage_kind)
+
+class MockStorage(Config):
+    '''
+    Harcoded storage for testing purposes
+    '''
+
+    def get_employees(self):
+        employees = {}
+        with open('mock/storage/org-chart.csv', mode ='r') as file:
+            file.readline() # discarding headers
+            csvFile = csv.reader(file)
+            for line in csvFile:
+                employee = Employee(
+                    mail=line[0],
+                    manager=line[1],
+                    area=line[2])
+                employees.update({employee.uid : employee})
+
+        return employees
+
+    def get_forms(self):
+        pass
+
+    def generate_eval_reports(self,
+                              reviewee,
+                              reviewee_evaluations: ReviewerResponse,
+                              employee_managers):
+        pass
+
+    def get_peers_assignment(self):
+        pass
+
+    def write_peers_assignment(self, peers_assignment):
+        return
 
 class GoogleStorage(GoogleAPI, Config):
 
