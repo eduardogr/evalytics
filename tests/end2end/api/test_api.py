@@ -6,7 +6,8 @@ import json
 from server import App # isort:skip
 
 
-class TestHelloApp(tornado.testing.AsyncHTTPTestCase):
+class TestTornadoApp(tornado.testing.AsyncHTTPTestCase):
+
     def get_app(self):
         app = App()
         return app.create()
@@ -49,5 +50,3 @@ class TestHelloApp(tornado.testing.AsyncHTTPTestCase):
 
         # Then:
         assert response.code == 200, print(f"Response: {response}")
-
-        # Assertion of body response content:
