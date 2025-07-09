@@ -20,10 +20,10 @@ class TestHelloApp(tornado.testing.AsyncHTTPTestCase):
         super().tearDown()
 
     def test_employees(self):
-        # Setup:
+        # Given:
         options.config = "config.tests.yaml"
 
-        # When
+        # When:
         response = self.fetch(
             '/employees',
             method='GET',
@@ -34,7 +34,6 @@ class TestHelloApp(tornado.testing.AsyncHTTPTestCase):
         # Then:
         assert response.code == 200, print(f"Response: {response}")
 
-        # Assertion of body response content:
         data = json.loads(response.body)
         assert data['success']
         assert len(data['response']['employees']) > 0
