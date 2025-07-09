@@ -6,8 +6,6 @@ class ConfigReader:
     CONFIG_FILE = 'config.yaml'
 
     def read(self):
-        print('CONFIG:', options.config)
-
         with open(options.config, 'r') as stream:
             data_loaded = yaml.safe_load(stream)
 
