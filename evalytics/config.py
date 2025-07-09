@@ -5,6 +5,8 @@ class ConfigReader:
 
     CONFIG_FILE = 'config.yaml'
 
+    # TODO: define strategy to read real-time config values without using this function so much
+    #   - some caching strategy perhaps?
     def read(self):
         with open(options.config, 'r') as stream:
             data_loaded = yaml.safe_load(stream)
