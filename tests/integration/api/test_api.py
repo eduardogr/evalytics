@@ -75,7 +75,7 @@ class TestTornadoApp(tornado.testing.AsyncHTTPTestCase):
 
         data = json.loads(response.body)
         assert data['success']
-        assert len(data['response']['peers']) > 0
+        assert len(data['response']['peers_assignment']) > 0
 
     def test_healthcheck(self):
         # When
