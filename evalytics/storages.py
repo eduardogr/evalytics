@@ -42,7 +42,27 @@ class MockStorage(Config):
         return employees
 
     def get_forms(self):
-        pass
+        forms = {}
+        with open('mock/storage/form-map.csv', mode ='r') as file:
+            file.readline() # discarding headers
+            csvFile = csv.reader(file)
+            for line in csvFile:
+                form_area = line[0].strip()
+                self_eval = line[1]
+                peer_manager_eval = line[2]
+                manager_peer_eval = line[3]
+                peer_to_peer_eval = line[4]
+
+                forms.update({
+                    form_area: {
+                        EvalKind.SELF.name: self_eval,
+                        EvalKind.PEER_MANAGER.name: peer_manager_eval,
+                        EvalKind.MANAGER_PEER.name: manager_peer_eval,
+                        EvalKind.PEER_TO_PEER.name: peer_to_peer_eval,
+                    }
+                })
+
+        return forms
 
     def generate_eval_reports(self,
                               reviewee,
