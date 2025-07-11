@@ -43,6 +43,7 @@ autopep8 = "2.0.1"
 pytest = "8.3.5"
 pytest-cov = "6.1.1"
 ipython = "8.10.0"
+tornado = "6.5.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

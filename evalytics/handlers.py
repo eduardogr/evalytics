@@ -17,6 +17,19 @@ from evalytics.models import CommunicationKind
 from evalytics.exceptions import MissingDataException, NoFormsException
 
 
+VERSION = "0.1.0"
+class HealthHandler(tornado.web.RequestHandler):
+    path = r"/health"
+
+    async def get(self):
+        self.set_status(200)
+        self.set_header("API-Version", VERSION)
+        self.finish()
+        return
+
+
+# TODO: control response when no config.yaml
+# TODO: control response when no credentials.json
 class EmployeesHandler(tornado.web.RequestHandler):
     path = r"/employees"
 
@@ -30,21 +43,25 @@ class EmployeesHandler(tornado.web.RequestHandler):
                     'employees': [Mapper().employee_to_json(e) for uid, e in employees.items()]
                 }
             })
+            return
         except (MissingGoogleDriveFolderException,
                 MissingGoogleDriveFileException) as e:
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': e.message,
-                }
-            })
-        except (MissingDataException, NoFormsException) as exception:
-            self.finish({
-                'success': False,
-                'response': {
-                    'error': exception.message,
-                }
-            })
+            self.set_status(500)
+            message = e.message
+        except (MissingDataException, NoFormsException) as e:
+            self.set_status(500)
+            message = e.message
+        except FileNotFoundError as e:
+            self.set_status(500)
+            message = f'FileNotFoundError: {str(e)}'
+
+        self.finish({
+            'success': False,
+            'response': {
+                'error': message,
+            }
+        })
+
 
 
 class SurveysHandler(tornado.web.RequestHandler):
@@ -186,6 +203,7 @@ class ReviewersHandler(tornado.web.RequestHandler):
                 }
             })
 
+# TODO: review if this has to be exposed in an API
 class CommunicationHandler(tornado.web.RequestHandler):
     path = r"/communications"
 

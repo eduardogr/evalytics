@@ -1,11 +1,14 @@
 from googledrive.exceptions import MissingGoogleDriveFileException
 from googledrive.api import GoogleDrive
 
+import csv
+
 from evalytics.google_api import GoogleAPI
 from evalytics.config import Config, ProvidersConfig
 from evalytics.models import Employee, EvalKind
 from evalytics.models import ReviewerResponse
 from evalytics.exceptions import MissingDataException, NoFormsException
+
 
 class StorageFactory(Config):
 
@@ -14,7 +17,77 @@ class StorageFactory(Config):
         if storage_kind == ProvidersConfig.GOOGLE_DRIVE:
             return GoogleStorage()
 
+        elif storage_kind == ProvidersConfig.MOCK:
+            return MockStorage()
+
         raise ValueError(storage_kind)
+
+class MockStorage(Config):
+    '''
+    Harcoded storage for testing purposes
+    '''
+
+    def get_employees(self):
+        employees = {}
+        with open('mock/storage/0-org-chart.csv', mode ='r') as file:
+            file.readline() # discarding headers
+            csvFile = csv.reader(file)
+            for line in csvFile:
+                employee = Employee(
+                    mail=line[0],
+                    manager=line[1],
+                    area=line[2])
+                employees.update({employee.uid : employee})
+
+        return employees
+
+    def get_forms(self):
+        forms = {}
+        with open('mock/storage/0-form-map.csv', mode ='r') as file:
+            file.readline() # discarding headers
+            csvFile = csv.reader(file)
+            for line in csvFile:
+                form_area = line[0].strip()
+                self_eval = line[1]
+                peer_manager_eval = line[2]
+                manager_peer_eval = line[3]
+                peer_to_peer_eval = line[4]
+
+                forms.update({
+                    form_area: {
+                        EvalKind.SELF.name: self_eval,
+                        EvalKind.PEER_MANAGER.name: peer_manager_eval,
+                        EvalKind.MANAGER_PEER.name: manager_peer_eval,
+                        EvalKind.PEER_TO_PEER.name: peer_to_peer_eval,
+                    }
+                })
+
+        return forms
+
+    def generate_eval_reports(self,
+                              reviewee,
+                              reviewee_evaluations: ReviewerResponse,
+                              employee_managers):
+        pass
+
+    def get_peers_assignment(self):
+        # Creating models
+        peers = {}
+        with open('mock/storage/1-peers-assignment.csv', mode ='r') as file:
+            file.readline() # discarding headers
+            csvFile = csv.reader(file)
+            for line in csvFile:
+                reviewer = line[0].strip()
+                reviewees = list(map(str.strip, line[1].split(';')))
+
+                peers.update({
+                    reviewer: reviewees
+                })
+
+        return peers
+
+    def write_peers_assignment(self, peers_assignment):
+        return
 
 class GoogleStorage(GoogleAPI, Config):
 

@@ -31,6 +31,24 @@ class ReviewerResponseKeyDictStrategy:
             raise NotImplementedError(
                 'ReviewerResponseKeyDictStrategy does not implement {} strategy'.format(data_kind))
 
+
+class MockForms:
+    '''
+    Harcoded forms for testing purposes
+    '''
+
+    def get_peers_assignment(self):
+        pass
+
+    def get_responses(self):
+        response_kind = ReviewerResponseKeyDictStrategy.REVIEWER_RESPONSE
+        pass
+
+    def get_evaluations(self):
+        response_kind = ReviewerResponseKeyDictStrategy.REVIEWEE_EVALUATION
+        pass
+
+
 class GoogleForms(GoogleAPI, ResponseFileNameToEvalKind, Config):
 
     def get_peers_assignment(self):
