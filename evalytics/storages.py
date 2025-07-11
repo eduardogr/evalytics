@@ -29,7 +29,7 @@ class MockStorage(Config):
 
     def get_employees(self):
         employees = {}
-        with open('mock/storage/org-chart.csv', mode ='r') as file:
+        with open('mock/storage/0-org-chart.csv', mode ='r') as file:
             file.readline() # discarding headers
             csvFile = csv.reader(file)
             for line in csvFile:
@@ -43,7 +43,7 @@ class MockStorage(Config):
 
     def get_forms(self):
         forms = {}
-        with open('mock/storage/form-map.csv', mode ='r') as file:
+        with open('mock/storage/0-form-map.csv', mode ='r') as file:
             file.readline() # discarding headers
             csvFile = csv.reader(file)
             for line in csvFile:
@@ -71,7 +71,20 @@ class MockStorage(Config):
         pass
 
     def get_peers_assignment(self):
-        pass
+        # Creating models
+        peers = {}
+        with open('mock/storage/1-peers-assignment.csv', mode ='r') as file:
+            file.readline() # discarding headers
+            csvFile = csv.reader(file)
+            for line in csvFile:
+                reviewer = line[0].strip()
+                reviewees = list(map(str.strip, line[1].split(';')))
+
+                peers.update({
+                    reviewer: reviewees
+                })
+
+        return peers
 
     def write_peers_assignment(self, peers_assignment):
         return

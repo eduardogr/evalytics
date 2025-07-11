@@ -1,0 +1,8 @@
+reviewer, reviewees
+fulanite, ctanganite;menganita;techlead
+ctanganite, fulanite;menganita;techlead
+menganita, fulanite;ctanganite;techlead
+techlead, fulanite;ctanganite;menganita;CTO
+CIO, CTO;CEO;ctanganite
+CTO, techlead;CEO
+CEO, CTO;CIO;techlead

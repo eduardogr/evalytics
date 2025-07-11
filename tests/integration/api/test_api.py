@@ -58,6 +58,25 @@ class TestTornadoApp(tornado.testing.AsyncHTTPTestCase):
         assert data['success']
         assert len(data['response']['surveys']) > 0
 
+    def test_peers(self):
+        # Given:
+        options.config = "config.tests.yaml"
+
+        # When:
+        response = self.fetch(
+            '/peers',
+            method='GET',
+            headers=None,
+
+        )
+
+        # Then:
+        assert response.code == 200, print(f"Response: {response}")
+
+        data = json.loads(response.body)
+        assert data['success']
+        assert len(data['response']['peers']) > 0
+
     def test_healthcheck(self):
         # When
         response = self.fetch(
